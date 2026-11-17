@@ -1,0 +1,27 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+
+# runtime state and logs
+data/
+logs/
+*.db
+*.db-wal
+*.db-shm
+
+# generated review workbooks and the real inventory (VM names, subscriptions, projects)
+review/
+seed/
+vms_all.csv
+config/initial_overrides.csv
+
+# secrets and per-server settings
+config/settings.yaml
+config/*.key
+config/*.json
+*.pem
+.env
+
+# offline wheel cache for the restricted server
+wheels/
