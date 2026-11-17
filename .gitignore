@@ -20,6 +20,7 @@ config/initial_overrides.csv
 config/settings.yaml
 config/*.key
 config/*.json
+!config/settings.example.json
 *.pem
 .env
 

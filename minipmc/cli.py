@@ -5,9 +5,10 @@ import os
 import sys
 from datetime import datetime, timedelta, timezone
 
-from . import db, grid as g, importer, reconcile as rc
+from . import db, grid as g, importer, reconcile as rc, users
 from .logs import setup_logging
 from .service import Store, UserError, iso, parse_until, parse_utc
+from .users import ROLES
 
 
 def out(*parts) -> None:
@@ -75,10 +76,51 @@ def build_parser() -> argparse.ArgumentParser:
     x.add_argument("--vms", required=True); x.add_argument("--out")
 
     sub.add_parser("validate", help="check the setup for problems")
+    x = sub.add_parser("serve", help="run the dashboard (and, in later steps, the scheduler)")
+    x.add_argument("--host", default="127.0.0.1", help="use 0.0.0.0 to let the team reach it")
+    x.add_argument("--port", type=int, default=8080)
+
+    up = sub.add_parser("user", help="dashboard users").add_subparsers(dest="sub", required=True)
+    x = up.add_parser("add"); x.add_argument("username"); x.add_argument("--role", default="viewer", choices=list(ROLES))
+    x.add_argument("--password", help="omit to be prompted (recommended)")
+    x = up.add_parser("passwd"); x.add_argument("username"); x.add_argument("--password")
+    x = up.add_parser("role"); x.add_argument("username"); x.add_argument("role", choices=list(ROLES))
+    for n in ("enable", "disable", "remove"):
+        x = up.add_parser(n); x.add_argument("username")
+    up.add_parser("list")
+
+    x = sub.add_parser("creds-check", help="test Azure identity, Key Vault and GCP key; optionally read one VM state")
+    x.add_argument("--vm", help="name of a VM already added; its power state is read (read-only)")
     sub.add_parser("pause", help="stop the scheduler from acting on anything")
     sub.add_parser("resume")
     x = sub.add_parser("export", help="write the VM list to CSV"); x.add_argument("--out", required=True)
     return p
+
+
+def creds_check(store: Store, vm_name=None) -> int:
+    from . import creds as cr, providers
+    ok = True
+
+    def step(label, fn):
+        nonlocal ok
+        try:
+            out("OK    ", label, fn() or "")
+            return True
+        except (cr.CredentialError, UserError) as e:
+            ok = False
+            out("FAIL  ", label, "-", e)
+            return False
+
+    c = cr.Credentials(cr.load_settings(store.home))
+    if step("Azure managed identity token (ARM)", lambda: c.azure_token(cr.ARM) and ""):
+        if step("Key Vault: read GCP key secret", lambda: "(secret found)" if c.gcp_info() else ""):
+            step("GCP service account", lambda: c.gcp_info()["client_email"])
+            step("Google access token", lambda: c.gcp_token() and "")
+    if vm_name:
+        vm, _, _ = store.get_vm(vm_name)
+        step("read power state of " + vm["name"],
+             lambda: "%s (%s)" % providers.vm_status(c, vm["provider"], vm["scope"], vm["group_or_zone"], vm["name"]))
+    return 0 if ok else 1
 
 
 def run(args, store: Store) -> int:
@@ -184,6 +226,38 @@ def run(args, store: Store) -> int:
         store.set_setting("paused", "1" if c == "pause" else "0"); out("scheduler", c + "d")
         return 0
 
+    if c == "serve":
+        from . import web
+        out("dashboard on http://%s:%d  (Ctrl+C to stop)" % (args.host, args.port))
+        web.serve(store.home, args.host, args.port)
+        return 0
+
+    if c == "user":
+        if s == "list":
+            table([(u["username"], u["role"], "DISABLED" if u["disabled"] else "active") for u in users.list_users(store)],
+                  ["USER", "ROLE", "STATUS"])
+        elif s in ("add", "passwd"):
+            pw = args.password
+            if pw is None:
+                pw = getpass.getpass("Password (8+ characters): ")
+                if pw != getpass.getpass("Repeat password: "):
+                    raise UserError("passwords do not match")
+            if s == "add":
+                users.add_user(store, args.username, pw, args.role)
+            else:
+                users.set_password(store, args.username, pw)
+            out("done:", s, args.username)
+        elif s == "role":
+            users.set_role(store, args.username, args.role); out("done")
+        elif s in ("enable", "disable"):
+            users.set_disabled(store, args.username, s == "disable"); out("done")
+        elif s == "remove":
+            users.remove_user(store, args.username); out("removed", args.username)
+        return 0
+
+    if c == "creds-check":
+        return creds_check(store, args.vm)
+
     if c == "export":
         out("wrote", store.export_vms_csv(args.out), "VMs to", args.out)
         return 0
@@ -199,3 +273,9 @@ def main(argv=None) -> int:
     except (UserError, FileNotFoundError) as e:
         out("ERROR:", e)
         return 1
+    except Exception as e:
+        from .creds import CredentialError
+        if isinstance(e, CredentialError):
+            out("ERROR:", e)
+            return 1
+        raise

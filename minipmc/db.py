@@ -3,9 +3,17 @@ import os
 import sqlite3
 from contextlib import contextmanager
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
+
+_USERS = """CREATE TABLE users (
+        username TEXT PRIMARY KEY COLLATE NOCASE, pw_hash TEXT NOT NULL, role TEXT NOT NULL,
+        disabled INTEGER NOT NULL DEFAULT 0, created_at TEXT NOT NULL)"""
+
+# version N -> statements that bring it to N+1
+_MIGRATIONS = {1: [_USERS]}
 
 _SCHEMA = [
+    _USERS,
     """CREATE TABLE meta (key TEXT PRIMARY KEY, value TEXT NOT NULL)""",
     """CREATE TABLE settings (key TEXT PRIMARY KEY, value TEXT NOT NULL)""",
     """CREATE TABLE schedules (
@@ -61,8 +69,14 @@ def init(home: str) -> bool:
     if os.path.exists(path):
         with connect(home) as con:
             ver = int(con.execute("SELECT value FROM meta WHERE key='schema_version'").fetchone()[0])
-        if ver != SCHEMA_VERSION:
-            raise RuntimeError(f"database schema is v{ver}, this program expects v{SCHEMA_VERSION}")
+        if ver > SCHEMA_VERSION:
+            raise RuntimeError(f"database schema is v{ver}, this program only knows up to v{SCHEMA_VERSION}")
+        while ver < SCHEMA_VERSION:
+            with connect(home) as con:
+                for stmt in _MIGRATIONS[ver]:
+                    con.execute(stmt)
+                ver += 1
+                con.execute("UPDATE meta SET value=? WHERE key='schema_version'", (str(ver),))
         return False
     con = sqlite3.connect(path)
     try:

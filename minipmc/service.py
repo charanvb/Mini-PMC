@@ -329,6 +329,37 @@ class Store:
         order = {"ERROR": 0, "WARN": 1, "INFO": 2}
         return sorted(out, key=lambda x: order[x[0]])
 
+    def recent_events(self, limit: int = 200, text: str = "") -> List[sqlite3.Row]:
+        q, args = "SELECT ts, actor, action, target, detail FROM events", []
+        if text:
+            q += " WHERE target LIKE ? OR action LIKE ? OR actor LIKE ?"
+            args = [f"%{text}%"] * 3
+        with db.connect(self.home) as con:
+            return con.execute(q + " ORDER BY id DESC LIMIT ?", args + [limit]).fetchall()
+
+    def overview(self, now: Optional[datetime] = None) -> List[dict]:
+        """One row per VM with what the schedule says right now (R running / S stopped), for the dashboard."""
+        now = now or datetime.now(timezone.utc)
+        scheds = {s["name"]: (s["grid"], s["tz"]) for s in self.list_schedules()}
+        out = []
+        for v in self.list_vms():
+            says, local = "", ""
+            if v["schedule"] in scheds:
+                grid, tzname = scheds[v["schedule"]]
+                try:
+                    tz = get_tz(tzname)
+                    says = g.desired_at(grid, tz, now)
+                    local = now.astimezone(tz).strftime("%a %H:%M")
+                except ValueError:
+                    says, local = "", "tz unavailable"
+            held = bool(v["held"]) and (v["hold_until"] is None or parse_utc(v["hold_until"]) > now)
+            out.append({"name": v["name"], "provider": v["provider"], "scope": v["scope"],
+                        "group": v["group_or_zone"], "schedule": v["schedule"], "enabled": bool(v["enabled"]),
+                        "notes": v["notes"], "says": says, "local": local, "held": held,
+                        "hold_until": v["hold_until"], "hold_reason": v["hold_reason"] if v["held"] else "",
+                        "hold_by": v["hold_by"] if v["held"] else ""})
+        return out
+
     def export_vms_csv(self, path: str) -> int:
         rows = self.list_vms()
         with open(path, "w", newline="", encoding="utf-8") as f:
