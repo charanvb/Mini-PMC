@@ -83,36 +83,73 @@ Copy the `wheels` folder to `C:\MiniPMC\wheels`, then on the VM:
 .\.venv\Scripts\python.exe -m pip install --no-index --find-links wheels -r requirements-dev.txt
 ```
 
-## Step 3 - Put the private files on the VM
+## Step 3 - Private files (optional - not needed for Step 2 testing)
 
-Copy by hand:
+Only if you want to compare the full inventory numbers. Copy by hand:
 
 | From the laptop | To the VM |
 |---|---|
 | `vms_all.csv` | `C:\MiniPMC\vms_all.csv` |
 | `config\initial_overrides.csv` | `C:\MiniPMC\config\initial_overrides.csv` |
 
-## Step 4 - Run the tests and build the workbook
+## Step 4 - Run the tests (and optionally build the workbook)
 
 ```powershell
 cd C:\MiniPMC
 .\.venv\Scripts\python.exe -m pytest tests -q
+```
+
+Expected without the private files: `... passed, 3 skipped` (no failures). With them: no skips.
+
+Optional workbook (needs the private files):
+
+```powershell
 .\.venv\Scripts\python.exe -m minipmc.build_seed --vms vms_all.csv --overrides config\initial_overrides.csv --out review\minipmc_seed.xlsx
 ```
 
 Expected:
 
 ```
-79 passed in ...
 VMs: 1891  |  schedule texts: 217 (4 unmanaged)
 Schedules: 184  |  managed VMs: 1884  |  unmanaged VMs: 7
 To confirm: 6 texts / 19 VMs  |  on hold: 17 (1 until cleared)
 Wrote review\minipmc_seed.xlsx
 ```
 
-The laptop shows `78 passed, 1 skipped`. The extra test checks the London clock change and only runs where `tzdata` is installed, so it runs for the first time here.
+## Step 5 - Onboard test VMs by hand (Step 2 of the build)
 
-**Send back:** the output of both commands, or the error text.
+Run from the cloned folder. `mpmc` is just a shortcut for this session:
+
+```powershell
+cd C:\MiniPMC
+function mpmc { .\.venv\Scripts\python.exe -m minipmc @args }
+
+mpmc init                                   # creates data\minipmc.db, loads 184 schedules
+mpmc schedule list                          # the library
+mpmc schedule show "IST Mon-Fri 10:00-18:00"
+
+# add one test VM (use a real name, subscription id and resource group)
+mpmc vm add MYTESTVM --provider azure --scope <subscription-id> --group <resource-group> --schedule "IST Mon-Fri 10:00-18:00"
+# GCP: mpmc vm add MYGCPVM --provider gcp --scope <project> --group <zone> --schedule ALWAYS_PARKED
+
+mpmc vm list
+mpmc desired MYTESTVM --actual running     # what would the scheduler do right now?
+mpmc desired MYTESTVM --actual stopped --at 2026-11-23T05:00:00Z   # Monday 10:30 IST -> START
+
+mpmc hold set MYTESTVM --days 1 --reason "testing"
+mpmc desired MYTESTVM --actual running     # -> SKIP / OVERRIDE_ACTIVE
+mpmc hold clear MYTESTVM
+
+mpmc validate
+mpmc vm show MYTESTVM                      # recent events
+mpmc vm remove MYTESTVM
+```
+
+Nothing here touches Azure or GCP: it only edits the local database. Every change is written to `logs\app.log` and `logs\audit\<date>.jsonl`.
+
+To load the whole inventory later: `mpmc import --vms vms_all.csv --overrides config\initial_overrides.csv` (dry run), add `--apply` to write.
+
+**Send back:** the output of `mpmc desired` (both), `mpmc validate`, and the last lines of `logs\audit\<today>.jsonl`.
 
 ## If something fails
 
@@ -120,5 +157,6 @@ The laptop shows `78 passed, 1 skipped`. The extra test checks the London clock 
 |---|---|
 | `python` not found | try `py -3`, or use the full path to `python.exe` |
 | pip cannot connect / SSL or proxy error | send me the message; use the offline route in Step 2 |
-| `1 skipped` in the test result | `tzdata` is missing: `.\.venv\Scripts\python.exe -m pip install tzdata` |
+| `validate` shows ERROR "time zone cannot be loaded" | `tzdata` is missing: `.\.venv\Scripts\python.exe -m pip install tzdata` |
+| `Unable to copy venvlauncher.exe` | `python -m venv` was run twice while the venv was in use; harmless, do not repeat |
 | `Activate.ps1` blocked | not needed; this guide always calls `.\.venv\Scripts\python.exe` directly |
