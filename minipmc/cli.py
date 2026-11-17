@@ -269,6 +269,8 @@ def main(argv=None) -> int:
     home = os.path.abspath(args.home)
     try:
         setup_logging(home)
+        if args.cmd != "init" and os.path.exists(db.db_path(home)):
+            db.init(home)  # applies any pending schema upgrade
         return run(args, Store(home, actor=getpass.getuser()))
     except (UserError, FileNotFoundError) as e:
         out("ERROR:", e)
