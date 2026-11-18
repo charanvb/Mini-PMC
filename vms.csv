@@ -1,0 +1,878 @@
+VMName,Provider,ProjectOrSubscription,ZoneOrResourceGroup,Action,
+biefsqw200002,azure,b466d563-74e6-4232-a5c6-f39f65f6f1fc,bieno-fs01-q-904180-is01-rg,start,Up 5 days (Mon-Fri) 10 AM to 10 PM IST
+bnlwefspap20560,azure,b466d563-74e6-4232-a5c6-f39f65f6f1fc,bnlwe-fs01-n-00000-cloudbau-rg,start,Up 7 days 12:30 PM to 05:00 PM IST
+bnlfsuw500006,azure,b466d563-74e6-4232-a5c6-f39f65f6f1fc,bnlwe-fs01-u-903572-is01-rg,start,24X7 Always Up
+bnlfsuw500007,azure,b466d563-74e6-4232-a5c6-f39f65f6f1fc,bnlwe-fs01-u-903572-is01-rg,start,Up 7 days 9 AM to 12 AM IST
+bnlfsuw200008,azure,b466d563-74e6-4232-a5c6-f39f65f6f1fc,bnlwe-fs01-u-931523-is01-rg,start,Up 5 days (Mon-Fri) 10:00 AM to 06:00 PM IST
+bnlfspx200020,azure,b466d563-74e6-4232-a5c6-f39f65f6f1fc,bnlwe-p-fs-citrix-rg,start,Up Mon 08:00 AM to Fri 08:00 PM IST
+bnlfspx200001,azure,b466d563-74e6-4232-a5c6-f39f65f6f1fc,bnlwe-fs01-p-ctxnonmcs-mc-1a-rg,start,Up 5 days (Mon-Fri) 10:00 AM to 10:00 PM IST
+bnlfspw200161,azure,b466d563-74e6-4232-a5c6-f39f65f6f1fc,bnlwe-p-fs-citrix-rg,start,Up Mon 08:00 AM to Fri 08:00 PM IST
+biefspx200024,azure,b466d563-74e6-4232-a5c6-f39f65f6f1fc,bieno-p-fs-citrix-rg,start,Up 5 days (Mon-Fri) 11:30 AM to 02:30 AM IST
+gnlfspx200016,gcp,ul-fs-p-citrix-prj,europe-west4-a,start,Up 7 days 07:00 AM to 08:00 AM IST
+bnlfspw200010,azure,b466d563-74e6-4232-a5c6-f39f65f6f1fc,bnlwe-fs01-p-903468-IS01-rg,start,Up 7 days 04:00 PM to 12:00 AM UTC
+bnlfspw200188,azure,b466d563-74e6-4232-a5c6-f39f65f6f1fc,bnlwe-fs01-p-903891-is01-rg,start,Up 6 days (Mon-Sat) 06:00 AM to 11:00 PM IST
+bnlfsdlx00005,azure,b466d563-74e6-4232-a5c6-f39f65f6f1fc,bnlwe-fs01-d-903893-is01-rg,start,Up 5 days (Mon-Fri) 09:00 AM to 09:00 PM IST
+bnlfsdlx00006,azure,b466d563-74e6-4232-a5c6-f39f65f6f1fc,bnlwe-fs01-d-903893-is01-rg,start,Up 5 days (Mon-Fri) 09:00 AM to 09:00 PM IST
+bnlfsdw200589,azure,b466d563-74e6-4232-a5c6-f39f65f6f1fc,bnlwe-fs01-d-903893-is01-rg,start,Up 5 days (Mon-Fri) 09:00 AM to 09:00 PM IST
+bnlfsul200004,azure,b466d563-74e6-4232-a5c6-f39f65f6f1fc,bnlwe-fs01-u-930846-is01-rg,start,Up 5 days (Mon-Fri) 11:00 AM to 11:00 PM IST
+bnlfsul200005,azure,b466d563-74e6-4232-a5c6-f39f65f6f1fc,bnlwe-fs01-u-930846-is01-rg,start,Up 5 days (Mon-Fri) 11:00 AM to 11:00 PM IST
+bnlfsql200004,azure,b466d563-74e6-4232-a5c6-f39f65f6f1fc,bnlwe-fs01-q-903642-is01-rg,start,Up 5 days (Mon-Fri) 06:00 AM to 06:00 PM UTC
+bnlfsqw200015,azure,b466d563-74e6-4232-a5c6-f39f65f6f1fc,bnlwe-fs01-q-903642-is01-rg,start,Up 5 days (Mon-Fri) 06:00 AM to 06:00 PM UTC
+bnlfsqw200012,azure,b466d563-74e6-4232-a5c6-f39f65f6f1fc,bnlwe-fs01-q-903642-is01-rg,start,Up 5 days (Mon-Fri) 06:00 AM to 06:00 PM UTC
+bnlfsqw200013,azure,b466d563-74e6-4232-a5c6-f39f65f6f1fc,bnlwe-fs01-q-903642-is01-rg,start,Up 5 days (Mon-Fri) 06:00 AM to 06:00 PM UTC
+bnlfsqw200014,azure,b466d563-74e6-4232-a5c6-f39f65f6f1fc,bnlwe-fs01-q-903642-is01-rg,start,Up 5 days (Mon-Fri) 06:00 AM to 06:00 PM UTC
+gnlfspx200017,gcp,ul-fs-p-citrix-prj,europe-west4-b,start,Up 7 days 07:00 AM to 08:00 AM IST
+biefsuwm00001,azure,b466d563-74e6-4232-a5c6-f39f65f6f1fc,bieno-fs01-u-931144-is01-rg,start,Up 5 days (Mon-Fri) 09:00 AM to 06:00 PM IST
+bnlfsuwm00001,azure,b466d563-74e6-4232-a5c6-f39f65f6f1fc,bnlwe-fs01-u-931144-is01-rg,start,Up 5 days (Mon-Fri) 09:00 AM to 06:00 PM IST
+gnlfspw200085,gcp,ul-fs-p-scom-prj,europe-west4-a,start,Up 7 days 07:00 AM to 07:00 PM IST
+bnlfspw200185,azure,b466d563-74e6-4232-a5c6-f39f65f6f1fc,bnlwe-p-fs-turbonomic-rg,start,Up 5 days (Mon-Fri) 07:00 AM to 07:00 PM CET
+gnlfsplx00175,gcp,ul-fs-p-zpa-prj,europe-west4-b,start,Up 5 days (Mon-Fri) 09:00 AM to 09:00 PM IST
+gfrfsplx00022,gcp,ul-fs-p-zpa-prj,europe-west3-a,start,Up 5 days (Mon-Fri) 10:30 AM to 11:59 PM IST
+gfrfsplx00105,gcp,ul-fs-p-zpa-prj,europe-west3-b,start,Up 5 days (Mon-Fri) 10:30 AM to 11:59 PM IST
+gnlfsplx00024,gcp,ul-fs-p-zpa-prj,europe-west4-a,start,Up 5 days (Mon-Fri) 10:30 AM to 11:59 PM IST
+gnlfsplx00020,gcp,ul-fs-p-zpa-prj,europe-west4-b,start,Up 5 days (Mon-Fri) 10:30 AM to 11:59 PM IST
+gfrfsplx00023,gcp,ul-fs-p-zpa-prj,europe-west3-b,start,Up 5 days (Mon-Fri) 10:30 AM to 11:59 PM IST
+gfrfsplx00101,gcp,ul-fs-p-zpa-prj,europe-west3-a,start,Up 5 days (Mon-Fri) 10:30 AM to 11:59 PM IST
+gnlfsplx00173,gcp,ul-fs-p-zpa-prj,europe-west4-a,start,Up 5 days (Mon-Fri) 10:30 AM to 11:59 PM IST
+gfrfsplx00108,gcp,ul-fs-p-zpa-prj,europe-west3-c,start,Up 5 days (Mon-Fri) 10:30 AM to 11:59 PM IST
+gnlfsplx00177,gcp,ul-fs-p-zpa-prj,europe-west4-c,start,Up 5 days (Mon-Fri) 10:30 AM to 11:59 PM IST
+biefspl200021,azure,b466d563-74e6-4232-a5c6-f39f65f6f1fc,bieno-fs01-p-sentinel-rg,start,Up 2 days (Tue-Wed) 11:00 AM to 11:00 PM IST
+biefspl200032,azure,b466d563-74e6-4232-a5c6-f39f65f6f1fc,bieno-fs01-p-sentinel-rg,start,Up 2 days (Tue-Wed) 11:00 AM to 11:00 PM IST
+biefspl200024,azure,b466d563-74e6-4232-a5c6-f39f65f6f1fc,bieno-fs01-p-sentinel-rg,start,Up 2 days (Tue-Wed) 11:00 AM to 11:00 PM IST
+biefspl200022,azure,b466d563-74e6-4232-a5c6-f39f65f6f1fc,bieno-fs01-p-sentinel-rg,start,Up 2 days (Tue-Wed) 11:00 AM to 11:00 PM IST
+biefspl200031,azure,b466d563-74e6-4232-a5c6-f39f65f6f1fc,bieno-fs01-p-sentinel-rg,start,Up 2 days (Tue-Wed) 11:00 AM to 11:00 PM IST
+biefspl200033,azure,b466d563-74e6-4232-a5c6-f39f65f6f1fc,bieno-fs01-p-sentinel-rg,start,Up 2 days (Tue-Wed) 11:00 AM to 11:00 PM IST
+bnlafdw201013,azure,beb54d1c-1125-46b2-aa73-3c28f6918c06,bnlwe-af01-d-57425-rg,start,24*7 Always Up
+gfresqw200040,gcp,ul-es-q-55464-prj,europe-west3-a,start,Up 5 days (Mon-Fri) 10:30 AM to 10:30 PM IST
+gfresqw200041,gcp,ul-es-q-55464-prj,europe-west3-a,start,Up 5 days (Mon-Fri) 10:30 AM to 10:30 PM IST
+gfresqlx00010,gcp,ul-es-q-55464-prj,europe-west3-a,start,Up 5 days (Mon-Fri) 10 AM to 10 PM IST
+gfrspdlx00028,gcp,ul-sp-d-903561-prj,europe-west3-a,start,Up 5 days (Mon-Fri) 10 AM to 6 PM IST
+gfrspdlx00029,gcp,ul-sp-d-903561-prj,europe-west3-a,start,Up 5 days (Mon-Fri) 10 AM to 6 PM IST
+bnlesdw200023,azure,01491751-2545-4f64-afa7-54ffc907183d,bnlwe-ES01-d-903308-IS01-rg,start,Up 5 days (Mon-Fri) 10.30 AM to 10.30 PM IST
+gfrspdlx00035,gcp,ul-sp-d-902234-prj,europe-west3-a,start,Up 5 days (Mon-Fri) 10:00 AM to 10:00 PM IST
+gfrspdlx00034,gcp,ul-sp-d-902234-prj,europe-west3-a,start,Up 5 days (Mon-Fri) 10:00 AM to 10:00 PM IST
+gfrspdlx00040,gcp,ul-sp-d-901342-prj,europe-west3-b,start,Up 7 days (Mon-Sun) 9:30 AM to 12:30 AM IST
+bnlafdw201033,azure,beb54d1c-1125-46b2-aa73-3c28f6918c06,bnlwe-af01-d-57425-rg,start,Up 5 days (Mon-Fri) 10 AM to 10 PM IST
+bnlafdw201034,azure,beb54d1c-1125-46b2-aa73-3c28f6918c06,bnlwe-af01-d-57425-rg,start,Up 5 days (Mon-Fri) 10 AM to 10 PM IST
+bnlafdw201035,azure,beb54d1c-1125-46b2-aa73-3c28f6918c06,bnlwe-af01-d-57425-rg,start,Up 5 days (Mon-Fri) 10 AM to 10 PM IST
+bnlafdw201036,azure,beb54d1c-1125-46b2-aa73-3c28f6918c06,bnlwe-af01-d-57425-rg,start,Up 5 days (Mon-Fri) 10 AM to 10 PM IST
+bnlafdw201037,azure,beb54d1c-1125-46b2-aa73-3c28f6918c06,bnlwe-af01-d-57425-rg,start,Up 5 days (Mon-Fri) 10 AM to 10 PM IST
+bnlafdw201038,azure,beb54d1c-1125-46b2-aa73-3c28f6918c06,bnlwe-af01-d-57425-rg,start,Up 5 days (Mon-Fri) 10 AM to 10 PM IST
+bnlafdw201039,azure,beb54d1c-1125-46b2-aa73-3c28f6918c06,bnlwe-af01-d-57425-rg,start,Up 5 days (Mon-Fri) 10 AM to 10 PM IST
+bnlafdw201040,azure,beb54d1c-1125-46b2-aa73-3c28f6918c06,bnlwe-af01-d-57425-rg,start,Up 5 days (Mon-Fri) 10 AM to 10 PM IST
+bnlafdw201042,azure,beb54d1c-1125-46b2-aa73-3c28f6918c06,bnlwe-af01-d-57425-rg,start,Up 5 days (Mon-Fri) 10 AM to 10 PM IST
+bnlafdw201045,azure,beb54d1c-1125-46b2-aa73-3c28f6918c06,bnlwe-af01-d-57425-rg,start,24X7 Always Up
+bnlafdw201046,azure,beb54d1c-1125-46b2-aa73-3c28f6918c06,bnlwe-af01-d-57425-rg,start,Up 5 days (Mon-Fri) 10 AM to 10 PM IST
+bnlafdw201047,azure,beb54d1c-1125-46b2-aa73-3c28f6918c06,bnlwe-af01-d-57425-rg,start,Up 5 days (Mon-Fri) 10 AM to 10 PM IST
+bnlafdw201048,azure,beb54d1c-1125-46b2-aa73-3c28f6918c06,bnlwe-af01-d-57425-rg,start,Up 5 days (Mon-Fri) 10 AM to 10 PM IST
+bnlafdw201049,azure,beb54d1c-1125-46b2-aa73-3c28f6918c06,bnlwe-af01-d-57425-rg,start,Up 5 days (Mon-Fri) 10 AM to 10 PM IST
+bnlafdw201050,azure,beb54d1c-1125-46b2-aa73-3c28f6918c06,bnlwe-af01-d-57425-rg,start,Up 5 days (Mon-Fri) 10 AM to 10 PM IST
+bnlafdw201051,azure,beb54d1c-1125-46b2-aa73-3c28f6918c06,bnlwe-af01-d-57425-rg,start,Up 5 days (Mon-Fri) 10:00 AM to 10:00 PM IST
+bnlafdw201052,azure,beb54d1c-1125-46b2-aa73-3c28f6918c06,bnlwe-af01-d-57425-rg,start,Up 5 days (Mon-Fri) 10:00 AM to 10:00 PM IST
+bnlafdw201053,azure,beb54d1c-1125-46b2-aa73-3c28f6918c06,bnlwe-af01-d-57425-rg,start,Up 5 days (Mon-Fri) 10:00 AM to 10:00 PM IST
+bnlafdw201054,azure,beb54d1c-1125-46b2-aa73-3c28f6918c06,bnlwe-af01-d-57425-rg,start,Up 5 days (Mon-Fri) 10:00 AM to 10:00 PM IST
+bnlafdw201055,azure,beb54d1c-1125-46b2-aa73-3c28f6918c06,bnlwe-af01-d-57425-rg,start,Up 5 Days (Mon-Fri) 06:30 AM to 10:30 PM IST
+bnlafdw201057,azure,beb54d1c-1125-46b2-aa73-3c28f6918c06,bnlwe-af01-d-57425-rg,start,Up 5 Days (Mon-Fri) 06:30 AM to 10:30 PM IST
+bnlafdw201058,azure,beb54d1c-1125-46b2-aa73-3c28f6918c06,bnlwe-af01-d-57425-rg,start,Up 5 days (Mon- Fri) 9 AM to 7 PM IST
+bnlafdw201062,azure,beb54d1c-1125-46b2-aa73-3c28f6918c06,bnlwe-af01-d-57425-rg,start,Up 5 days (Mon-Fri) 10:00 AM to 10:00 PM IST
+bnlafdw201063,azure,beb54d1c-1125-46b2-aa73-3c28f6918c06,bnlwe-af01-d-57425-rg,start,Up 5 days (Mon-Fri) 10:00 AM to 10:00 PM IST
+bnlafdw201064,azure,beb54d1c-1125-46b2-aa73-3c28f6918c06,bnlwe-af01-d-57425-rg,start,Up 5 days (Mon-Fri) 10:00 AM to 10:00 PM IST
+bnlafdw201065,azure,beb54d1c-1125-46b2-aa73-3c28f6918c06,bnlwe-af01-d-57425-rg,start,Up 5 days (Mon-Fri) 10:00 AM to 10:00 PM IST
+bnlafdw201066,azure,beb54d1c-1125-46b2-aa73-3c28f6918c06,bnlwe-af01-d-57425-rg,start,Up 5 days (Mon-Fri) 10:00 AM to 10:00 PM IST
+bnlafdw201067,azure,beb54d1c-1125-46b2-aa73-3c28f6918c06,bnlwe-af01-d-57425-rg,start,Up 5 days (Mon-Fri) 10:00 AM to 10:00 PM IST
+bnlafdw201068,azure,beb54d1c-1125-46b2-aa73-3c28f6918c06,bnlwe-af01-d-57425-rg,start,Up 7 Days 07:00 AM to 08:00 PM UTC-3
+bnlafdw201069,azure,beb54d1c-1125-46b2-aa73-3c28f6918c06,bnlwe-af01-d-57425-rg,start,Up 7 Days 07:00 AM to 08:00 PM UTC-3
+gfrcmdw200005,gcp,ul-cm-d-903955-prj,europe-west3-a,start,UP 5 days Mon-Fri Sat-Sun 12 PM - 12 AM
+gfrcpdw100002,gcp,ul-cp-d-930421-prj,europe-west3-a,start,UP 5 Days | 8:00 AM – 8:00 PM BST | Sunday to Thursday
+gfrdmdlx00019,gcp,ul-dm-d-903338-02-prj,europe-west3-a,start,Up 5 days (Mon-Fri) 09:00 AM to 09:00 PM IST
+gfrdmdlx00020,gcp,ul-dm-d-903338-02-prj,europe-west3-a,start,Up 5 days (Mon-Fri) 09:00 AM to 09:00 PM IST
+gfrdmqlx00001,gcp,ul-dm-q-903831-prj,europe-west3-a,start,Up 5 days (Mon-Fri) 9 AM to 11 PM IST
+gfrdmqlx00002,gcp,ul-dm-q-903831-prj,europe-west3-a,start,Up 5 days (Mon-Fri) 9 AM to 11 PM IST
+gfrdmqlx00005,gcp,ul-dm-q-903831-prj,europe-west3-a,start,Up 5 days (Mon-Fri) 9 AM to 11 PM IST
+gfrdmqlx00006,gcp,ul-dm-q-903831-prj,europe-west3-a,start,Up 5 days (Mon-Fri) 9 AM to 11 PM IST
+gfrdmqlx00007,gcp,ul-dm-q-903831-prj,europe-west3-a,start,Up 5 days (Mon-Fri) 9 AM to 11 PM IST
+gfrerdw100003,gcp,ul-er-d-903337-prj,europe-west3-a,start,Up 5 days (Mon - Fri) 9 AM to 9 PM IST
+gfresdw200027,gcp,ul-es-d-904283-prj,europe-west3-a,start,Up 5 days (Mon-Fri) 10 AM to 8 PM IST
+gfresdw200028,gcp,ul-es-d-904283-prj,europe-west3-a,start,Up 5 days (Mon- Fri) 9 AM to 8 PM IST
+gfresdw200029,gcp,ul-es-d-904283-prj,europe-west3-a,start,Up 5 days (Mon-Fri) 10 AM to 8 PM IST
+gfresew200005,gcp,ul-es-e-904284-prj,europe-west3-a,start,Up 5 days Sun 10 PM to Sat 12:30 AM GMT
+gfresew200006,gcp,ul-es-e-904284-prj,europe-west3-a,start,Up 5 days Sun 10 PM to Sat 12:30 AM GMT
+gfresew200007,gcp,ul-es-e-904284-prj,europe-west3-a,start,Up 5 days Sun 10 PM to Sat 12:30 AM GMT
+gfresqw200029,gcp,ul-es-q-904281-prj,europe-west3-a,start,Up 5 days (Mon-Fri) 10 AM to 8 PM IST
+gfresqw200030,gcp,ul-es-q-904281-prj,europe-west3-a,start,Up 5 days (Mon-Fri) 10 AM to 8 PM IST
+gfresqw200031,gcp,ul-es-q-904281-prj,europe-west3-a,start,Up 5 days (Mon-Fri) 10 AM to 8 PM IST
+gfresqw200032,gcp,ul-es-q-904281-prj,europe-west3-a,start,Up 5 days (Mon- Fri) 9 AM to 8 PM IST
+gfrfrdw200003,gcp,ul-fr-d-930914-prj,europe-west3-a,start,IL QA backup 3
+gfrfrdw200006,gcp,ul-fr-d-930914-prj,europe-west3-a,start,IL QA backup 3
+gfrfrqw200009,gcp,ul-fr-q-930220-prj,europe-west3-a,start,Up 5 days (Mon-Fri) 1 PM to 6 PM Asia/Jakarta
+gfrfrqw200010,gcp,ul-fr-q-930220-prj,europe-west3-a,start,Up 5 days (Mon-Fri) 1 PM to 6 PM Asia/Jakarta
+gfrgsdw200023,gcp,ul-gs-d-931150-prj,europe-west3-a,start,UP 7 days (Mon-Sun) 7:00 AM to 6 PM GMT
+gfrgsdw200024,gcp,ul-gs-d-931150-prj,europe-west3-a,start,UP 7 days (Mon-Sun) 7:00 AM to 6 PM GMT
+gfrgsqw100001,gcp,ul-gs-q-930356-prj,europe-west3-a,start,Up 7days 9AM to 10PM Asia/Dhaka
+gfrgsqw100003,gcp,ul-gs-q-930356-prj,europe-west3-a,start,Up 7days 9AM to 10PM Asia/Dhaka
+gfrgsqw200017,gcp,ul-gs-q-902121-prj,europe-west3-a,start,Up 5 days (Mon-Fri) 11:30 AM to 10:30 PM IST
+gfrhrqw200006,gcp,ul-hr-q-903956-prj,europe-west3-a,start,Up 5 days (Mon-Fri) 10:00 AM to 9.30 PM IST
+gfrntqw200002,gcp,ul-nt-q-930656-prj,europe-west3-a,start,IL QA backup 3
+gfrntqw200003,gcp,ul-nt-q-930656-prj,europe-west3-a,start,IL QA backup 3
+gfrspslx00011,gcp,ul-sp-s-903098-prj,europe-west3-a,start,Up 5 days Mon-Thu 8:30 AM to 8:30 PM & Fri 8:30 AM to 11:30 PM IST.
+gfrspssx00003,gcp,ul-sp-s-903098-prj,europe-west3-a,start,Up 5 days Mon-Thu 8:30 AM to 8:30 PM & Fri 8:30 AM to 11:30 PM IST.
+gfrspssx00004,gcp,ul-sp-s-903098-prj,europe-west3-a,start,Up 5 days Mon-Thu 8:30 AM to 8:30 PM & Fri 8:30 AM to 11:30 PM IST.
+gfrspulx00003,gcp,ul-sp-u-902269-prj,europe-west3-a,start,Up 5 days (Mon- Fri) 10 AM to 10 PM IST
+gfrspulx00004,gcp,ul-sp-u-902269-prj,europe-west3-a,start,Up 5 days (Mon- Fri) 10 AM to 10 PM IST
+gfrspulx00005,gcp,ul-sp-u-902269-prj,europe-west3-a,start,Up 5 days (Mon- Fri) 10 AM to 10 PM IST
+gfrspuw200001,gcp,ul-sp-u-902269-prj,europe-west3-a,start,Up 5 days (Mon- Fri) 10 AM to 10 PM IST
+gnlcppw100001,gcp,ul-cp-p-930414-prj,europe-west4-a,start,Up 7 days 8 AM to 12 AM IST
+gnldmpw200018,gcp,ul-dm-p-903049-prj,europe-west4-a,start,Up 5 days (Mon-Fri) 8 AM to 6 PM MMT
+gnlespw200007,gcp,ul-es-p-903426-prj,europe-west4-a,start,Up 5 days (Mon-Fri) 24*5 IST
+gnlgfpw200010,gcp,ul-gf-p-903251-prj,europe-west4-a,start,Up 4 days (Mon-Thu) 6 AM to 3 PM IST
+gnlgfpw200025,gcp,ul-gf-p-903836-prj,europe-west4-a,start,Up 5 days (Mon-Fri) 10 AM to 10 PM IST
+gnlgfpw200026,gcp,ul-gf-p-903836-prj,europe-west4-a,start,Up 5 days (Mon-Fri) 10 AM to 10 PM IST
+gnlgfpw200027,gcp,ul-gf-p-903836-prj,europe-west4-a,start,Up 5 days (Mon-Fri) 10 AM to 10 PM IST
+gnlgspw100007,gcp,ul-gs-p-930355-prj,europe-west4-a,start,UP 7 days (Mon-Sun) 6:30 AM to 12:30 AM IST
+gnlgspw100009,gcp,ul-gs-p-930355-prj,europe-west4-a,start,Up 7 days (Mon-Sun) 8 AM to 2 AM IST
+gnlgspw200095,gcp,ul-gs-p-902016-01-prj,europe-west4-a,start,UP 5 days(Mon-Fri) 6 AM to 8 PM GMT-3
+gsgccqlx00001,gcp,ul-cd-q-930672-prj,asia-southeast1-a,start,Up 7 days 6 AM to 11:59 PM IST
+gsgccqlx00002,gcp,ul-cd-q-930672-prj,asia-southeast1-a,start,Up 7 days 6 AM to 11:59 PM IST
+gsgcdqw100001,gcp,ul-cd-q-930672-prj,asia-southeast1-a,start,5 Days UP (Mon to Fri) 8 AM to 8 PM IST
+gfrspdlx00026,gcp,ul-sp-d-901376-prj,europe-west3-a,start,Up 5 days (Mon-Fri) 10 AM to 9 PM IST
+gfrspdlx00027,gcp,ul-sp-d-901376-prj,europe-west3-a,start,Up 5 days (Mon-Fri) 10 AM to 9 PM IST
+gnlespw200055,gcp,ul-es-p-931980-prj,europe-west4-a,start,Up 5 days (Mon - Fri) 24*5 IST
+gfrceqw100001,gcp,ul-ce-q-930429-prj,europe-west3-a,start,Up 5 days (Sun - Thu) 6 AM to 11:59 PM IST
+gfrceqw100002,gcp,ul-ce-q-930429-prj,europe-west3-a,start,Up 5 days (Sun - Thu) 6 AM to 11:59 PM IST
+gfrerqw200002,gcp,ul-er-q-930362-prj,europe-west3-a,start,9am-11pm GMT+6
+gfresdw200021,gcp,ul-es-d-930619-prj,europe-west3-a,start,Monday 8 AM IST to Saturday 8 AM IST
+gfresqlx00005,gcp,ul-es-q-903991-prj,europe-west3-a,start,Up 5 days Mon 7 AM to 11:30 PM & (Tue-Thur 8 AM to 11:30 PM) & Fri 8 AM to 9:30 PM IST
+gfresqw200034,gcp,ul-es-q-931925-prj,europe-west3-a,start,Up 5 days (Mon - Fri) 24*5 IST
+gfresqw200035,gcp,ul-es-q-931925-prj,europe-west3-a,start,Up 5 days (Mon - Fri) 24*5 IST
+gfrgfdlx00006,gcp,ul-gf-d-57680-prj,europe-west3-a,start,24X7 Always Up
+gfrgfdlx00008,gcp,ul-gf-d-57680-prj,europe-west3-a,start,24X7 Always Up
+gfrgfdw200019,gcp,ul-gf-d-57680-prj,europe-west3-a,start,24X7 Always Up
+gfrgfdw200021,gcp,ul-gf-d-57680-prj,europe-west3-a,start,24X7 Always Up
+gfrgfqlx00011,gcp,ul-gf-q-57739-prj,europe-west3-a,start,24*7 Always Up
+gfrgfqlx00013,gcp,ul-gf-q-57739-prj,europe-west3-a,start,24*7 Always Up
+gfrgfqw200034,gcp,ul-gf-q-57739-prj,europe-west3-a,start,24*7 Always Up
+gfrgfqw200036,gcp,ul-gf-q-57739-prj,europe-west3-a,start,24*7 Always Up
+gfrgfqw200020,gcp,ul-gf-q-903854-prj,europe-west3-a,start,Up 5 days (Mon-Fri) 9 AM to 6 PM Portugal
+gfrgfqw200022,gcp,ul-gf-q-903854-prj,europe-west3-a,start,Up 5 days (Mon-Fri) 9 AM to 6 PM Portugal
+gfrgfqw200021,gcp,ul-gf-q-902494-prj,europe-west3-a,start,Up 5 days Mon 12:15 AM to Sat 12:15 AM CET
+gfrgfulx00003,gcp,ul-gf-u-932091-prj,europe-west3-a,start,24X7 Always Up
+gfrgfulx00006,gcp,ul-gf-u-932091-prj,europe-west3-a,start,24X7 Always Up
+gfrgfuw200004,gcp,ul-gf-u-932091-prj,europe-west3-a,start,24X7 Always Up
+gfrgfuw200005,gcp,ul-gf-u-932091-prj,europe-west3-a,start,24X7 Always Up
+gfrgfuw200006,gcp,ul-gf-u-932091-prj,europe-west3-a,start,24X7 Always Up
+gfrgsqlx00007,gcp,ul-gs-q-902044-prj,europe-west3-a,start,Up 5 days (Mon-Fri) 7 AM to 5 PM EST
+gfrgsqlx00008,gcp,ul-gs-q-903180-prj,europe-west3-a,start,Up 5 days (Mon-Fri) 10 AM to 7 PM IST
+gfrgsqw200022,gcp,ul-gs-q-903180-prj,europe-west3-a,start,Up 1 day (Wed) 10 AM to 11:59 PM IST
+gfrgsqw200019,gcp,ul-gs-q-901538-prj,europe-west3-a,start,Up 5 days (Mon-Fri) 11:30 AM to 10:30 PM IST
+gfrgsqw200062,gcp,ul-gs-q-930869-prj,europe-west3-a,start,Up 5 days (Mon-Fri) 8 AM to 6 PM JKT
+gfrgsqw200064,gcp,ul-gs-q-930869-prj,europe-west3-a,start,Up 5 days (Mon-Fri) 8 AM to 6 PM JKT
+gfrhrdlx00001,gcp,ul-hr-d-902763-prj,europe-west3-a,start,Dev Sche
+gfrhrdlx00002,gcp,ul-hr-d-902763-prj,europe-west3-b,start,Up 7 days (Mon- Fri) 9 AM to 3 AM & Sat (12 AM-3 AM) & Sun (11 AM-11:59 PM)IST
+gfrhrqw200002,gcp,ul-hr-q-903616-prj,europe-west3-a,start,Testing Schedule
+gfrhrqw200003,gcp,ul-hr-q-903616-prj,europe-west3-a,start,Up 7 days 2 PM to 9 PM IST
+gfrhrqw200014,gcp,ul-hr-q-930888-prj,europe-west3-a,start,Up 5 days (Mon-Fri) 10:30 AM to 10:45 PM IST
+gfrhrqw200015,gcp,ul-hr-q-930888-prj,europe-west3-a,start,Up 5 days (Mon-Fri) 10:30 AM to 10:45 PM IST
+gfrhrslx00012,gcp,ul-hr-s-931203-prj,europe-west3-a,start,Up 5 days (Mon-Fri) 9 AM to 3 AM IST and Down (Sat - Sun) 3 AM to 11:00 AM IST
+gfrhrslx00013,gcp,ul-hr-s-931203-prj,europe-west3-a,start,Up 5 days (Mon-Fri) 9 AM to 3 AM IST and Down (Sat - Sun) 3 AM to 11:00 AM IST
+gfrmbqw200002,gcp,ul-mb-q-902171-prj,europe-west3-a,start,Up 5 days (Mon-Fri) 10 AM to 6 PM IST
+gfrmbqw200004,gcp,ul-mb-q-902171-prj,europe-west3-a,start,Up 5 days (Mon-Fri) 10 AM to 6 PM IST
+gfrmbqw200007,gcp,ul-mb-q-902171-prj,europe-west3-a,start,Up 5 days (Mon-Fri) 10 AM to 6 PM IST
+gfrntqlx00001,gcp,ul-nt-q-902132-prj,europe-west3-a,start,Up 5 days (Mon-Fri) 8 AM to 6 PM CET
+gfrsmpw200003,gcp,ul-sm-p-901693-prj,europe-west3-a,start,Up 7 days 8 AM to 11 PM IST
+gfrsmpw200004,gcp,ul-sm-p-903062-prj,europe-west3-a,start,Up 7 days 8 AM to 11 PM IST
+gfrsmpw200030,gcp,ul-sm-p-903244-prj,europe-west3-a,start,Up 5 days (Mon- Fri) 9 AM to 9 PM IST
+gfrsmpw200032,gcp,ul-sm-p-903244-prj,europe-west3-a,start,Up 5 days (Mon-Fri) 9 AM to 9 PM IST
+gfrsmpw200054,gcp,ul-sm-p-903244-prj,europe-west3-a,start,Up 5 days (Mon- Fri) 9 AM to 9 PM IST
+gfrsmpw200055,gcp,ul-sm-p-903244-prj,europe-west3-a,start,Up 5 days (Mon- Fri) 9 AM to 9 PM IST
+gfrsmpw200056,gcp,ul-sm-p-903244-prj,europe-west3-a,start,Up 5 days (Mon- Fri) 9 AM to 9 PM IST
+gfrsmpw200057,gcp,ul-sm-p-903244-prj,europe-west3-a,start,Up 5 days (Mon- Fri) 9 AM to 9 PM IST
+gfrsmpw200063,gcp,ul-sm-p-903244-prj,europe-west3-a,start,Up 5 days (Mon - Fri) 10 AM to 11:30 PM IST
+gfrsmpw200074,gcp,ul-sm-p-901693-prj,europe-west3-a,start,24*7 Always Up
+gfrsmpw200084,gcp,ul-sm-p-901693-prj,europe-west3-a,start,24*7 Always Up
+gfrsmpw200085,gcp,ul-sm-p-901693-prj,europe-west3-a,start,24*7 Always Up
+gfrsmpw200086,gcp,ul-sm-p-901693-prj,europe-west3-a,start,24*7 Always Up
+gfrsmpw200087,gcp,ul-sm-p-901693-prj,europe-west3-a,start,24*7 Always Up
+gfrsmpw200088,gcp,ul-sm-p-901693-prj,europe-west3-a,start,24*7 Always Up
+gfrsmpw200089,gcp,ul-sm-p-901693-prj,europe-west3-a,start,24*7 Always Up
+gfrsmpw200090,gcp,ul-sm-p-901693-prj,europe-west3-a,start,24*7 Always Up
+gfrsmpw200091,gcp,ul-sm-p-901693-prj,europe-west3-a,start,24*7 Always Up
+gfrsmpw200092,gcp,ul-sm-p-901693-prj,europe-west3-a,start,24*7 Always Up
+gfrsmpw200093,gcp,ul-sm-p-901693-prj,europe-west3-a,start,24*7 Always Up
+gfrsmpw200095,gcp,ul-sm-p-901693-prj,europe-west3-a,start,24*7 Always Up
+gfrsmpw200096,gcp,ul-sm-p-901693-prj,europe-west3-a,start,24*7 Always Up
+gfrsmpw200097,gcp,ul-sm-p-901693-prj,europe-west3-a,start,24*7 Always Up
+gfrsmpw200098,gcp,ul-sm-p-901693-prj,europe-west3-a,start,24*7 Always Up
+gfrsmpw200099,gcp,ul-sm-p-901693-prj,europe-west3-a,start,24*7 Always Up
+gfrsmpw200100,gcp,ul-sm-p-901693-prj,europe-west3-a,start,24*7 Always Up
+gfrsmpw200101,gcp,ul-sm-p-901693-prj,europe-west3-a,start,24*7 Always Up
+gfrsmpw200102,gcp,ul-sm-p-901693-prj,europe-west3-a,start,24*7 Always Up
+gfrsmpw200103,gcp,ul-sm-p-901693-prj,europe-west3-a,start,24*7 Always Up
+gfrsmpw200104,gcp,ul-sm-p-901693-prj,europe-west3-a,start,24*7 Always Up
+gfrsmpw200105,gcp,ul-sm-p-901693-prj,europe-west3-a,start,24*7 Always Up
+gfrsmpw200106,gcp,ul-sm-p-901693-prj,europe-west3-a,start,24*7 Always Up
+gfrsmpw200107,gcp,ul-sm-p-901693-prj,europe-west3-a,start,24*7 Always Up
+gfrsmpw200108,gcp,ul-sm-p-901693-prj,europe-west3-a,start,24*7 Always Up
+gfrsmpw200109,gcp,ul-sm-p-901693-prj,europe-west3-a,start,24*7 Always Up
+gfrsmpw200110,gcp,ul-sm-p-901693-prj,europe-west3-a,start,24*7 Always Up
+gfrsmpw200111,gcp,ul-sm-p-901693-prj,europe-west3-a,start,24*7 Always Up
+gfrsmpw200112,gcp,ul-sm-p-901693-prj,europe-west3-a,start,24*7 Always Up
+gfrsmpw200113,gcp,ul-sm-p-901693-prj,europe-west3-a,start,24*7 Always Up
+gfrsmpw200114,gcp,ul-sm-p-901693-prj,europe-west3-a,start,24*7 Always Up
+gfrsmpw200115,gcp,ul-sm-p-901693-prj,europe-west3-a,start,24*7 Always Up
+gfrsmpw200116,gcp,ul-sm-p-901693-prj,europe-west3-a,start,24*7 Always Up
+gfrsmpw200117,gcp,ul-sm-p-901693-prj,europe-west3-a,start,24*7 Always Up
+gfrsmpw200118,gcp,ul-sm-p-901693-prj,europe-west3-a,start,24*7 Always Up
+gfrsmpw200119,gcp,ul-sm-p-901693-prj,europe-west3-a,start,24*7 Always Up
+gfrsmpw200120,gcp,ul-sm-p-901693-prj,europe-west3-a,start,24*7 Always Up
+gfrsmpw200121,gcp,ul-sm-p-901693-prj,europe-west3-a,start,24*7 Always Up
+gfrsmpw200122,gcp,ul-sm-p-901693-prj,europe-west3-a,start,24*7 Always Up
+gfrsmpw200123,gcp,ul-sm-p-901693-prj,europe-west3-a,start,24*7 Always Up
+gfrsmpw200124,gcp,ul-sm-p-901693-prj,europe-west3-a,start,24*7 Always Up
+gfrsmpw200125,gcp,ul-sm-p-901693-prj,europe-west3-a,start,24*7 Always Up
+gfrsmpw200126,gcp,ul-sm-p-901693-prj,europe-west3-a,start,24*7 Always Up
+gfrsmpw200127,gcp,ul-sm-p-901693-prj,europe-west3-a,start,24*7 Always Up
+gfrsmpw200128,gcp,ul-sm-p-901693-prj,europe-west3-a,start,24*7 Always Up
+gfrsmpw200129,gcp,ul-sm-p-901693-prj,europe-west3-a,start,24*7 Always Up
+gfrsmpw200130,gcp,ul-sm-p-901693-prj,europe-west3-a,start,24*7 Always Up
+gfrsmpw200131,gcp,ul-sm-p-901693-prj,europe-west3-a,start,24*7 Always Up
+gfrsmpw200132,gcp,ul-sm-p-901693-prj,europe-west3-a,start,24*7 Always Up
+gfrsmpw200133,gcp,ul-sm-p-901693-prj,europe-west3-a,start,24*7 Always Up
+gfrsmpw200134,gcp,ul-sm-p-901693-prj,europe-west3-a,start,24*7 Always Up
+gfrsmpw200135,gcp,ul-sm-p-901693-prj,europe-west3-a,start,24*7 Always Up
+gfrsmpw200136,gcp,ul-sm-p-901693-prj,europe-west3-a,start,24*7 Always Up
+gfrsmpw200137,gcp,ul-sm-p-901693-prj,europe-west3-a,start,24*7 Always Up
+gfrsmpw200138,gcp,ul-sm-p-901693-prj,europe-west3-a,start,24*7 Always Up
+gfrsmpw200139,gcp,ul-sm-p-901693-prj,europe-west3-a,start,24*7 Always Up
+gfrsmpw200140,gcp,ul-sm-p-901693-prj,europe-west3-a,start,24*7 Always Up
+gfrsmpw200141,gcp,ul-sm-p-901693-prj,europe-west3-a,start,24*7 Always Up
+gfrsmpw200143,gcp,ul-sm-p-901693-prj,europe-west3-a,start,24*7 Always Up
+gfrsmpw200144,gcp,ul-sm-p-901693-prj,europe-west3-a,start,Up 7 days 8 AM to 11 PM IST
+gfrsmpw200145,gcp,ul-sm-p-901693-prj,europe-west3-a,start,24*7 Always Up
+gfrspdlx00017,gcp,ul-sp-d-904325-prj,europe-west3-b,start,Up 5 days (Mon-Fri) 8:30 AM to 9:30 PM IST
+gfrspdlx00019,gcp,ul-sp-d-904325-prj,europe-west3-b,start,Up 5 days (Mon-Fri) 8:30 AM to 9:30 PM IST
+gfrstqlx00004,gcp,ul-st-q-930416-prj,europe-west3-a,start,Up 6 days (Mon-Sat) 24*6 IST
+gnldmpw200015,gcp,ul-dm-p-902779-prj,europe-west4-a,start,Up 5 days (Mon-Fri) 9 AM to 6 PM CET
+gnlerpw200001,gcp,ul-er-p-903236-prj,europe-west4-a,start,Up 5 days (Mon-Fri) 24*5 GMT
+gnlerpw200005,gcp,ul-er-p-930361-prj,europe-west4-a,start,Up 7 days (Mon-Sun) 5:30 AM to 11:30 PM IST
+gnlerpw200006,gcp,ul-er-p-930361-prj,europe-west4-a,start,Up 7 days (Mon-Sun) 5:30 AM to 11:30 PM IST
+gnlesplx00001,gcp,ul-es-p-903990-prj,europe-west4-a,start,Up 5 days Mon 7 AM to 11:30 PM & (Tue-Thur 8 AM to 11:30 PM) & Fri 8 AM to 9:30 PM IST
+gnlespw200028,gcp,ul-es-p-903709-prj,europe-west4-a,start,Up 5 days (Mon- Fri) 6 AM to 10 PM GMT
+gnlgfpw200028,gcp,ul-gf-p-904167-prj,europe-west4-a,start,Up 5 days (Mon-Fri) 9:30 AM to 5:30 PM IST
+gnlgfpw200040,gcp,ul-gf-p-930359-prj,europe-west4-a,start,Up 5 days (Mon-Fri) 9:30 AM to 6:30 PM PST
+gnlgfpw200041,gcp,ul-gf-p-930359-prj,europe-west4-a,start,Up 5 days (Mon-Fri) 9:30 AM to 6:30 PM PST
+gnlgspd200001,gcp,ul-gs-p-902037-prj,europe-west4-a,start,Up 5 days (Mon-Fri) 10AM to 7PM IST
+gnlgspw200046,gcp,ul-gs-p-903492-prj,europe-west4-a,start,Up 5 Days (Mon to Fri) 7AM to 6PM EET
+gnlgspw200047,gcp,ul-gs-p-903490-prj,europe-west4-a,start,Up 5 Days (Mon to Fri) 7AM to 6PM EET
+gnlgspw200048,gcp,ul-gs-p-903494-prj,europe-west4-a,start,Up 5 Days (Mon to Fri) 7AM to 6PM EET
+gnlgspw200098,gcp,ul-gs-p-930409-prj,europe-west4-a,start,UP 6 days (Mon-Sat) 8 AM to 9 PM PKT
+gnlhrpw200002,gcp,ul-hr-p-902007-prj,europe-west4-a,start,UP 5 days(Mon-Fri) 8 AM to 6 PM GMT+3
+gnlhrpw200016,gcp,ul-hr-p-903901-prj,europe-west4-a,start,UP 7 Days (Mon-Sun) 6 AM to 11 PM IST
+gnlhrpw200039,gcp,ul-hr-p-930004-prj,europe-west4-a,start,UP 5 days(Mon-Fri) 6 AM to 8 PM GMT-3
+gnlhrpw200041,gcp,ul-hr-p-930004-prj,europe-west4-a,start,UP 5 days(Mon-Fri) 6 AM to 8 PM GMT-3
+gnlgsplx00020,gcp,ul-gs-p-931665-prj,europe-west4-a,start,Up 7 days 7 AM to 11:59 PM Egypt(UTC+2)
+biedadw200013,azure,c9462478-f3d6-4345-acd0-feb25ebe28ca,bieno-da12-d-901437-is01-rg,start,24X7 Always Up
+biedadw200014,azure,c9462478-f3d6-4345-acd0-feb25ebe28ca,bieno-da12-d-901437-is01-rg,start,24X7 Always Up
+biedadw200026,azure,c9462478-f3d6-4345-acd0-feb25ebe28ca,bieno-da12-d-901437-is01-rg,start,24X7 Always Up
+biegsqw200001,azure,79b8c9b8-5845-459d-ab58-d6c7d370d9cd,bieno-gs02-q-902602-is01-rg,start,Up 5 days (Mon-Fri) 3:30 PM to 4:30 AM IST
+bienwuw200001,azure,6011039e-0460-4f62-8e6f-0b5e86728a38,bieno-nw02-u-931568-is01-rg,start,Up 5 days (Mon-Fri) 10 AM to 10 PM IST
+bnlafql200005,azure,beb54d1c-1125-46b2-aa73-3c28f6918c06,bnlwe-af01-q-901740-is01-rg,start,Up 5 days (Mon-Fri) 10:00 AM to 9.30 PM IST
+bnlafql200011,azure,beb54d1c-1125-46b2-aa73-3c28f6918c06,bnlwe-af01-q-930780-is01-rg,start,Up 5 days (Mon- Fri) 9 AM to 9 PM IST
+bnldadw200058,azure,105fbd8d-388f-4b19-9fda-d56f44121122,bnlwe-da04-d-904265-is01-rg,start,Up 5 days (Mon-Fri) 10 AM to 6 PM IST
+bnldadw200059,azure,105fbd8d-388f-4b19-9fda-d56f44121122,bnlwe-da04-d-904265-is01-rg,start,Up 5 days (Mon-Fri) 10 AM to 6 PM IST
+bnldadw200060,azure,105fbd8d-388f-4b19-9fda-d56f44121122,bnlwe-da04-d-904265-is01-rg,start,Up 5 days (Mon-Fri) 10 AM to 6 PM IST
+bnldapw200131,azure,e2b0e829-5210-40ae-b73f-20805aa01351,bnlwe-da01-p-904264-is01-rg,start,UP 7 days 5 AM to 12 AM IST
+bnldapw200132,azure,e2b0e829-5210-40ae-b73f-20805aa01351,bnlwe-da01-p-904264-is01-rg,start,UP 7 days 5 AM to 12 AM IST
+bnldapw200133,azure,e2b0e829-5210-40ae-b73f-20805aa01351,bnlwe-da01-p-904264-is01-rg,start,UP 7 days 5 AM to 12 AM IST
+bnldeqw200001,azure,8627b3ac-0c14-458e-a003-d1ba997b2ce9,bnlwe-de01-q-901977-is01-rg,start,Up 5 days (Mon-Fri) 9 AM to 6 PM UTC
+bnldeqw200002,azure,8627b3ac-0c14-458e-a003-d1ba997b2ce9,bnlwe-de01-q-901977-is01-rg,start,Up 5 days (Mon- Fri) 9 AM to 6 PM GMT
+bnldeqw200003,azure,8627b3ac-0c14-458e-a003-d1ba997b2ce9,bnlwe-de01-q-901977-is01-rg,start,Up 5 days (Mon- Fri) 9 AM to 6 PM GMT
+bnldeqw200004,azure,8627b3ac-0c14-458e-a003-d1ba997b2ce9,bnlwe-de01-q-901977-is01-rg,start,Up 5 days (Mon-Fri) 9 AM to 6 PM UTC
+bnlerdw200001,azure,a5365f29-0ca0-4ab8-a9f8-b94056880ca3,bnlwe-gs01-d-902414-is01-rg,start,Up 6 days Mon 6 AM to Sat 8 PM IST
+bnlerdw200002,azure,a5365f29-0ca0-4ab8-a9f8-b94056880ca3,bnlwe-gs01-d-902414-is01-rg,start,Up 6 days Mon 6 AM to Sat 8 PM IST
+bnlerdw200003,azure,a5365f29-0ca0-4ab8-a9f8-b94056880ca3,bnlwe-gs01-d-902416-is01-rg,start,Up 6 days Mon 6 AM to Sat 8 PM IST
+bnlesdl200008,azure,01491751-2545-4f64-afa7-54ffc907183d,bnlwe-es01-d-903208-is01-rg,start,Up 5 days (Mon- Fri) 2 PM to 10 PM IST
+bnlesdl200010,azure,01491751-2545-4f64-afa7-54ffc907183d,bnlwe-es01-d-903208-is01-rg,start,Up 5 days (Mon- Fri) 2 PM to 10 PM IST
+bnlesdw200001,azure,01491751-2545-4f64-afa7-54ffc907183d,bnlwe-es01-d-901973-is01-rg,start,Up 5 days (Mon - Fri) 06:00 AM – 18:00 PM GMT
+bnlesdw200018,azure,01491751-2545-4f64-afa7-54ffc907183d,bnlwe-es01-d-55806-is01-rg,start,Up 5 days (Mon-Fri) 2 PM to 11 PM IST
+bnlesdw200021,azure,01491751-2545-4f64-afa7-54ffc907183d,bnlwe-es01-d-55806-is01-rg,start,Up 5 days (Mon-Fri) 10 AM to 11 PM IST
+bnlesqw200044,azure,01491751-2545-4f64-afa7-54ffc907183d,bnlwe-es01-d-54744-is01-rg,start,Up 5 days (Mon-Fri) 6 AM to 6 PM Europe/London
+bnlesqw200045,azure,01491751-2545-4f64-afa7-54ffc907183d,bnlwe-es01-d-54744-is01-rg,start,Up 5 days (Mon-Fri) 6 AM to 6 PM Europe/London
+bnlespw200019,azure,01491751-2545-4f64-afa7-54ffc907183d,bnlwe-es01-p-903296-is01-rg,start,Up 5 days (Mon- Fri) 6 AM to 10 PM GMT
+bnlespw200020,azure,01491751-2545-4f64-afa7-54ffc907183d,bnlwe-es01-p-903296-is01-rg,start,Up 5 days (Mon- Fri) 6 AM to 10 PM GMT
+bnlesql200012,azure,01491751-2545-4f64-afa7-54ffc907183d,bnlwe-es01-q-55464-is01-rg,start,Up 5 days (Mon-Fri) 10 AM to 10 PM IST
+bnlesqw200028,azure,01491751-2545-4f64-afa7-54ffc907183d,bnlwe-es01-q-55464-is01-rg,start,Up 5 days (Mon-Fri) 10:30 AM to 10:30 PM IST
+bnlesqw200038,azure,01491751-2545-4f64-afa7-54ffc907183d,bnlwe-es01-q-55464-is01-rg,start,Up 5 days (Mon-Fri) 10:30 AM to 10:30 PM IST
+bnlesqw200001,azure,01491751-2545-4f64-afa7-54ffc907183d,bnlwe-es01-q-901974-is01-rg,start,Up 7 days(Mon-Sun) 11:45 PM to 12:30 AM GMT & Up 5 days(Mon-Fri) 06:00 AM to 06:00 PM GMT
+bnlesqw200046,azure,01491751-2545-4f64-afa7-54ffc907183d,bnlwe-es01-q-903307-is01-rg,start,Up 5 days (Mon-Fri) 7.30 AM to 11.30 PM IST
+bnlfrqlx00001,azure,f0495c41-db5e-43a4-8465-35ae4997db87,bnlwe-fr01-q-903506-is01-rg,start,Up 5 days (Mon-Fri) 6 AM to 6 PM Europe/London
+bnlfrqw200001,azure,f0495c41-db5e-43a4-8465-35ae4997db87,bnlwe-fr01-q-903506-is01-rg,start,Up 5 days (Mon - Fri)  08:00 AM – 18:00 PM GMT
+bnlfrqlx00004,azure,f0495c41-db5e-43a4-8465-35ae4997db87,bnlwe-fr01-q-931413-is01-rg,start,Up 5 days (Mon-Fri) 6 AM to 6 PM Europe/London
+bnlfrqw200032,azure,f0495c41-db5e-43a4-8465-35ae4997db87,bnlwe-fr01-q-931413-is01-rg,start,Up 5 days (Mon - Fri) 1:30 PM to 3:30 AM IST
+bnlfrqw200019,azure,8ecceefd-d865-4e44-8445-6c414aee5367,bnlwe-fr03-q-931119-is01-rg,start,UP 5 days(Mon-Fri) 6 AM to 8 PM GMT-3
+bnlfrqw200022,azure,8ecceefd-d865-4e44-8445-6c414aee5367,bnlwe-fr03-q-931119-is01-rg,start,UP 5 days(Mon-Fri) 6 AM to 8 PM GMT-3
+bnlfrqw200029,azure,8ecceefd-d865-4e44-8445-6c414aee5367,bnlwe-fr03-q-931123-is01-rg,start,UP 5 days(Mon-Fri) 6 AM to 8 PM GMT-3
+bnlfrqw200030,azure,8ecceefd-d865-4e44-8445-6c414aee5367,bnlwe-fr03-q-931123-is01-rg,start,UP 5 days(Mon-Fri) 6 AM to 8 PM GMT-3
+bnlgfdw200004,azure,6f656825-9133-4900-9f21-bd578eab6e9e,bnlwe-gf01-d-903095-IS01-rg,start,Up 5 days (Mon-Fri) 8AM to 6PM BRT
+bnlgfdw200007,azure,6f656825-9133-4900-9f21-bd578eab6e9e,bnlwe-gf01-d-904332-is01-rg,start,Up 5 days (Mon-Fri) 9 AM to 8 PM IST
+bnlgfdw200008,azure,6f656825-9133-4900-9f21-bd578eab6e9e,bnlwe-gf01-d-904332-is01-rg,start,Up 5 days (Mon-Fri) 9 AM to 8 PM IST
+bnlgfpw200027,azure,6f656825-9133-4900-9f21-bd578eab6e9e,bnlwe-gf01-p-903508-is01-rg,start,Up 5 days (Mon-Fri) 24*5 IST
+bnlgfpw200028,azure,6f656825-9133-4900-9f21-bd578eab6e9e,bnlwe-gf01-p-903508-is01-rg,start,Up 5 days (Mon-Fri) 24*5 IST
+bnlgfpw200033,azure,6f656825-9133-4900-9f21-bd578eab6e9e,bnlwe-gf01-p-904333-is01-rg,start,Up 7 days 8 AM to 11:45 PM IST
+bnlgsdl200002,azure,a5365f29-0ca0-4ab8-a9f8-b94056880ca3,bnlwe-gs01-d-902474-is01-rg,start,Up 5 days (Mon-Fri) 8 AM to 8 PM IST
+bnlgsdl200003,azure,a5365f29-0ca0-4ab8-a9f8-b94056880ca3,bnlwe-gs01-d-902474-is01-rg,start,Up 5 days (Mon-Fri) 8 AM to 8 PM IST
+bnlgsdlx00011,azure,a5365f29-0ca0-4ab8-a9f8-b94056880ca3,bnlwe-gs01-d-931221-is01-rg,start,Up 5 Days (Mon–Fri) 5:30 PM to 2:30 AM IST
+bnlgspw200004,azure,a5365f29-0ca0-4ab8-a9f8-b94056880ca3,bnlwe-gs01-p-902232-is01-rg,start,UP 5 days (Mon -Fri) 5 AM to 5 PM GMT+3
+bnlgspw200045,azure,a5365f29-0ca0-4ab8-a9f8-b94056880ca3,bnlwe-GS01-p-931077-IS01-rg,start,Up 6 days (Mon to Sat) 6 AM to 11:00 PM UTC +8
+bnlgspw200046,azure,a5365f29-0ca0-4ab8-a9f8-b94056880ca3,bnlwe-GS01-p-931077-IS01-rg,start,Up 6 days (Mon to Sat) 6 AM to 11:00 PM UTC +8
+bnlmsdw200009,azure,3d042583-7bf5-4515-90ef-0ef7b61f4f17,bnlwe-ms02-d-930039-is01-rg,start,24X7 Always Up
+bnlmsdw200010,azure,3d042583-7bf5-4515-90ef-0ef7b61f4f17,bnlwe-ms02-d-930039-is01-rg,start,24X7 Always Up
+bnlmsdw200019,azure,3d042583-7bf5-4515-90ef-0ef7b61f4f17,bnlwe-ms02-d-930039-is01-rg,start,24X7 Always Up
+bnlmsqw200012,azure,3d042583-7bf5-4515-90ef-0ef7b61f4f17,bnlwe-ms02-q-930038-is01-rg,start,Up 5 days (Mon-Fri) 24*5 IST
+bnlmsqw200013,azure,3d042583-7bf5-4515-90ef-0ef7b61f4f17,bnlwe-ms02-q-930038-is01-rg,start,Up 5 days (Mon-Fri) 24X5 IST
+bnlmsqw200015,azure,3d042583-7bf5-4515-90ef-0ef7b61f4f17,bnlwe-ms02-q-930038-is01-rg,start,Up 5 days (Mon-Fri) 24X5 IST
+bnlmsqw200016,azure,3d042583-7bf5-4515-90ef-0ef7b61f4f17,bnlwe-ms02-q-930038-is01-rg,start,Up 5 days (Mon-Fri) 24*5 IST
+bnlmsqw200018,azure,3d042583-7bf5-4515-90ef-0ef7b61f4f17,bnlwe-ms02-q-930038-is01-rg,start,Up 5 days (Mon-Fri) 24X5 IST
+bnlmsqw200020,azure,3d042583-7bf5-4515-90ef-0ef7b61f4f17,bnlwe-ms02-q-930038-is01-rg,start,Up 5 days (Mon-Fri) 24*5 IST
+bnlnapw200005,azure,bf7a4d2d-018d-4914-bbb2-1719c8c2bf81,bnlwe-na01-p-930583-is01-rg,start,Up 5 days (Mon-Fri) 8 AM to 6 PM EST
+bnlnwuw200001,azure,094059fd-06a9-4f64-853b-f5f8d3de1c9a,bnlwe-nw01-u-931568-is01-rg,start,Up 5 days (Mon- Fri) 10 AM to 10 PM IST
+bnlnwuw200002,azure,094059fd-06a9-4f64-853b-f5f8d3de1c9a,bnlwe-nw01-u-931568-is01-rg,start,Up 5 days (Mon- Fri) 10 AM to 10 PM IST
+bnlstpw200003,azure,67304802-1ddc-402f-9f64-9bd1371c3a56,bnlwe-st01-p-903989-is01-rg,start,UP 7 days (Mon-Sun) Except Sat & Sun 6 AM to 11 PM Down BST
+bnlweesqap20044,azure,01491751-2545-4f64-afa7-54ffc907183d,bnlwe-es01-q-901421-is01-rg,start,Up 5 days (Mon-Fri) 2 PM to 11 PM IST
+bnlwegfqap20002,azure,6f656825-9133-4900-9f21-bd578eab6e9e,bnlwe-gf01-n-57739-IS01-rg,start,24*7 Always Up
+bnlwegfqdb20001,azure,6f656825-9133-4900-9f21-bd578eab6e9e,bnlwe-gf01-n-57739-IS01-rg,start,24*7 Always Up
+bnlwegspap20001,azure,a5365f29-0ca0-4ab8-a9f8-b94056880ca3,bnlwe-gs01-p-57648-rg,start,Up 5 days (Mon-Fri) 24*5 IST
+bnlwegspdb20001,azure,a5365f29-0ca0-4ab8-a9f8-b94056880ca3,bnlwe-gs01-p-57648-rg,start,Up 5 days (Mon-Fri) 24*5 IST
+bnlwegspap20550,azure,a5365f29-0ca0-4ab8-a9f8-b94056880ca3,bnlwe-gs01-p-901647-is01-rg,start,Up 5 days (Mon-Fri) 09:00 AM to 09:00 PM IST
+bnlwegsqap20506,azure,a5365f29-0ca0-4ab8-a9f8-b94056880ca3,bnlwe-gs01-q-901209-is01-rg,start,Up 5 days Mon 6 AM to Fri 10 PM GMT
+bnlwesmpap20002,azure,172910dd-3fe8-488a-a25e-87dabbf1613b,bnlwe-SM01-p-901629-IS01-rg,start,Up 5 days (Mon-Fri) 10 AM to 10 PM IST
+bnlwesmplil0017,azure,172910dd-3fe8-488a-a25e-87dabbf1613b,bnlwe-sm01-p-901580-is01-rg,start,Up 5 days (Mon-Fri) 8 AM to 8 PM IST
+bsgdmdl200001,azure,4d1774d8-071b-4d5a-888b-ba12da1d9e5c,bsg-dm01-d-930939-is01-rg,start,Up 5 days (Mon-Fri) 6 AM to 11:59 PM IST
+bsgdmdl200002,azure,4d1774d8-071b-4d5a-888b-ba12da1d9e5c,bsg-dm01-d-930939-is01-rg,start,Up 7 days 6 AM to 11:59 PM IST
+bsgdmdl200010,azure,4d1774d8-071b-4d5a-888b-ba12da1d9e5c,bsg-dm01-d-930939-is01-rg,start,Up 5 days (Mon-Fri) 6 AM to 11:59 PM IST
+bsgdmdw200011,azure,4d1774d8-071b-4d5a-888b-ba12da1d9e5c,bsg-dm01-d-930939-is01-rg,start,Up 5 days (Mon- Fri) 8 AM to 8 PM IST
+bsgdmql200002,azure,4d1774d8-071b-4d5a-888b-ba12da1d9e5c,bsg-dm01-q-930672-is01-rg,start,Up 5 days (Mon-Fri) 6 AM to 11:59 PM IST
+bsgdmql200007,azure,4d1774d8-071b-4d5a-888b-ba12da1d9e5c,bsg-dm01-q-930672-is01-rg,start,Up 7 days 6 AM to 11:59 PM IST
+bsgdmql200011,azure,4d1774d8-071b-4d5a-888b-ba12da1d9e5c,bsg-dm01-q-930672-is01-rg,start,Up 7 days 6 AM to 11:59 PM IST
+bsgdmqw200005,azure,4d1774d8-071b-4d5a-888b-ba12da1d9e5c,bsg-dm01-q-930672-is01-rg,start,Up 5 days (Mon- Fri) 8 AM to 8 PM IST
+bsgdmql200004,azure,4d1774d8-071b-4d5a-888b-ba12da1d9e5c,bsg-dm01-q-930672-is01-rg,start,Up 5 days (Mon-Fri) 6 AM to 11:59 PM IST
+bsgdmul200002,azure,4d1774d8-071b-4d5a-888b-ba12da1d9e5c,bsg-dm01-u-930752-is01-rg,start,Up 5 days (Mon-Fri) 6 AM to 11:59 PM IST
+bsgdmul200013,azure,4d1774d8-071b-4d5a-888b-ba12da1d9e5c,bsg-dm01-u-930752-is01-rg,start,Up 5 days (Mon-Fri) 6 AM to 11:59 PM IST
+bsgdmul200008,azure,4d1774d8-071b-4d5a-888b-ba12da1d9e5c,bsg-dm01-u-930662-is01-rg,start,Up 7 days 6 AM to 11:59 PM IST
+bnlweafnlil0009,azure,beb54d1c-1125-46b2-aa73-3c28f6918c06,bnlwe-af01-n-57335-rg,start,Up 5 days (Mon-Fri) 24*5 Brazil/East
+bnlnwdw200007,azure,094059fd-06a9-4f64-853b-f5f8d3de1c9a,bnlwe-nw01-d-931962-is01-rg,start,Up 5 days (Mon- Fri) 9 AM to 9 PM IST
+bnlnwdlx00009,azure,094059fd-06a9-4f64-853b-f5f8d3de1c9a,bnlwe-nw01-d-931962-pa01-rg,start,5 Days UP (Mon to Fri) 8 AM to 8 PM IST
+bnlnwdlx00010,azure,094059fd-06a9-4f64-853b-f5f8d3de1c9a,bnlwe-nw01-d-931961-pa01-rg,start,5 Days UP (Mon to Fri) 8 AM to 8 PM IST
+gfrspdlx00047,gcp,ul-sp-d-902271-prj,europe-west3-a,start,Up 5 days (Mon-Fri) 11:00 AM to 11:00 PM IST
+gfrspdlx00048,gcp,ul-sp-d-902271-prj,europe-west3-a,start,Up 5 days (Mon-Fri) 11:00 AM to 11:00 PM IST
+biedapw200005,azure,291887e7-fc87-453a-ba96-5f2386363348,bieno-da09-p-901689-is01-rg,start,Up 7 days 6 AM to 11 PM IST
+biedapw200008,azure,291887e7-fc87-453a-ba96-5f2386363348,bieno-da09-p-901689-is01-rg,start,Up 7 days 6 AM to 11 PM IST
+biedapw200159,azure,291887e7-fc87-453a-ba96-5f2386363348,bieno-da09-p-56728-rg,start,Up 5 days (Mon-Fri) 8 AM to 6 PM EST
+bieesdw200002,azure,c2f494c9-73f0-4c0d-8111-d49457f34016,bieno-es02-d-901951-is01-rg,start,Up 5 days (Mon-Sat)10 AM to 4:30 AM IST
+bieesdw200003,azure,c2f494c9-73f0-4c0d-8111-d49457f34016,bieno-es02-d-901951-is01-rg,start,Up 5 days (Mon-Sat)10 AM to 4:30 AM IST
+bieesdw200004,azure,c2f494c9-73f0-4c0d-8111-d49457f34016,bieno-es02-d-901951-is01-rg,start,Up 5 days (Mon-Sat)10 AM to 4:30 AM IST
+bieesdw200006,azure,c2f494c9-73f0-4c0d-8111-d49457f34016,bieno-es02-d-901951-is01-rg,start,Up 5 days (Mon-Sat)10 AM to 4:30 AM IST
+bieesqw200007,azure,c2f494c9-73f0-4c0d-8111-d49457f34016,bieno-es02-q-901952-is01-rg,start,Up 5 days (Mon-Sat)10 AM to 4:30 AM IST
+bieesqw200008,azure,c2f494c9-73f0-4c0d-8111-d49457f34016,bieno-es02-q-901952-is01-rg,start,Up 5 days (Mon-Sat)10 AM to 4:30 AM IST
+bieesqw200009,azure,c2f494c9-73f0-4c0d-8111-d49457f34016,bieno-es02-q-901952-is01-rg,start,Up 5 days (Mon-Sat)10 AM to 4:30 AM IST
+bieesqw200010,azure,c2f494c9-73f0-4c0d-8111-d49457f34016,bieno-es02-q-901952-is01-rg,start,Up 5 days (Mon-Sat)10 AM to 4:30 AM IST
+bnlcspw200006,azure,30a28444-5dbc-4122-a09e-72333861b31a,bnlwe-cs01-p-931443-is01-rg,start,Up 5 days (Sun-Thu) 5 AM to 5 PM Israel
+bnldadw200057,azure,105fbd8d-388f-4b19-9fda-d56f44121122,bnlwe-da04-d-80011-is01-rg,start,Up 5 days (Mon- Fri) 8 AM to 10 PM IST
+bnldaqw200001,azure,43046d94-2b34-46fa-8b8b-4a3a72b53df6,bnlwe-da03-q-901965-is01-rg,start,Up 7 days (Mon-Sun) 8 AM to 10 PM IST
+bnldaqw200002,azure,43046d94-2b34-46fa-8b8b-4a3a72b53df6,bnlwe-da03-q-901965-is01-rg,start,Up 7 days (Mon-Sun) 8 AM to 10 PM IST
+bnldauw200030,azure,8b4fb847-3b45-410f-a6e7-3247c9d459b7,bnlwe-da02-u-903370-is01-rg,start,Up 5 days (Mon- Fri) 8 AM to 10 PM IST
+bnldauw200031,azure,8b4fb847-3b45-410f-a6e7-3247c9d459b7,bnlwe-da02-u-903370-is01-rg,start,Up 5 days (Mon- Fri) 8 AM to 10 PM IST
+bnldauw200034,azure,8b4fb847-3b45-410f-a6e7-3247c9d459b7,bnlwe-da02-u-903370-is01-rg,start,Up 5 days (Mon- Fri) 8 AM to 10 PM IST
+bnldmql200001,azure,4d1774d8-071b-4d5a-888b-ba12da1d9e5c,bnlwe-dm01-q-904099-is01-rg,start,Up 5 days (Mon- Fri) 6:15 AM to 10 PM Turkey
+bnldmql200002,azure,4d1774d8-071b-4d5a-888b-ba12da1d9e5c,bnlwe-dm01-q-904099-is01-rg,start,Up 5 days (Mon- Fri) 6 AM to 10 PM Turkey
+bnldmqw200001,azure,4d1774d8-071b-4d5a-888b-ba12da1d9e5c,bnlwe-dm01-q-904099-is01-rg,start,Up 5 days (Mon- Fri) 6 AM to 10 PM Turkey
+bnldmqw200002,azure,4d1774d8-071b-4d5a-888b-ba12da1d9e5c,bnlwe-dm01-q-904099-is01-rg,start,Up 5 days (Mon- Fri) 6 AM to 10 PM Turkey
+bnldmqw200004,azure,4d1774d8-071b-4d5a-888b-ba12da1d9e5c,bnlwe-dm01-q-930050-is01-rg,start,Up 5 days (Mon- Fri) 7 AM to 5 PM IST
+bnldmqw200006,azure,4d1774d8-071b-4d5a-888b-ba12da1d9e5c,bnlwe-dm01-q-930050-is01-rg,start,Up 5 days (Mon- Fri) 7 AM to 5 PM IST
+bnldmqw200007,azure,4d1774d8-071b-4d5a-888b-ba12da1d9e5c,bnlwe-dm01-q-930050-is01-rg,start,Up 5 days (Mon- Fri) 7 AM to 5 PM IST
+bnldmqw200008,azure,4d1774d8-071b-4d5a-888b-ba12da1d9e5c,bnlwe-dm01-q-930050-is01-rg,start,Up 5 days (Mon- Fri) 7 AM to 5 PM IST
+bnldmqw200009,azure,4d1774d8-071b-4d5a-888b-ba12da1d9e5c,bnlwe-dm01-q-930050-is01-rg,start,Up 5 days (Mon- Fri) 7 AM to 5 PM IST
+bnldmuw200010,azure,4d1774d8-071b-4d5a-888b-ba12da1d9e5c,bnlwe-dm01-u-930049-is01-rg,start,Up 5 days (Mon- Fri) 7 AM to 5 PM IST
+bnldmuw200012,azure,4d1774d8-071b-4d5a-888b-ba12da1d9e5c,bnlwe-dm01-u-930049-is01-rg,start,Up 5 days (Mon- Fri) 7 AM to 5 PM IST
+bnldmuw200014,azure,4d1774d8-071b-4d5a-888b-ba12da1d9e5c,bnlwe-dm01-u-930049-is01-rg,start,Up 5 days (Mon- Fri) 7 AM to 5 PM IST
+bnldmuw200015,azure,4d1774d8-071b-4d5a-888b-ba12da1d9e5c,bnlwe-dm01-u-930049-is01-rg,start,Up 5 days (Mon- Fri) 7 AM to 5 PM IST
+bnldmuw200016,azure,4d1774d8-071b-4d5a-888b-ba12da1d9e5c,bnlwe-dm01-u-930049-is01-rg,start,Up 5 days (Mon- Fri) 7 AM to 5 PM IST
+bnlesqw200040,azure,01491751-2545-4f64-afa7-54ffc907183d,bnlwe-es01-q-904499-is01-rg,start,Up 5 days (Mon-Fri) 10:30 AM to 11:59 PM IST
+bnlessw200003,azure,01491751-2545-4f64-afa7-54ffc907183d,bnlwe-es01-s-904500-is01-rg,start,Up 5 days (Mon-Fri) 11 AM to 9 PM IST
+bnlgsdw200001,azure,a5365f29-0ca0-4ab8-a9f8-b94056880ca3,bnlwe-gs01-d-902400-is01-rg,start,Up 5 days Mon 7 AM to Fri 9 PM IST
+bnlmsdw200003,azure,105fbd8d-388f-4b19-9fda-d56f44121122,bnlwe-da04-d-902230-is01-rg,start,Up 1 day (Wed) 10 AM to 11:59 PM IST
+bnlmsdw200004,azure,105fbd8d-388f-4b19-9fda-d56f44121122,bnlwe-da04-d-902230-is01-rg,start,Up 1 day (Wed) 10 AM to 6 PM IST
+bnlmsqw200001,azure,43046d94-2b34-46fa-8b8b-4a3a72b53df6,bnlwe-da03-q-902231-is01-rg,start,Up 7 days 8 AM to 2 AM IST
+bnlwedadap20001,azure,e2b0e829-5210-40ae-b73f-20805aa01351,bnlwe-da01-d-57536-app-rg,start,Up 7 days 10 AM to 10 PM IST
+bnlwedadap20002,azure,e2b0e829-5210-40ae-b73f-20805aa01351,bnlwe-da01-d-57536-app-rg,start,Up 5 days (Mon-Fri) 9 AM to 9 PM IST
+bnlwedanap20040,azure,e2b0e829-5210-40ae-b73f-20805aa01351,bnlwe-da01-d-57536-app-rg,start,Up 5 days (Mon-Fri) 9 AM to 10 PM IST
+bnlwedanap20041,azure,e2b0e829-5210-40ae-b73f-20805aa01351,bnlwe-da01-d-57536-app-rg,start,Up 5 days (Mon-Fri) 9 AM to 10 PM IST
+bnlwedanap20042,azure,e2b0e829-5210-40ae-b73f-20805aa01351,bnlwe-da01-d-57536-app-rg,start,Up 5 days (Mon-Fri) 9 AM to 10 PM IST
+bnlwedanap20043,azure,e2b0e829-5210-40ae-b73f-20805aa01351,bnlwe-da01-d-57536-app-rg,start,Up 5 days (Mon-Fri) 9 AM to 10 PM IST
+bnlwedapap20046,azure,e2b0e829-5210-40ae-b73f-20805aa01351,bnlwe-da01-p-57537-rg,start,Up 5 days (Mon-Fri) 9 AM to 10 PM IST
+bnlwedaqap20001,azure,e2b0e829-5210-40ae-b73f-20805aa01351,bnlwe-da01-q-57554-app-rg,start,Up 7 days 7:30 AM to 2:30 AM IST
+bnlwedauap20012,azure,e2b0e829-5210-40ae-b73f-20805aa01351,bnlwe-da01-u-57556-rg,start,Up 5 days (Mon-Fri) 10 AM to 10 PM IST
+bnlweesplil0040,azure,01491751-2545-4f64-afa7-54ffc907183d,bnlwe-es01-p-901355-is01-rg,start,Up 5 days Mon 12 AM to Fri 8 PM GMT -1
+bnldapw200151,azure,65c24fb4-4567-43b8-a31f-d06f8f1d0dd7,bnlwe-da13-p-931469-is01-rg,start,Up 1 day (Wed) 10 AM to 6 PM IST
+bnldauw200033,azure,8b4fb847-3b45-410f-a6e7-3247c9d459b7,bnlwe-da02-u-903370-is01-rg,start,Up 5 days (Mon- Fri) 8 AM to 10 PM IST
+bnldauw200032,azure,8b4fb847-3b45-410f-a6e7-3247c9d459b7,bnlwe-da02-u-903370-is01-rg,start,Up 5 days (Mon- Fri) 8 AM to 10 PM IST
+biedspw200002,azure,c86581bf-573b-4054-942a-f3ec225171e6,bieno-ds02-p-903422-is01-rg,start,Up 5 days (Mon-Fri) 10 AM to 11 PM IST
+biedspw200003,azure,c86581bf-573b-4054-942a-f3ec225171e6,bieno-ds02-p-903422-is01-rg,start,Up 5 days (Mon-Fri) 10 AM to 11 PM IST
+gfrcepw100001,gcp,ul-ce-p-930428-prj,europe-west3-a,start,Up 7 days(Mon-Sun) 6 AM to 12 AM BST/ Asia Dhaka
+gfrcepw100002,gcp,ul-ce-p-930428-prj,europe-west3-a,start,Up 7 days(Mon-Sun) 6 AM to 12 AM BST/ Asia Dhaka
+gfrcepw200009,gcp,ul-ce-p-932108-prj,europe-west3-a,start,Up 5 days (Sun - Fri) 06:00 AM – 09:00 PM IL
+gfrcepw200010,gcp,ul-ce-p-932108-prj,europe-west3-a,start,Up 5 days (Sun - Fri) 06:00 AM – 09:00 PM IL
+gfrcepw200011,gcp,ul-ce-p-932108-prj,europe-west3-a,start,Up 5 days (Sun - Fri) 06:00 AM – 09:00 PM IL
+gfrcepw200012,gcp,ul-ce-p-932108-prj,europe-west3-a,start,Up 5 days (Sun - Fri) 06:00 AM – 09:00 PM IL
+gnlcepw200009,gcp,ul-ce-p-932108-prj,europe-west4-a,start,Up 5 days (Sun - Fri) 06:00 AM – 09:00 PM IL
+gfrdmdw200003,gcp,ul-dm-d-901111-prj,europe-west3-a,start,24X7 Always Up
+gfrdmdw200004,gcp,ul-dm-d-901111-prj,europe-west3-a,start,24X7 Always Up
+gfrdmdw200005,gcp,ul-dm-d-901111-prj,europe-west3-a,start,24X7 Always Up
+gfrdmdw200007,gcp,ul-dm-d-901111-prj,europe-west3-a,start,24X7 Always Up
+gfrdmdw200008,gcp,ul-dm-d-901111-prj,europe-west3-a,start,24X7 Always Up
+gfrdmdw200009,gcp,ul-dm-d-901111-prj,europe-west3-b,start,24X7 Always Up
+gfrdmdw200010,gcp,ul-dm-d-901111-prj,europe-west3-a,start,24X7 Always Up
+gfrdmdw200011,gcp,ul-dm-d-901111-prj,europe-west3-a,start,24X7 Always Up
+gfrdmdw200012,gcp,ul-dm-d-901111-prj,europe-west3-a,start,24X7 Always Up
+gfrdmdw200013,gcp,ul-dm-d-901111-prj,europe-west3-a,start,24X7 Always Up
+gfrdmdw200014,gcp,ul-dm-d-901111-prj,europe-west3-a,start,24X7 Always Up
+gfrdmdw200015,gcp,ul-dm-d-901111-prj,europe-west3-b,start,24X7 Always Up
+gfrdmdw200016,gcp,ul-dm-d-901111-prj,europe-west3-a,start,24X7 Always Up
+gfrdmdw200017,gcp,ul-dm-d-901111-prj,europe-west3-c,start,24X7 Always Up
+gfrdmdw200018,gcp,ul-dm-d-901111-prj,europe-west3-a,start,24X7 Always Up
+gfrdmdw200019,gcp,ul-dm-d-901111-prj,europe-west3-a,start,24X7 Always Up
+gfrdmdw200020,gcp,ul-dm-d-901111-prj,europe-west3-a,start,24X7 Always Up
+gfrdmdw200021,gcp,ul-dm-d-901111-prj,europe-west3-a,start,24X7 Always Up
+gfrdmdw200022,gcp,ul-dm-d-901111-prj,europe-west3-a,start,24X7 Always Up
+gfrdmdw200023,gcp,ul-dm-d-901111-prj,europe-west3-a,start,24X7 Always Up
+gfrdmdw200025,gcp,ul-dm-d-901111-prj,europe-west3-a,start,24X7 Always Up
+gfrdmdw200026,gcp,ul-dm-d-901111-prj,europe-west3-a,start,24X7 Always Up
+gnldmplx00019,gcp,ul-dm-p-931710-prj,europe-west4-a,start,Up 7 days 7 AM to 11:59 PM Egypt(UTC+2)
+gfresdlx00001,gcp,ul-es-d-932177-prj,europe-west3-a,start,Up 7 days 7 AM to 11 PM IST
+gfresdw200031,gcp,ul-es-d-932177-prj,europe-west3-a,start,Up 7 days (Mon - Sun) 9 AM to 11 PM IST
+gfresplx00005,gcp,ul-es-p-901355-prj,europe-west3-a,start,Up 5 days Mon 12 AM to Fri 8 PM GMT -1
+gfresqlx00009,gcp,ul-es-q-901354-prj,europe-west3-a,start,Up 5 days (Mon- Fri) 2 PM to 10 PM IST
+gfrfrpw200002,gcp,ul-fr-p-930208-prj,europe-west3-a,start,Up 5 days (Mon- Fri) 7:30 AM to 4:30 PM IST
+gfrfrpw200003,gcp,ul-fr-p-930208-prj,europe-west3-a,start,Up 5 days (Mon- Fri) 7:30 AM to 4:30 PM IST
+gfrfrpw200004,gcp,ul-fr-p-930206-prj,europe-west3-a,start,Up 5 days (Mon- Fri) 7:30 AM to 4:30 PM IST
+gfrfrpw200005,gcp,ul-fr-p-930206-prj,europe-west3-a,start,Up 5 days (Mon- Fri) 7:30 AM to 4:30 PM IST
+gfrfrpw200006,gcp,ul-fr-p-930207-prj,europe-west3-a,start,Up 5 days (Mon- Fri) 7:30 AM to 4:30 PM IST
+gfrfrpw200007,gcp,ul-fr-p-930207-prj,europe-west3-a,start,Up 5 days (Mon- Fri) 7:30 AM to 4:30 PM IST
+gfrgfpw200046,gcp,ul-gf-p-903312-prj,europe-west3-a,start,Up 6 days (Mon-Sat) 24*6 IST
+gfrgfpw200048,gcp,ul-gf-p-904405-prj,europe-west3-a,start,6 days UP Sunday 8:30 PM to Friday 11:00 PM IST
+gfrgfpw200050,gcp,ul-gf-p-904405-prj,europe-west3-a,start,6 days UP Sunday 8:30 PM to Friday 11:00 PM IST
+gfrgsdw200001,gcp,ul-gs-d-902468-prj,europe-west3-a,start,Up 5 days (Mon to Fri) 12:30 PM to 10 PM IST
+gnlgsplx00021,gcp,ul-gs-p-931692-prj,europe-west4-a,start,Up 5 days(Sun-Thur) 10:00 AM to 11:59 PM Egypt(UTC+2)
+gnlgspw100010,gcp,ul-gs-p-930425-prj,europe-west4-a,start,Up 7 days(Mon-Sun) 6 AM to 12 AM BST/ Asia Dhaka
+gnlgspw100011,gcp,ul-gs-p-930425-prj,europe-west4-a,start,Up 7 days(Mon-Sun) 6 AM to 12 AM BST/ Asia Dhaka
+gfrgspw200024,gcp,ul-gs-p-930205-prj,europe-west3-a,start,Up 5 days (Mon- Fri) 7:30 AM to 4:30 PM IST
+gfrgspw200025,gcp,ul-gs-p-930205-prj,europe-west3-a,start,Up 5 days (Mon- Fri) 7:30 AM to 4:30 PM IST
+gfrgsqw200003,gcp,ul-gs-q-902458-prj,europe-west3-a,start,Up 5 days (Mon - Fri) 1:30 PM to 3:30 AM IST
+gfrgsqw200032,gcp,ul-gs-q-903477-prj,europe-west3-a,start,Up 5 days (Mon-Fri) 6 AM to 6 PM UTC
+gfrgsqw200038,gcp,ul-gs-q-903477-prj,europe-west3-a,start,Up 5 days (Mon-Fri) 6 AM to 6 PM UTC
+gfrgsqw200049,gcp,ul-gs-q-903988-prj,europe-west3-a,start,Up 5 days (Mon-Fri) 7 AM to 8 PM Asia/Manila(+8:00)
+gfrhrdw200014,gcp,ul-hr-d-930212-prj,europe-west3-a,start,Up 5 days (Mon-Fri) 04:30 AM to 9:30 PM IST
+gnlhrpw100013,gcp,ul-hr-p-930419-prj,europe-west4-a,start,UP 7 days (Mon-Fri) 25*5 Except Sat & Sun 8 AM to 12AM Asia/Dhaka (+06:00)
+gnlhrpw100014,gcp,ul-hr-p-930419-prj,europe-west4-a,start,UP 7 days (Mon-Fri) 25*5 Except Sat & Sun 8 AM to 12AM Asia/Dhaka (+06:00)
+gfrhrpw200010,gcp,ul-hr-p-901895-prj,europe-west3-a,start,Up 5 days (Mon-Fri) 10:30 AM to 10:30 PM IST
+gfrhrqw200010,gcp,ul-hr-q-904067-prj,europe-west3-a,start,Up 5 days (Mon-Fri) 7 AM to 7 PM AEST
+gfrhrqw200011,gcp,ul-hr-q-904067-prj,europe-west3-a,start,Up 5 days (Mon-Fri) 7 AM to 7 PM AEST
+gfrhrqw200017,gcp,ul-hr-q-930991-prj,europe-west3-a,start,UP 7 Days (Mon-Sun) 6 AM to 11 PM IST
+gfrhrqw200018,gcp,ul-hr-q-930991-prj,europe-west3-a,start,UP 7 Days (Mon-Sun) 6 AM to 11 PM IST
+gfrntpw200001,gcp,ul-nt-p-903332-prj,europe-west3-a,start,Up 5 days(Mon-Fri) 7 AM to 5 PM CET
+gfrntpw200006,gcp,ul-nt-p-903332-prj,europe-west3-a,start,Up 5 days(Mon-Fri) 7 AM to 5 PM CET
+gfrntqw200001,gcp,ul-nt-q-902132-prj,europe-west3-a,start,Up 5 days (Mon-Fri) 10:30 AM to 11:59 PM IST
+gfrprdlx00004,gcp,ul-pr-d-903851-prj,europe-west3-a,start,Up 5 days (Mon-Fri) 11 AM to 8 PM IST
+gfrprqlx00005,gcp,ul-pr-q-903852-prj,europe-west3-a,start,Up 5 days (Mon-Fri) 10 AM to 8 PM IST
+gfrprqlx00006,gcp,ul-pr-q-903852-prj,europe-west3-a,start,Up 5 days (Mon-Fri) 10 AM to 8 PM IST
+gfrprtlx00003,gcp,ul-pr-t-930650-prj,europe-west3-a,start,Up 5 days (Mon-Fri) 10 AM to 8 PM IST
+gfrprtlx00004,gcp,ul-pr-t-930650-prj,europe-west3-a,start,Up 5 days (Mon-Fri) 10 AM to 8 PM IST
+gfrprulx00006,gcp,ul-pr-u-930649-prj,europe-west3-a,start,Up 5 days (Mon-Fri) 10 AM to 8 PM IST
+gfrprulx00007,gcp,ul-pr-u-930649-prj,europe-west3-a,start,Up 5 days (Mon-Fri) 10 AM to 8 PM IST
+gfrprulx00008,gcp,ul-pr-u-930649-prj,europe-west3-a,start,Up 5 days (Mon-Fri) 10 AM to 8 PM IST
+gfrprulx00009,gcp,ul-pr-u-930649-prj,europe-west3-a,start,Up 5 days (Mon-Fri) 10 AM to 8 PM IST
+gfrprulx00010,gcp,ul-pr-u-930649-prj,europe-west3-a,start,Up 5 days (Mon-Fri) 10 AM to 8 PM IST
+gnlfrpw200002,gcp,ul-fr-p-902073-prj,europe-west4-a,start,UP 7 Days 11:30 AM to 9:30 AM GMT
+gnlgfpw200033,gcp,ul-gf-p-903853-prj,europe-west4-a,start,Up 7 Days (Mon - Sun ) 5Am to 1Am WET
+gnlgfpw200035,gcp,ul-gf-p-903853-prj,europe-west4-a,start,Up 7 Days (Mon - Sun ) 5Am to 1Am WET
+gnlgfpw200038,gcp,ul-gf-p-930292-prj,europe-west4-a,start,UP 7 days (Mon-Sun) except Down SAT&SUN 10 AM to 10 PM JKT
+gnlgfpw200039,gcp,ul-gf-p-930292-prj,europe-west4-a,start,UP 7 days (Mon-Sun) except Down SAT&SUN 10 AM to 10 PM JKT
+gnlgspw200100,gcp,ul-gs-p-930461-prj,europe-west4-a,start,UP 7 days (Mon-Sun) except Down SUN 12 AM to 7 AM JKT
+gnlgspw200102,gcp,ul-gs-p-930461-prj,europe-west4-a,start,UP 7 days (Mon-Sun) except Down SUN 12 AM to 7 AM JKT
+gnlgsqd100001,gcp,ul-gs-q-902383-prj,europe-west4-a,start,Up 7 days 7 AM to 11 PM IST
+gnlgsqd100002,gcp,ul-gs-q-902384-prj,europe-west4-a,start,Up 5 days (Mon-Fri) 10:00 AM to 9.30 PM IST
+gnlgsqw200006,gcp,ul-gs-q-903241-prj,europe-west4-a,start,Up 5 days (Mon-Fri) 11 AM to 8 PM IST
+gnlhrpw200004,gcp,ul-hr-p-902792-prj,europe-west4-a,start,Up 7 days (Mon-Sun) 6 AM to 10 PM CET
+gnlhrpw200008,gcp,ul-hr-p-903207-prj,europe-west4-a,start,Up 7 days(Mon-Fri) 7 AM to 7 PM & (Sat-Sun) 7 AM to 4 PM GMT+1
+gnlhrqw200002,gcp,ul-hr-q-904427-prj,europe-west4-a,start,Up 7 days (Mon-Sun) 10 AM to 3 AM IST
+gnlstplx00001,gcp,ul-st-p-903855-prj,europe-west4-a,start,Up 6 days (Mon-Sat) 24*6 IST
+gnlstpw200001,gcp,ul-st-p-901992-prj,europe-west4-a,start,Up 6 days (Mon 6 Am to Sat 11:59 PM IST)
+gnlstpw200002,gcp,ul-st-p-901992-prj,europe-west4-b,start,Up 6 days (Mon 6 Am to Sat 11:59 PM IST)
+gnlstpw200003,gcp,ul-st-p-901992-prj,europe-west4-a,start,Up 6 days (Mon 6 Am to Sat 11:59 PM IST)
+gnldmplx00016,gcp,ul-dm-p-931641-prj,europe-west4-a,start,Up 7 days 7 AM to 11:59 PM Egypt(UTC+2)
+gnlgsplx00022,gcp,ul-gs-p-931781-prj,europe-west4-a,start,Up 7 days 7 AM to 11:59 PM Egypt(UTC+2)
+gnldmplx00017,gcp,ul-dm-p-58505-prj,europe-west4-a,start,Up 6 days (Sat - Thu) 7:00 AM to 10:00 PM Algiers UTC+1
+gnldmplx00024,gcp,ul-dm-p-931741-prj,europe-west4-a,start,Up 7 days (Mon-Sun) 7:00 AM to 23:59:59 Africa/Casablanca UTC+1
+bnlafqw200329,azure,beb54d1c-1125-46b2-aa73-3c28f6918c06,bnlwe-af01-q-57427-rg,start,Up 5 days (Mon-Fri) 3:30 PM to 4:30 AM IST
+gfrdmdw200027,gcp,ul-dm-d-901111-prj,europe-west3-a,start,24X7 Always Up
+gfrdmdw200028,gcp,ul-dm-d-901111-prj,europe-west3-a,start,24X7 Always Up
+gfrdmdw200029,gcp,ul-dm-d-901111-prj,europe-west3-a,start,24X7 Always Up
+gfrdmdw200030,gcp,ul-dm-d-901111-prj,europe-west3-a,start,24X7 Always Up
+gfrdmdw200031,gcp,ul-dm-d-901111-prj,europe-west3-a,start,24X7 Always Up
+gfrdmdw200032,gcp,ul-dm-d-901111-prj,europe-west3-a,start,24X7 Always Up
+gfrdmdw200033,gcp,ul-dm-d-901111-prj,europe-west3-a,start,24X7 Always Up
+gfrdmdw200034,gcp,ul-dm-d-901111-prj,europe-west3-a,start,24X7 Always Up
+gfrdmdw200035,gcp,ul-dm-d-901111-prj,europe-west3-a,start,24X7 Always Up
+gfrdmdw200036,gcp,ul-dm-d-901111-prj,europe-west3-a,start,24X7 Always Up
+gfrspdlx00036,gcp,ul-sp-d-901342-prj,europe-west3-b,start,Up 7 days (Mon-Sun) 9:30 AM to 12:30 AM IST
+gfrspqlx00002,gcp,ul-sp-q-904326-prj,europe-west3-b,start,up 5 days (Mon-Fri) 7:30 AM to 10:30 PM IST
+gfrspqlx00004,gcp,ul-sp-q-904326-prj,europe-west3-b,start,up 5 days (Mon-Fri) 7:30 AM to 10:30 PM IST
+bnlafdw201028,azure,beb54d1c-1125-46b2-aa73-3c28f6918c06,bnlwe-af01-d-57425-rg,start,Up 7 Days 05:00 AM IST to 12:30 AM IST
+bnlafdw201029,azure,beb54d1c-1125-46b2-aa73-3c28f6918c06,bnlwe-af01-d-57425-rg,start,UP 7 Days (Mon-Sun) 6 AM to 2 AM IST
+bnlafdw201031,azure,beb54d1c-1125-46b2-aa73-3c28f6918c06,bnlwe-af01-d-57425-rg,start,UP 7 Days (Mon-Sun) 6 AM to 2 AM IST
+bnlafdw200356,azure,beb54d1c-1125-46b2-aa73-3c28f6918c06,bnlwe-af01-d-57342-is01-rg,start,Up 7 days 3:30 PM to 7:30 AM IST
+bnlafpw201393,azure,beb54d1c-1125-46b2-aa73-3c28f6918c06,bnlwe-af01-p-57426-rg,start,24X7 Always Up
+bnlafpw201398,azure,beb54d1c-1125-46b2-aa73-3c28f6918c06,bnlwe-af01-p-57426-rg,start,24X7 Always Up
+bnlafpw201399,azure,beb54d1c-1125-46b2-aa73-3c28f6918c06,bnlwe-af01-p-57426-rg,start,24X7 Always Up
+bnlafpw201402,azure,beb54d1c-1125-46b2-aa73-3c28f6918c06,bnlwe-af01-p-57426-rg,start,24X7 Always Up
+bnlafpw201403,azure,beb54d1c-1125-46b2-aa73-3c28f6918c06,bnlwe-af01-p-57426-rg,start,24X7 Always Up
+bnlafpw201408,azure,beb54d1c-1125-46b2-aa73-3c28f6918c06,bnlwe-af01-p-57426-rg,start,24X7 Always Up
+bnlafpw201594,azure,beb54d1c-1125-46b2-aa73-3c28f6918c06,bnlwe-af01-p-57426-rg,start,24X7 Always Up
+bnlafqw200039,azure,beb54d1c-1125-46b2-aa73-3c28f6918c06,bnlwe-af01-q-57427-rg,start,Up 5 days (Mon-Fri) 4:30 PM to 6:30 AM IST
+bnlafqw200043,azure,beb54d1c-1125-46b2-aa73-3c28f6918c06,bnlwe-af01-q-57427-rg,start,24X7 Always Up
+bnlafqw200206,azure,beb54d1c-1125-46b2-aa73-3c28f6918c06,bnlwe-af01-q-57427-rg,start,Up 7 days (Mon-Fri) 11:30 AM to 8:30 AM & Sat 11:30 AM to 8:30 PM & Sun 3:30 AM to 8:30 AM IST
+bnlafqw200282,azure,beb54d1c-1125-46b2-aa73-3c28f6918c06,bnlwe-af01-q-57427-rg,start,Up 5 days (Mon-Fri) 10 AM to 10 PM IST
+bnlafqw200313,azure,beb54d1c-1125-46b2-aa73-3c28f6918c06,bnlwe-af01-q-57427-rg,start,Up 5 days (Mon- Fri) 9 AM to 7 PM IST
+bnlafqw200339,azure,beb54d1c-1125-46b2-aa73-3c28f6918c06,bnlwe-af01-q-57427-rg,start,Up 5 days (Mon- Fri) 10 AM to 10 PM IST
+bnlafqw200345,azure,beb54d1c-1125-46b2-aa73-3c28f6918c06,bnlwe-af01-q-57427-rg,start,Up 5 days (Mon- Fri) 10 AM to 10 PM IST
+bnlafqw200346,azure,beb54d1c-1125-46b2-aa73-3c28f6918c06,bnlwe-af01-q-57427-rg,start,Up 5 days (Mon- Fri) 10 AM to 10 PM IST
+bnlafqw200347,azure,beb54d1c-1125-46b2-aa73-3c28f6918c06,bnlwe-af01-q-57427-rg,start,Up 5 days (Mon-Fri) 9 AM to 3:30 AM IST
+bnlafqw200348,azure,beb54d1c-1125-46b2-aa73-3c28f6918c06,bnlwe-af01-q-57427-rg,start,Up 5 days (Mon- Fri) 10 AM to 10 PM IST
+bnlafqw200349,azure,beb54d1c-1125-46b2-aa73-3c28f6918c06,bnlwe-af01-q-57427-rg,start,Up 5 days (Mon- Fri) 10 AM to 10 PM IST
+bnlafqw200351,azure,beb54d1c-1125-46b2-aa73-3c28f6918c06,bnlwe-af01-q-57427-rg,start,Up 5 days (Mon- Fri) 10 AM to 10 PM IST
+bnlafqw200352,azure,beb54d1c-1125-46b2-aa73-3c28f6918c06,bnlwe-af01-q-57427-rg,start,Up 5 days (Mon- Fri) 10 AM to 10 PM IST
+bnlafqw200353,azure,beb54d1c-1125-46b2-aa73-3c28f6918c06,bnlwe-af01-q-57427-rg,start,Up 5 days (Mon- Fri) 10 AM to 10 PM IST
+bnlafqw200354,azure,beb54d1c-1125-46b2-aa73-3c28f6918c06,bnlwe-af01-q-57427-rg,start,Up 5 days (Mon- Fri) 10 AM to 10 PM IST
+bnlafqw200171,azure,beb54d1c-1125-46b2-aa73-3c28f6918c06,bnlwe-af01-q-57342-is01-rg,start,Up 7 days 3:30 PM to 7:30 AM IST
+bnlafqw200173,azure,beb54d1c-1125-46b2-aa73-3c28f6918c06,bnlwe-af01-q-57342-is01-rg,start,Up 7 days 3:30 PM to 7:30 AM IST
+bnlafqw200179,azure,beb54d1c-1125-46b2-aa73-3c28f6918c06,bnlwe-af01-q-57342-is01-rg,start,Up 7 days 3:30 PM to 7:30 AM IST
+bnlweafqap20592,azure,beb54d1c-1125-46b2-aa73-3c28f6918c06,bnlwe-af01-q-57644-rg,start,Up 5 days (Mon-Fri) 10:00 AM to 9.30 PM IST
+bnlweafqap20594,azure,beb54d1c-1125-46b2-aa73-3c28f6918c06,bnlwe-af01-q-57644-rg,start,Up 5 days (Mon-Fri) 24*5 IST
+bnlweafqap20683,azure,beb54d1c-1125-46b2-aa73-3c28f6918c06,bnlwe-af01-q-57644-rg,start,Up 5 days (Mon-Fri) 10:00 AM to 9.30 PM IST
+bienodmpap20001,azure,bd099129-c5d9-4c72-bd65-eb0c286c92cb,bieno-dm02-p-901534-is01-rg,start,Up 3 days Mon 11 AM to 4 PM & Sat 8:30 PM to Sun 2:30 AM & Sun 5:30 AM - 5:30 PM IST
+bienodmpap20002,azure,bd099129-c5d9-4c72-bd65-eb0c286c92cb,bieno-dm02-p-901534-is01-rg,start,Up 3 days Mon 11 AM to 4 PM & Sat 8:30 PM to Sun 2:30 AM & Sun 5:30 AM - 5:30 PM IST
+bienodmpap20003,azure,bd099129-c5d9-4c72-bd65-eb0c286c92cb,bieno-dm02-p-901534-is01-rg,start,Up 3 days Mon 11 AM to 4 PM & Sat 8:30 PM to Sun 2:30 AM & Sun 5:30 AM - 5:30 PM IST
+bienodmpap20004,azure,bd099129-c5d9-4c72-bd65-eb0c286c92cb,bieno-dm02-p-901534-is01-rg,start,Up 3 days Mon 11 AM to 4 PM & Sat 8:30 PM to Sun 2:30 AM & Sun 5:30 AM - 5:30 PM IST
+bienodmpap20005,azure,bd099129-c5d9-4c72-bd65-eb0c286c92cb,bieno-dm02-p-901534-is01-rg,start,Up 3 days Mon 11 AM to 4 PM & Sat 8:30 PM to Sun 2:30 AM & Sun 5:30 AM - 5:30 PM IST
+bienodmpap20006,azure,bd099129-c5d9-4c72-bd65-eb0c286c92cb,bieno-dm02-p-901534-is01-rg,start,Up 3 days Mon 11 AM to 4 PM & Sat 8:30 PM to Sun 2:30 AM & Sun 5:30 AM - 5:30 PM IST
+bienodmpap20007,azure,bd099129-c5d9-4c72-bd65-eb0c286c92cb,bieno-dm02-p-901534-is01-rg,start,Up 3 days Mon 11 AM to 4 PM & Sat 8:30 PM to Sun 2:30 AM & Sun 5:30 AM - 5:30 PM IST
+bienodmpap20008,azure,bd099129-c5d9-4c72-bd65-eb0c286c92cb,bieno-dm02-p-901534-is01-rg,start,Up 3 days Mon 11 AM to 4 PM & Sat 8:30 PM to Sun 2:30 AM & Sun 5:30 AM - 5:30 PM IST
+bienodmpap20009,azure,bd099129-c5d9-4c72-bd65-eb0c286c92cb,bieno-dm02-p-901534-is01-rg,start,Up 3 days Mon 11 AM to 4 PM & Sat 8:30 PM to Sun 2:30 AM & Sun 5:30 AM - 5:30 PM IST
+bienodmpap20010,azure,bd099129-c5d9-4c72-bd65-eb0c286c92cb,bieno-dm02-p-901534-is01-rg,start,Up 3 days Mon 11 AM to 4 PM & 11:30 PM to 11:59 PM & Sat 8:30 PM to Sun 11:59 PM IST
+bienodmpdb20001,azure,bd099129-c5d9-4c72-bd65-eb0c286c92cb,bieno-dm02-p-901534-is01-rg,start,UP 4 days Mon 11AM-4PM &Thu 5:30AM-3:30PM&Sat 8:30PM-Sun2:30AM&Sun5:30AM-5:30PM IST
+bienodmpdb20002,azure,bd099129-c5d9-4c72-bd65-eb0c286c92cb,bieno-dm02-p-901534-is01-rg,start,UP 4 days Mon 11AM-4PM &Thu 5:30AM-3:30PM&Sat 8:30PM-Sun2:30AM&Sun5:30AM-5:30PM IST
+bienodmpdb20003,azure,bd099129-c5d9-4c72-bd65-eb0c286c92cb,bieno-dm02-p-901534-is01-rg,start,UP 4 days Mon 11AM-4PM &Thu 5:30AM-3:30PM&Sat 8:30PM-Sun2:30AM&Sun5:30AM-5:30PM IST
+bienodmpdb20005,azure,bd099129-c5d9-4c72-bd65-eb0c286c92cb,bieno-dm02-p-901534-is01-rg,start,UP 4 days Mon 11AM-4PM &Thu 5:30AM-3:30PM&Sat 8:30PM-Sun2:30AM&Sun5:30AM-5:30PM IST
+bienodmpdb20006,azure,bd099129-c5d9-4c72-bd65-eb0c286c92cb,bieno-dm02-p-901534-is01-rg,start,UP 4 days Mon 11AM-4PM &Thu 5:30AM-3:30PM&Sat 8:30PM-Sun2:30AM&Sun5:30AM-5:30PM IST
+bnldaqw200013,azure,43046d94-2b34-46fa-8b8b-4a3a72b53df6,bnlwe-da03-q-903158-is01-rg,start,Up 5 days (Mon-Fri) 10 AM to 6 PM IST
+bnlgfpw200037,azure,6f656825-9133-4900-9f21-bd578eab6e9e,bnlwe-gf01-p-58727-is01-rg,start,Up 5 days (Mon - Fri) 24*5 IST
+bnlgfpw200040,azure,6f656825-9133-4900-9f21-bd578eab6e9e,bnlwe-gf01-p-58727-is03-rg,start,Up 5 days (Mon-Fri) 10 AM to 10 PM (Asia/Jakarta)
+bnlgfpw200041,azure,6f656825-9133-4900-9f21-bd578eab6e9e,bnlwe-gf01-p-58727-is03-rg,start,Up 5 days (Mon-Fri) 10 AM to 10 PM (Asia/Jakarta)
+bnlwedmpap20029,azure,4d1774d8-071b-4d5a-888b-ba12da1d9e5c,bnlwe-dm01-p-901533-is01-rg,start,Up 5 days (Mon-Fri) 8 AM to 8 PM IST
+gnldmplx00009,gcp,ul-dm-p-931638-prj,europe-west4-a,start,Up 7 days 7 AM to 11:59 PM Egypt(UTC+2)
+gnldmplx00010,gcp,ul-dm-p-931638-prj,europe-west4-b,start,Up 7 days 7 AM to 11:59 PM Egypt(UTC+2)
+bieafpw200011,azure,12223455-bfc2-44b7-bd1f-26caa2ec3f6a,bieno-af02-p-931088-is01-rg,start,Up 5 days (Mon-Fri) 10 AM to 10 PM IST
+bnlafpw200901,azure,beb54d1c-1125-46b2-aa73-3c28f6918c06,bnlwe-af01-p-931088-is01-rg,start,Up 5 days (Mon-Fri) 10 AM to 10 PM IST
+bnlafpw200902,azure,beb54d1c-1125-46b2-aa73-3c28f6918c06,bnlwe-af01-p-931088-is01-rg,start,Up 5 days (Mon-Fri) 10 AM to 10 PM IST
+gfrspdlx00045,gcp,ul-sp-d-902082-prj,europe-west3-a,start,Up 5 days (Mon- Fri) 10 AM to 10 PM IST
+gfrspdlx00046,gcp,ul-sp-d-902082-prj,europe-west3-a,start,Up 5 days (Mon- Fri) 10 AM to 10 PM IST
+biespds200014,azure,61f1b943-e15f-42a1-b3e4-a098cb2826e1,bieno-sp01-d-904185-is01-rg,start,Up 5 days (Mon- Fri) 9 AM to 7 PM IST
+biespdsx00106,azure,61f1b943-e15f-42a1-b3e4-a098cb2826e1,bieno-sp01-d-903327-is01-rg,start,Up 5 days (Mon-Fri) 10 AM to 10 PM IST
+biespdsx00107,azure,61f1b943-e15f-42a1-b3e4-a098cb2826e1,bieno-sp01-d-903327-is01-rg,start,Up 5 days (Mon-Fri) 10 AM to 10 PM IST
+biespdsx00108,azure,61f1b943-e15f-42a1-b3e4-a098cb2826e1,bieno-sp01-d-903327-is01-rg,start,Up 5 days (Mon-Fri) 10 AM to 10 PM IST
+biespqs200023,azure,61f1b943-e15f-42a1-b3e4-a098cb2826e1,bieno-sp01-q-904289-is01-rg,start,Up 5 days (Mon- Fri) 9 AM to 7 PM IST
+biespqs200024,azure,61f1b943-e15f-42a1-b3e4-a098cb2826e1,bieno-sp01-q-904289-is01-rg,start,Up 5 days (Mon- Fri) 9 AM to 7 PM IST
+biespqsx00079,azure,61f1b943-e15f-42a1-b3e4-a098cb2826e1,bieno-sp01-q-903562-is01-rg,start,Up 5 days (Mon-Fri) 10 AM to 6 PM IST
+biespqsx00080,azure,61f1b943-e15f-42a1-b3e4-a098cb2826e1,bieno-sp01-q-903562-is01-rg,start,Up 5 days (Mon-Fri) 10 AM to 6 PM IST
+biespusx00111,azure,61f1b943-e15f-42a1-b3e4-a098cb2826e1,bieno-sp01-u-903350-is01-rg,start,Up 5 days (Mon- Fri) 9 AM to 9 PM IST
+biespusx00115,azure,61f1b943-e15f-42a1-b3e4-a098cb2826e1,bieno-sp01-u-903350-is01-rg,start,Up 5 days (Mon- Fri) 9 AM to 9 PM IST
+biespusx00118,azure,61f1b943-e15f-42a1-b3e4-a098cb2826e1,bieno-sp01-u-903350-is01-rg,start,Up 5 days (Mon- Fri) 9 AM to 9 PM IST
+biespusx00119,azure,61f1b943-e15f-42a1-b3e4-a098cb2826e1,bieno-sp01-u-903350-is01-rg,start,Up 5 days (Mon- Fri) 9 AM to 9 PM IST
+biespusx00120,azure,61f1b943-e15f-42a1-b3e4-a098cb2826e1,bieno-sp01-u-903350-is01-rg,start,Up 5 days (Mon- Fri) 9 AM to 9 PM IST
+biespusx00121,azure,61f1b943-e15f-42a1-b3e4-a098cb2826e1,bieno-sp01-u-903350-is01-rg,start,Up 5 days (Mon- Fri) 9 AM to 9 PM IST
+biespusx00122,azure,61f1b943-e15f-42a1-b3e4-a098cb2826e1,bieno-sp01-u-903350-is01-rg,start,Up 5 days (Mon- Fri) 9 AM to 9 PM IST
+biespusx00147,azure,61f1b943-e15f-42a1-b3e4-a098cb2826e1,bieno-sp01-u-903325-is01-rg,start,Up 5 days (Mon-Fri) 10 AM to 10 PM IST
+biespusx00151,azure,61f1b943-e15f-42a1-b3e4-a098cb2826e1,bieno-sp01-u-903325-is01-rg,start,Up 5 days (Mon-Fri) 10 AM to 10 PM IST
+biespusx00153,azure,61f1b943-e15f-42a1-b3e4-a098cb2826e1,bieno-sp01-u-903325-is01-rg,start,Up 5 days (Mon-Fri) 10 AM to 10 PM IST
+biespusx00156,azure,61f1b943-e15f-42a1-b3e4-a098cb2826e1,bieno-sp01-u-903325-is01-rg,start,Up 5 days (Mon-Fri) 10 AM to 10 PM IST
+bnlspds200001,azure,1c0c41e9-8fe8-4ae8-b996-5a1dd1cd7701,bnlwe-sp02-d-902248-is01-rg,start,Up 5 days (Mon-Fri) 10 AM to 10 PM IST
+bnlspds200002,azure,1c0c41e9-8fe8-4ae8-b996-5a1dd1cd7701,bnlwe-sp02-d-902248-is01-rg,start,Up 5 days (Mon-Fri) 10 AM to 10 PM IST
+bnlspds200003,azure,1c0c41e9-8fe8-4ae8-b996-5a1dd1cd7701,bnlwe-sp02-d-902248-is01-rg,start,Up 5 days (Mon-Fri) 10 AM to 10 PM IST
+bnlspds200013,azure,1c0c41e9-8fe8-4ae8-b996-5a1dd1cd7701,bnlwe-sp02-d-903201-is01-rg,start,Up 5 days (Mon-Fri) 10 AM to 10 PM IST
+bnlspdsx00075,azure,1c0c41e9-8fe8-4ae8-b996-5a1dd1cd7701,bnlwe-sp02-d-903201-is01-rg,start,Up 5 days (Mon-Fri) 10 AM to 10 PM IST
+bnlspdsx00076,azure,1c0c41e9-8fe8-4ae8-b996-5a1dd1cd7701,bnlwe-sp02-d-903201-is01-rg,start,Up 5 days (Mon-Fri) 10 AM to 10 PM IST
+bnlspds200015,azure,61f1b943-e15f-42a1-b3e4-a098cb2826e1,bnlwe-sp01-d-904126-is01-rg,start,Up 5 days (Mon- Fri) 9 AM to 7 PM IST
+bnlspds200016,azure,61f1b943-e15f-42a1-b3e4-a098cb2826e1,bnlwe-sp01-d-904468-is01-rg,start,Up 5 days (Mon- Fri) 9 AM to 7 PM IST
+bnlspdsx00041,azure,1c0c41e9-8fe8-4ae8-b996-5a1dd1cd7701,bnlwe-sp02-d-902785-is01-rg,start,Up 5 days (Mon-Fri) 10 AM to 10 PM IST
+bnlspdsx00042,azure,1c0c41e9-8fe8-4ae8-b996-5a1dd1cd7701,bnlwe-sp02-d-902785-is01-rg,start,Up 5 days (Mon-Fri) 10 AM to 10 PM IST
+bnlspdsx00048,azure,1c0c41e9-8fe8-4ae8-b996-5a1dd1cd7701,bnlwe-sp02-d-903162-is01-rg,start,24X7 Always Up
+bnlspdsx00049,azure,1c0c41e9-8fe8-4ae8-b996-5a1dd1cd7701,bnlwe-sp02-d-903162-is01-rg,start,24X7 Always Up
+bnlspdsx00050,azure,1c0c41e9-8fe8-4ae8-b996-5a1dd1cd7701,bnlwe-sp02-d-903162-is01-rg,start,24X7 Always Up
+bnlspdsx00165,azure,1c0c41e9-8fe8-4ae8-b996-5a1dd1cd7701,bnlwe-sp02-d-903162-is01-rg,start,Up 5 days (Mon-Fri) 12:30 PM to 22:30 PM IST
+bnlspdsx00053,azure,1c0c41e9-8fe8-4ae8-b996-5a1dd1cd7701,bnlwe-sp02-d-903577-is01-rg,start,Up 5 days (Mon-Fri) 12:30 PM to 12:30 AM IST
+bnlspdsx00054,azure,1c0c41e9-8fe8-4ae8-b996-5a1dd1cd7701,bnlwe-sp02-d-903577-is01-rg,start,Up 5 days (Mon-Fri) 12:30 PM to 12:30 AM IST
+bnlspdsx00055,azure,1c0c41e9-8fe8-4ae8-b996-5a1dd1cd7701,bnlwe-sp02-d-903579-is01-rg,start,Up 6 days (Mon-Sat) 1:30 PM to 2:00 AM IST
+bnlspdsx00056,azure,1c0c41e9-8fe8-4ae8-b996-5a1dd1cd7701,bnlwe-sp02-d-903579-is01-rg,start,Up 6 days (Mon-Sat) 1:30 PM to 2:00 AM IST
+bnlspdsx00057,azure,1c0c41e9-8fe8-4ae8-b996-5a1dd1cd7701,bnlwe-sp02-d-903576-is01-rg,start,Up 6 days (Mon-Sat) 1:30 PM to 2:00 AM IST
+bnlspdsx00058,azure,1c0c41e9-8fe8-4ae8-b996-5a1dd1cd7701,bnlwe-sp02-d-903576-is01-rg,start,Up 6 days (Mon-Sat) 1:30 PM to 2:00 AM IST
+bnlspdsx00061,azure,1c0c41e9-8fe8-4ae8-b996-5a1dd1cd7701,bnlwe-sp02-d-903418-is01-rg,start,Up 5 days (Mon-Fri) 10 AM to 10 PM IST
+bnlspdsx00062,azure,1c0c41e9-8fe8-4ae8-b996-5a1dd1cd7701,bnlwe-sp02-d-903418-is01-rg,start,Up 5 days (Mon-Fri) 10 AM to 10 PM IST
+bnlspdsx00092,azure,61f1b943-e15f-42a1-b3e4-a098cb2826e1,bnlwe-sp01-d-903793-is01-rg,start,Up 5 days (Mon-Fri) 10 AM to 10 PM IST
+bnlspdsx00093,azure,61f1b943-e15f-42a1-b3e4-a098cb2826e1,bnlwe-sp01-d-903793-is01-rg,start,Up 5 days (Mon-Fri) 10 AM to 10 PM IST
+bnlspdsx00123,azure,61f1b943-e15f-42a1-b3e4-a098cb2826e1,bnlwe-sp01-d-901818-is01-rg,start,Up 5 days (Mon-Fri) 9:30 AM to 9:30 PM IST
+bnlspdsx00124,azure,61f1b943-e15f-42a1-b3e4-a098cb2826e1,bnlwe-sp01-d-901818-is01-rg,start,Up 5 days (Mon-Fri) 9:30 AM to 9:30 PM IST
+bnlspdsx00125,azure,61f1b943-e15f-42a1-b3e4-a098cb2826e1,bnlwe-sp01-d-901719-is01-rg,start,Up 5 days (Mon-Fri) 9 AM to 9 PM IST
+bnlspdsx00126,azure,61f1b943-e15f-42a1-b3e4-a098cb2826e1,bnlwe-sp01-d-901719-is01-rg,start,Up 5 days (Mon- Fri) 9 AM to 9 PM IST
+bnlspdsx00152,azure,61f1b943-e15f-42a1-b3e4-a098cb2826e1,bnlwe-sp01-d-57525-rg,start,Up 5 days (Mon-Fri) 10 AM to 7 PM IST
+bnlspdsx00172,azure,1c0c41e9-8fe8-4ae8-b996-5a1dd1cd7701,bnlwe-sp02-d-931561-is01-rg,start,Up 5 day (Mon-Fri) 7:00 AM to 9:30 PM BST
+bnlspdsx00173,azure,1c0c41e9-8fe8-4ae8-b996-5a1dd1cd7701,bnlwe-sp02-d-931561-is01-rg,start,Up 5 day (Mon-Fri) 7:00 AM to 9:30 PM BST
+bnlspdsx00174,azure,1c0c41e9-8fe8-4ae8-b996-5a1dd1cd7701,bnlwe-sp02-d-931563-is01-rg,start,Up 5 day (Mon-Fri) 7:00 AM to 9:30 PM BST
+bnlspdsx00175,azure,1c0c41e9-8fe8-4ae8-b996-5a1dd1cd7701,bnlwe-sp02-d-931563-is01-rg,start,Up 5 day (Mon-Fri) 7:00 AM to 9:30 PM BST
+bnlspdsx00176,azure,1c0c41e9-8fe8-4ae8-b996-5a1dd1cd7701,bnlwe-sp02-d-931562-is01-rg,start,Up 5 day (Mon-Fri) 7:00 AM to 9:30 PM BST
+bnlspdsx00177,azure,1c0c41e9-8fe8-4ae8-b996-5a1dd1cd7701,bnlwe-sp02-d-931562-is01-rg,start,Up 5 day (Mon-Fri) 7:00 AM to 9:30 PM BST
+bnlspql200008,azure,61f1b943-e15f-42a1-b3e4-a098cb2826e1,bnlwe-sp01-q-931159-pa01-rg,start,Up 5 days (Mon-Fri) 12 PM to 12 AM IST
+bnlspql200010,azure,61f1b943-e15f-42a1-b3e4-a098cb2826e1,bnlwe-sp01-q-931159-pa01-rg,start,Up 5 days (Mon-Fri) 12 PM to 12 AM IST
+bnlspql200011,azure,61f1b943-e15f-42a1-b3e4-a098cb2826e1,bnlwe-sp01-q-931159-pa01-rg,start,Up 5 days (Mon-Fri) 12 PM to 12 AM IST
+bnlspqs200001,azure,1c0c41e9-8fe8-4ae8-b996-5a1dd1cd7701,bnlwe-sp02-q-902249-is01-rg,start,Up 5 days (Mon- Fri) 9 AM to 9 PM IST
+bnlspqs200002,azure,1c0c41e9-8fe8-4ae8-b996-5a1dd1cd7701,bnlwe-sp02-q-902249-is01-rg,start,Up 5 days (Mon- Fri) 9 AM to 9 PM IST
+bnlspqs200003,azure,1c0c41e9-8fe8-4ae8-b996-5a1dd1cd7701,bnlwe-sp02-q-902249-is01-rg,start,Up 5 days (Mon- Fri) 9 AM to 9 PM IST
+bnlspqs200004,azure,1c0c41e9-8fe8-4ae8-b996-5a1dd1cd7701,bnlwe-sp02-q-902249-is01-rg,start,Up 5 days (Mon- Fri) 9 AM to 9 PM IST
+bnlspqs200005,azure,1c0c41e9-8fe8-4ae8-b996-5a1dd1cd7701,bnlwe-sp02-q-902249-is01-rg,start,Up 5 days (Mon- Fri) 9 AM to 9 PM IST
+bnlspqs200007,azure,1c0c41e9-8fe8-4ae8-b996-5a1dd1cd7701,bnlwe-sp02-q-902249-is01-rg,start,Up 5 days (Mon- Fri) 9 AM to 9 PM IST
+bnlspqs200008,azure,1c0c41e9-8fe8-4ae8-b996-5a1dd1cd7701,bnlwe-sp02-q-902249-is01-rg,start,Up 5 days (Mon- Fri) 9 AM to 9 PM IST
+bnlspqs200009,azure,1c0c41e9-8fe8-4ae8-b996-5a1dd1cd7701,bnlwe-sp02-q-902249-is01-rg,start,Up 5 days (Mon- Fri) 9 AM to 9 PM IST
+bnlspqs200010,azure,1c0c41e9-8fe8-4ae8-b996-5a1dd1cd7701,bnlwe-sp02-q-902249-is01-rg,start,Up 5 days (Mon- Fri) 9 AM to 9 PM IST
+bnlspqs200011,azure,1c0c41e9-8fe8-4ae8-b996-5a1dd1cd7701,bnlwe-sp02-q-902249-is01-rg,start,Up 5 days (Mon- Fri) 9 AM to 9 PM IST
+bnlspqs200012,azure,61f1b943-e15f-42a1-b3e4-a098cb2826e1,bnlwe-sp01-q-902210-is01-rg,start,Up 5 days (Mon-Fri) 10 AM to 10 PM IST
+bnlspqs200013,azure,61f1b943-e15f-42a1-b3e4-a098cb2826e1,bnlwe-sp01-q-902210-is01-rg,start,Up 5 days (Mon-Fri) 10 AM to 10 PM IST
+bnlspqs200043,azure,1c0c41e9-8fe8-4ae8-b996-5a1dd1cd7701,bnlwe-sp02-q-901816-is01-rg,start,Up 6 days (Mon-Sat) 1:30 PM to 2:00 AM IST
+bnlspqs200044,azure,1c0c41e9-8fe8-4ae8-b996-5a1dd1cd7701,bnlwe-sp02-q-901816-is01-rg,start,Up 6 days (Mon-Sat) 1:30 PM to 2:00 AM IST
+bnlspqs200076,azure,61f1b943-e15f-42a1-b3e4-a098cb2826e1,bnlwe-sp01-q-904233-is01-rg,start,Up 5 days (Mon- Fri) 9 AM to 7 PM IST
+bnlspqs200077,azure,61f1b943-e15f-42a1-b3e4-a098cb2826e1,bnlwe-sp01-q-904233-is01-rg,start,Up 5 days (Mon- Fri) 9 AM to 7 PM IST
+bnlspqs200080,azure,61f1b943-e15f-42a1-b3e4-a098cb2826e1,bnlwe-sp01-q-904489-is01-rg,start,Up 5 days (Mon- Fri) 9 AM to 7 PM IST
+bnlspqs200082,azure,61f1b943-e15f-42a1-b3e4-a098cb2826e1,bnlwe-sp01-q-904489-is01-rg,start,Up 5 days (Mon- Fri) 9 AM to 7 PM IST
+bnlspqsx00001,azure,1c0c41e9-8fe8-4ae8-b996-5a1dd1cd7701,bnlwe-sp02-q-902164-is01-rg,start,Up 5 days (Mon-Fri) 11 AM to 8 PM IST
+bnlspqsx00002,azure,1c0c41e9-8fe8-4ae8-b996-5a1dd1cd7701,bnlwe-sp02-q-902164-is01-rg,start,Up 5 days (Mon-Fri) 11 AM to 8 PM IST
+bnlspqsx00076,azure,1c0c41e9-8fe8-4ae8-b996-5a1dd1cd7701,bnlwe-sp02-q-903068-is01-rg,start,Up 5 days (Mon-Fri) 10 AM to 10 PM IST
+bnlspqsx00077,azure,1c0c41e9-8fe8-4ae8-b996-5a1dd1cd7701,bnlwe-sp02-q-903068-is01-rg,start,Up 5 days (Mon-Fri) 10 AM to 10 PM IST
+bnlspqsx00078,azure,1c0c41e9-8fe8-4ae8-b996-5a1dd1cd7701,bnlwe-sp02-q-903068-is01-rg,start,Up 5 days (Mon-Fri) 10 AM to 10 PM IST
+bnlspqsx00079,azure,1c0c41e9-8fe8-4ae8-b996-5a1dd1cd7701,bnlwe-sp02-q-903105-is01-rg,start,Up 5 days (Mon-Fri) 11 AM to 11 PM IST
+bnlspqsx00080,azure,1c0c41e9-8fe8-4ae8-b996-5a1dd1cd7701,bnlwe-sp02-q-903105-is01-rg,start,Up 5 days (Mon-Fri) 11 AM to 11 PM IST
+bnlspqsx00123,azure,1c0c41e9-8fe8-4ae8-b996-5a1dd1cd7701,bnlwe-sp02-q-901807-is01-rg,start,Up 6 days (Mon-Sat) 1:30 PM to 2:00 AM IST
+bnlspqsx00125,azure,1c0c41e9-8fe8-4ae8-b996-5a1dd1cd7701,bnlwe-sp02-q-901807-is01-rg,start,Up 6 days (Mon-Sat) 1:30 PM to 2:00 AM IST
+bnlspqsx00128,azure,1c0c41e9-8fe8-4ae8-b996-5a1dd1cd7701,bnlwe-sp02-q-901807-is01-rg,start,Up 6 days (Mon-Sat) 1:30 PM to 2:00 AM IST
+bnlspqsx00131,azure,1c0c41e9-8fe8-4ae8-b996-5a1dd1cd7701,bnlwe-sp02-q-901814-is01-rg,start,Up 6 days (Mon-Sat) 1:30 PM to 2:00 AM IST
+bnlspqsx00133,azure,1c0c41e9-8fe8-4ae8-b996-5a1dd1cd7701,bnlwe-sp02-q-901814-is01-rg,start,Up 6 days (Mon-Sat) 1:30 PM to 2:00 AM IST
+bnlspqsx00136,azure,1c0c41e9-8fe8-4ae8-b996-5a1dd1cd7701,bnlwe-sp02-q-901814-is01-rg,start,Up 6 days (Mon-Sat) 1:30 PM to 2:00 AM IST
+bnlspqsx00139,azure,1c0c41e9-8fe8-4ae8-b996-5a1dd1cd7701,bnlwe-sp02-q-901809-is01-rg,start,Up 5 days (Mon-Fri) 12:30 PM to 12:30 AM IST
+bnlspqsx00141,azure,1c0c41e9-8fe8-4ae8-b996-5a1dd1cd7701,bnlwe-sp02-q-901809-is01-rg,start,Up 5 days (Mon-Fri) 12:30 PM to 12:30 AM IST
+bnlspqsx00144,azure,1c0c41e9-8fe8-4ae8-b996-5a1dd1cd7701,bnlwe-sp02-q-901809-is01-rg,start,Up 5 days (Mon-Fri) 12:30 PM to 12:30 AM IST
+bnlspqsx00151,azure,1c0c41e9-8fe8-4ae8-b996-5a1dd1cd7701,bnlwe-sp02-q-903419-is01-rg,start,Up 5 days (Mon-Fri) 10 AM to 10 PM IST
+bnlspqsx00155,azure,1c0c41e9-8fe8-4ae8-b996-5a1dd1cd7701,bnlwe-sp02-q-903419-is01-rg,start,Up 5 days (Mon-Fri) 10 AM to 10 PM IST
+bnlspqsx00158,azure,1c0c41e9-8fe8-4ae8-b996-5a1dd1cd7701,bnlwe-sp02-q-903419-is01-rg,start,Up 5 days (Mon-Fri) 10 AM to 10 PM IST
+bnlspqsx00170,azure,1c0c41e9-8fe8-4ae8-b996-5a1dd1cd7701,bnlwe-sp02-q-903202-is01-rg,start,Up 5 days (Mon-Fri) 10 AM to 10 PM IST
+bnlspqsx00171,azure,1c0c41e9-8fe8-4ae8-b996-5a1dd1cd7701,bnlwe-sp02-q-903202-is01-rg,start,Up 5 days (Mon-Fri) 10 AM to 10 PM IST
+bnlspqsx00221,azure,1c0c41e9-8fe8-4ae8-b996-5a1dd1cd7701,bnlwe-sp02-q-903202-is01-rg,start,Up 5 days (Mon- Fri) 10 AM to 10 PM IST
+bnlspqsx00192,azure,61f1b943-e15f-42a1-b3e4-a098cb2826e1,bnlwe-sp01-q-901720-is01-rg,start,Up 6 Days (Mon-Sat) 09:00 AM to 01:00 AM IST
+bnlspqsx00193,azure,61f1b943-e15f-42a1-b3e4-a098cb2826e1,bnlwe-sp01-q-901720-is01-rg,start,Up 6 Days (Mon-Sat) 09:00 AM to 01:00 AM IST
+bnlspqsx00207,azure,61f1b943-e15f-42a1-b3e4-a098cb2826e1,bnlwe-sp01-q-57487-rg,start,Up 5 days (Mon-Fri) 10 AM to 7 PM IST
+bnlspqsx00208,azure,61f1b943-e15f-42a1-b3e4-a098cb2826e1,bnlwe-sp01-q-57487-rg,start,Up 5 days (Mon-Fri) 10 AM to 7 PM IST
+bnlspqsx00222,azure,1c0c41e9-8fe8-4ae8-b996-5a1dd1cd7701,bnlwe-sp02-q-931564-is01-rg,start,Up 5 day (Mon-Fri) 7:00 AM to 9:30 PM BST
+bnlspqsx00223,azure,1c0c41e9-8fe8-4ae8-b996-5a1dd1cd7701,bnlwe-sp02-q-931564-is01-rg,start,Up 5 day (Mon-Fri) 7:00 AM to 9:30 PM BST
+bnlspqw200008,azure,1c0c41e9-8fe8-4ae8-b996-5a1dd1cd7701,bnlwe-sp02-q-931564-is01-rg,start,Up 6 days (Mon-Sat) 1:00 PM to 2:00 AM IST
+bnlspqsx00226,azure,1c0c41e9-8fe8-4ae8-b996-5a1dd1cd7701,bnlwe-sp02-q-931565-is01-rg,start,Up 5 day (Mon-Fri) 7:00 AM to 9:30 PM BST
+bnlspqsx00227,azure,1c0c41e9-8fe8-4ae8-b996-5a1dd1cd7701,bnlwe-sp02-q-931565-is01-rg,start,Up 5 day (Mon-Fri) 7:00 AM to 9:30 PM BST
+bnlspqsx00228,azure,1c0c41e9-8fe8-4ae8-b996-5a1dd1cd7701,bnlwe-sp02-q-931566-is01-rg,start,Up 5 day (Mon-Fri) 7:00 AM to 9:30 PM BST
+bnlspqsx00229,azure,1c0c41e9-8fe8-4ae8-b996-5a1dd1cd7701,bnlwe-sp02-q-931566-is01-rg,start,Up 5 day (Mon-Fri) 7:00 AM to 9:30 PM BST
+bnlspssx00021,azure,61f1b943-e15f-42a1-b3e4-a098cb2826e1,bnlwe-sp01-s-901774-is01-rg,start,Up 5 days (Mon-Fri) 9:30 AM to 9:30 PM IST
+bnlspssx00022,azure,61f1b943-e15f-42a1-b3e4-a098cb2826e1,bnlwe-sp01-s-901774-is01-rg,start,Up 5 days (Mon-Fri) 9:30 AM to 9:30 PM IST
+bnlspssx00107,azure,61f1b943-e15f-42a1-b3e4-a098cb2826e1,bnlwe-sp01-s-901757-is01-rg,start,Up 5 days (Mon-Fri) 9:30 AM to 9:30 PM IST
+bnlspssx00108,azure,61f1b943-e15f-42a1-b3e4-a098cb2826e1,bnlwe-sp01-s-901757-is01-rg,start,Up 5 days (Mon-Fri) 9:30 AM to 9:30 PM IST
+bnlspusx00112,azure,1c0c41e9-8fe8-4ae8-b996-5a1dd1cd7701,bnlwe-sp02-u-903106-is01-rg,start,Up 5 days (Mon-Fri) 11 AM to 11 PM IST
+bnlspusx00115,azure,1c0c41e9-8fe8-4ae8-b996-5a1dd1cd7701,bnlwe-sp02-u-903106-is01-rg,start,Up 5 days (Mon-Fri) 11 AM to 11 PM IST
+bnlspusx00116,azure,1c0c41e9-8fe8-4ae8-b996-5a1dd1cd7701,bnlwe-sp02-u-903106-is01-rg,start,Up 5 days (Mon-Fri) 11 AM to 11 PM IST
+bnlspusx00166,azure,61f1b943-e15f-42a1-b3e4-a098cb2826e1,bnlwe-sp01-u-901825-is01-rg,start,Up 5 days (Mon-Fri) 9:30 AM to 9:30 PM IST
+bnlspusx00167,azure,61f1b943-e15f-42a1-b3e4-a098cb2826e1,bnlwe-sp01-u-901825-is01-rg,start,Up 5 days (Mon-Fri) 9:30 AM to 9:30 PM IST
+bnlspusx00168,azure,61f1b943-e15f-42a1-b3e4-a098cb2826e1,bnlwe-sp01-u-901825-is01-rg,start,Up 5 days (Mon-Fri) 9:30 AM to 9:30 PM IST
+bnlspusx00169,azure,61f1b943-e15f-42a1-b3e4-a098cb2826e1,bnlwe-sp01-u-901825-is01-rg,start,Up 5 days (Mon-Fri) 9:30 AM to 9:30 PM IST
+bnlspusx00170,azure,61f1b943-e15f-42a1-b3e4-a098cb2826e1,bnlwe-sp01-u-901284-is01-rg,start,Up 5 days (Mon-Fri) 11:30 AM to 11:30 PM IST
+bnlspusx00171,azure,61f1b943-e15f-42a1-b3e4-a098cb2826e1,bnlwe-sp01-u-901284-is01-rg,start,Up 5 days (Mon-Fri) 11:30 AM to 11:30 PM IST
+bnlspusx00172,azure,61f1b943-e15f-42a1-b3e4-a098cb2826e1,bnlwe-sp01-u-901284-is01-rg,start,Up 5 days (Mon-Fri) 11:30 AM to 11:30 PM IST
+bnlspusx00187,azure,1c0c41e9-8fe8-4ae8-b996-5a1dd1cd7701,bnlwe-sp02-u-903380-is01-rg,start,24X7 Always Up
+bnlspusx00188,azure,1c0c41e9-8fe8-4ae8-b996-5a1dd1cd7701,bnlwe-sp02-u-903380-is01-rg,start,24X7 Always Up
+bnlspusx00189,azure,1c0c41e9-8fe8-4ae8-b996-5a1dd1cd7701,bnlwe-sp02-u-903380-is01-rg,start,24X7 Always Up
+bnlspusx00190,azure,1c0c41e9-8fe8-4ae8-b996-5a1dd1cd7701,bnlwe-sp02-u-903380-is01-rg,start,24X7 Always Up
+bnlwespdap20001,azure,61f1b943-e15f-42a1-b3e4-a098cb2826e1,bnlwe-sp01-n-57672-is01-rg,start,Up 5 days (Mon-Fri) 10 AM to 10 PM IST
+bnlwesppap20504,azure,61f1b943-e15f-42a1-b3e4-a098cb2826e1,bnlwe-sp01-p-57674-is01-rg,start,Up 5 days (Mon-Fri) 10 AM to 10 PM IST
+biespds200001,azure,6c76103f-b987-4d6b-8f8d-b251cb88ffbb,bieno-sp05-d-902199-is01-rg,start,Up 5 days (Mon-Fri) 10 AM to 10 PM IST
+biespds200006,azure,4c18ce9f-e28d-4f9b-966f-ebe469a1123b,bieno-sp04-d-902254-is01-rg,start,Up 5 days (Mon-Fri) 10 AM to 10 PM IST
+biespds200007,azure,4c18ce9f-e28d-4f9b-966f-ebe469a1123b,bieno-sp04-d-902254-is01-rg,start,Up 5 days (Mon-Fri) 10 AM to 10 PM IST
+biespds200015,azure,61f1b943-e15f-42a1-b3e4-a098cb2826e1,bieno-sp01-d-904466-is01-rg,start,Up 5 days (Mon- Fri) 9 AM to 7 PM IST
+biespdsx00038,azure,4c18ce9f-e28d-4f9b-966f-ebe469a1123b,bieno-sp04-d-903042-is01-rg,start,Up 5 days (Mon- Fri) 8 AM to 10 PM IST
+biespdsx00039,azure,4c18ce9f-e28d-4f9b-966f-ebe469a1123b,bieno-sp04-d-903042-is01-rg,start,Up 5 days (Mon- Fri) 8 AM to 10 PM IST
+biespdsx00040,azure,4c18ce9f-e28d-4f9b-966f-ebe469a1123b,bieno-sp04-d-903042-is01-rg,start,Up 5 days (Mon- Fri) 8 AM to 10 PM IST
+biespdsx00050,azure,4c18ce9f-e28d-4f9b-966f-ebe469a1123b,bieno-sp04-d-902788-is01-rg,start,Up 5 days (Mon- Fri) 5 PM to 5 AM IST
+biespdsx00051,azure,4c18ce9f-e28d-4f9b-966f-ebe469a1123b,bieno-sp04-d-902788-is01-rg,start,Up 5 days (Mon- Fri) 5 PM to 5 AM IST
+biespdsx00099,azure,6c76103f-b987-4d6b-8f8d-b251cb88ffbb,bieno-sp05-d-903220-is01-rg,start,Up 5 days (Mon-Fri) 10 AM to 10 PM IST
+biespdsx00100,azure,6c76103f-b987-4d6b-8f8d-b251cb88ffbb,bieno-sp05-d-903220-is01-rg,start,Up 5 days (Mon-Fri) 10 AM to 10 PM IST
+biespdsx00101,azure,6c76103f-b987-4d6b-8f8d-b251cb88ffbb,bieno-sp05-d-903220-is01-rg,start,Up 5 days (Mon-Fri) 10 AM to 10 PM IST
+biespdsx00149,azure,4c18ce9f-e28d-4f9b-966f-ebe469a1123b,bieno-sp04-d-903044-is01-rg,start,Up 5 days (Mon-Fri) 11:30 AM to 2:30 AM IST
+biespps200164,azure,42d55838-585f-4a26-b055-3b7c78326ebc,bieno-sp03-p-930392-is01-rg,start,Up 5 days (Mon- Fri) 11:30 AM to 9:30 PM IST
+biesppsx00318,azure,4c18ce9f-e28d-4f9b-966f-ebe469a1123b,bieno-sp04-p-903283-is01-rg,start,Up 5 Days (Mon - Fri) 5PM IST to 1 AM IST
+biesppsx00322,azure,4c18ce9f-e28d-4f9b-966f-ebe469a1123b,bieno-sp04-p-903283-is01-rg,start,Up 5 Days (Mon - Fri) 5PM IST to 1 AM IST
+biesppsx00324,azure,4c18ce9f-e28d-4f9b-966f-ebe469a1123b,bieno-sp04-p-903283-is01-rg,start,Up 5 Days (Mon - Fri) 5PM IST to 1 AM IST
+biesppsx00325,azure,4c18ce9f-e28d-4f9b-966f-ebe469a1123b,bieno-sp04-p-903283-is01-rg,start,Up 5 Days (Mon - Fri) 5PM IST to 1 AM IST
+biespqs200001,azure,4c18ce9f-e28d-4f9b-966f-ebe469a1123b,bieno-sp04-q-902255-is01-rg,start,Up 5 days (Mon-Fri) 12:30 PM to 12:30 AM IST
+biespqs200002,azure,4c18ce9f-e28d-4f9b-966f-ebe469a1123b,bieno-sp04-q-902255-is01-rg,start,Up 5 days (Mon-Fri) 12:30 PM to 12:30 AM IST
+biespqs200003,azure,4c18ce9f-e28d-4f9b-966f-ebe469a1123b,bieno-sp04-q-902255-is01-rg,start,Up 5 days (Mon-Fri) 12:30 PM to 12:30 AM IST
+biespqs200004,azure,4c18ce9f-e28d-4f9b-966f-ebe469a1123b,bieno-sp04-q-902255-is01-rg,start,Up 5 days (Mon-Fri) 12:30 PM to 12:30 AM IST
+biespqs200005,azure,4c18ce9f-e28d-4f9b-966f-ebe469a1123b,bieno-sp04-q-902255-is01-rg,start,Up 5 days (Mon-Fri) 12:30 PM to 12:30 AM IST
+biespqs200006,azure,4c18ce9f-e28d-4f9b-966f-ebe469a1123b,bieno-sp04-q-902255-is01-rg,start,Up 5 days (Mon-Fri) 12:30 PM to 12:30 AM IST
+biespqs200011,azure,4c18ce9f-e28d-4f9b-966f-ebe469a1123b,bieno-sp04-q-902255-is01-rg,start,Up 5 days (Mon-Fri) 10 AM to 12:30 AM IST
+biespqs200012,azure,4c18ce9f-e28d-4f9b-966f-ebe469a1123b,bieno-sp04-q-902255-is01-rg,start,Up 5 days (Mon-Fri) 12:30 PM to 12:30 AM IST
+biespqs200019,azure,6c76103f-b987-4d6b-8f8d-b251cb88ffbb,bieno-sp05-q-902268-is01-rg,start,Up 5 days (Mon- Fri) 9 AM to 9 PM IST
+biespqsx00062,azure,6c76103f-b987-4d6b-8f8d-b251cb88ffbb,bieno-sp05-q-902268-is01-rg,start,Up 5 days (Mon-Fri) 10 AM to 10 PM IST
+biespqsx00063,azure,6c76103f-b987-4d6b-8f8d-b251cb88ffbb,bieno-sp05-q-902268-is01-rg,start,Up 5 days (Mon-Fri) 10 AM to 10 PM IST
+biespqs200026,azure,61f1b943-e15f-42a1-b3e4-a098cb2826e1,bieno-sp01-q-904479-is01-rg,start,Up 5 days (Mon- Fri) 9 AM to 7 PM IST
+biespqs200027,azure,61f1b943-e15f-42a1-b3e4-a098cb2826e1,bieno-sp01-q-904479-is01-rg,start,Up 5 days (Mon- Fri) 9 AM to 7 PM IST
+biespqsx00015,azure,6c76103f-b987-4d6b-8f8d-b251cb88ffbb,bieno-sp05-q-902235-is01-rg,start,Up 5 days (Mon-Fri) 10 AM to 10 PM IST
+biespqsx00016,azure,6c76103f-b987-4d6b-8f8d-b251cb88ffbb,bieno-sp05-q-902235-is01-rg,start,Up 5 days (Mon-Fri) 10 AM to 10 PM IST
+biespqsx00101,azure,6c76103f-b987-4d6b-8f8d-b251cb88ffbb,bieno-sp05-q-902235-is01-rg,start,Up 5 days (Mon-Fri) 10 AM to 10 PM IST
+biespqsx00102,azure,6c76103f-b987-4d6b-8f8d-b251cb88ffbb,bieno-sp05-q-902235-is01-rg,start,Up 5 days (Mon-Fri) 10 AM to 10 PM IST
+biespqsx00103,azure,6c76103f-b987-4d6b-8f8d-b251cb88ffbb,bieno-sp05-q-902235-is01-rg,start,Up 5 days (Mon- Fri) 10 AM to 10 PM IST
+biespqsx00019,azure,6c76103f-b987-4d6b-8f8d-b251cb88ffbb,bieno-sp05-q-902481-is01-rg,start,Up 7 days 8 AM to 8 PM IST
+biespqsx00020,azure,6c76103f-b987-4d6b-8f8d-b251cb88ffbb,bieno-sp05-q-902481-is01-rg,start,Up 7 days 8 AM to 8 PM IST
+biespqsx00047,azure,4c18ce9f-e28d-4f9b-966f-ebe469a1123b,bieno-sp04-q-903134-is01-rg,start,Up 5 days (Mon-Fri) 12 PM to 12 AM IST
+biespqsx00048,azure,4c18ce9f-e28d-4f9b-966f-ebe469a1123b,bieno-sp04-q-903134-is01-rg,start,Up 5 days (Mon-Fri) 12 PM to 12 AM IST
+biespqsx00071,azure,4c18ce9f-e28d-4f9b-966f-ebe469a1123b,bieno-sp04-q-903118-is01-rg,start,Up 5 days (Mon-Fri) 11 AM to 11 PM IST
+biespqsx00072,azure,4c18ce9f-e28d-4f9b-966f-ebe469a1123b,bieno-sp04-q-903118-is01-rg,start,Up 5 days (Mon-Fri) 11 AM to 11 PM IST
+biespqsx00106,azure,6c76103f-b987-4d6b-8f8d-b251cb88ffbb,bieno-sp05-q-901377-is01-rg,start,24X7 Always Up
+biespqsx00107,azure,6c76103f-b987-4d6b-8f8d-b251cb88ffbb,bieno-sp05-q-901377-is01-rg,start,24X7 Always Up
+biespqsx00110,azure,6c76103f-b987-4d6b-8f8d-b251cb88ffbb,bieno-sp05-q-903479-is01-rg,start,Up 5 days (Mon-Fri) 10 AM to 10 PM IST
+biespssx00027,azure,4c18ce9f-e28d-4f9b-966f-ebe469a1123b,bieno-sp04-s-902791-is01-rg,start,Up 5 days (Mon-Fri) 8 AM to 8 PM Brazil time
+biespssx00029,azure,4c18ce9f-e28d-4f9b-966f-ebe469a1123b,bieno-sp04-s-902791-is01-rg,start,Up 5 days (Mon-Fri) 8 AM to 8 PM Brazil time
+bnlspdsx00102,azure,42d55838-585f-4a26-b055-3b7c78326ebc,bnlwe-sp03-d-902812-is01-rg,start,Up 5 days (Mon- Fri) 10 AM to 10 PM IST
+bnlspdsx00103,azure,42d55838-585f-4a26-b055-3b7c78326ebc,bnlwe-sp03-d-902812-is01-rg,start,Up 5 days (Mon- Fri) 10 AM to 10 PM IST
+bnlspqsx00012,azure,42d55838-585f-4a26-b055-3b7c78326ebc,bnlwe-sp03-q-901758-is01-rg,start,Up 5 days (Mon-Fri) 10:30 AM to 10:45 PM IST
+bnlspqsx00013,azure,42d55838-585f-4a26-b055-3b7c78326ebc,bnlwe-sp03-q-901758-is01-rg,start,Up 5 days (Mon-Fri) 10:30 AM to 10:30 PM IST
+bnlspqsx00189,azure,42d55838-585f-4a26-b055-3b7c78326ebc,bnlwe-sp03-q-902578-is01-rg,start,Up 5 days (Mon-Fri) 10 AM to 10 PM IST
+bnlspqsx00212,azure,42d55838-585f-4a26-b055-3b7c78326ebc,bnlwe-sp03-q-901343-is01-rg,start,Up 5 days (Mon- Fri) 9 AM to 9 PM IST
+bnlspqsx00213,azure,42d55838-585f-4a26-b055-3b7c78326ebc,bnlwe-sp03-q-901343-is01-rg,start,Up 5 days (Mon- Fri) 9 AM to 9 PM IST
+bnlwespqs3099,azure,42d55838-585f-4a26-b055-3b7c78326ebc,bnlwe-sp03-q-901751-is01-rg,start,Up 5 days (Mon- Fri) 9 AM to 9 PM IST
+bnlwespqs3100,azure,42d55838-585f-4a26-b055-3b7c78326ebc,bnlwe-sp03-q-901751-is01-rg,start,Up 5 days (Mon- Fri) 9 AM to 9 PM IST
+bnlafdw200985,azure,beb54d1c-1125-46b2-aa73-3c28f6918c06,bnlwe-af01-d-57425-rg,start,Up 5 Days (Mon-Fri) 6 AM to 6 PM Brazil/East
+bnlweesddb20001,azure,01491751-2545-4f64-afa7-54ffc907183d,bnlwe-es01-d-55806-is01-rg,start,Up 5 days (Mon-Fri) 2 PM to 11 PM IST
+biespusx00139,azure,4c18ce9f-e28d-4f9b-966f-ebe469a1123b,bieno-sp04-u-903135-is01-rg,start,Up 5 days (Mon-Fri) 10 AM to 10 PM IST
+biespusx00142,azure,4c18ce9f-e28d-4f9b-966f-ebe469a1123b,bieno-sp04-u-903135-is01-rg,start,Up 5 days (Mon-Fri) 10 AM to 10 PM IST
+biespusx00143,azure,4c18ce9f-e28d-4f9b-966f-ebe469a1123b,bieno-sp04-u-903135-is01-rg,start,Up 5 days (Mon-Fri) 10 AM to 10 PM IST
+biespdsx00041,azure,6c76103f-b987-4d6b-8f8d-b251cb88ffbb,bieno-sp05-d-903123-is01-rg,start,Up 5 days (Mon-Fri) 10 AM to 9 PM IST
+biespdsx00042,azure,6c76103f-b987-4d6b-8f8d-b251cb88ffbb,bieno-sp05-d-903123-is01-rg,start,Up 5 days (Mon-Fri) 10 AM to 9 PM IST
+biespdsx00043,azure,6c76103f-b987-4d6b-8f8d-b251cb88ffbb,bieno-sp05-d-903123-is01-rg,start,Up 5 days (Mon-Fri) 10 AM to 9 PM IST
+biespdsx00144,azure,6c76103f-b987-4d6b-8f8d-b251cb88ffbb,bieno-sp05-d-903123-is01-rg,start,Up 5 days (Mon-Fri) 10 AM to 9 PM IST
+biesppsx00651,azure,1c0c41e9-8fe8-4ae8-b996-5a1dd1cd7701,bieno-sp02-p-901652-is01-rg,start,Up 2 days (Tue&Wed) 11AM to 11PM IST
+biesppsx00694,azure,1c0c41e9-8fe8-4ae8-b996-5a1dd1cd7701,bieno-sp02-p-901652-is01-rg,start,Up 2 days (Tue&Wed) 11AM to 11PM IST
+gfrprdlx00003,gcp,ul-pr-d-903851-prj,europe-west3-a,start,Up 5 days (Mon-Fri) 11 AM to 8 PM IST
+bnlafdw201044,azure,beb54d1c-1125-46b2-aa73-3c28f6918c06,bnlwe-af01-d-57425-rg,start,24X7 Always Up
+bnlafpw201257,azure,beb54d1c-1125-46b2-aa73-3c28f6918c06,bnlwe-af01-p-57426-rg,start,24X7 Always Up
+biedaqw200016,azure,b699fc9e-47e8-4268-8b1a-f6f14757dd06,bieno-da11-q-901445-is01-rg,start,24X7 Always Up
+biedaqw200015,azure,b699fc9e-47e8-4268-8b1a-f6f14757dd06,bieno-da11-q-901445-is01-rg,start,24X7 Always Up
+biedaqw200022,azure,b699fc9e-47e8-4268-8b1a-f6f14757dd06,bieno-da11-q-901445-is01-rg,start,24X7 Always Up
+gfrspdlx00054,gcp,ul-sp-d-902267-prj,europe-west3-a,start,Up 7 days 10 AM to 10 PM IST
+gfrspdlx00055,gcp,ul-sp-d-902267-prj,europe-west3-a,start,Up 7 days 10 AM to 10 PM IST
+gfrspdw200002,gcp,ul-sp-d-902267-prj,europe-west3-a,start,Up 7 days 10 AM to 10 PM IST
+gfrccdw200583,gcp,ul-cc-d-903755-01-prj,europe-west3-a,start,Up 5 days (Mon-Fri) 6 AM to 6 PM Europe/London
+biefsuap00001,azure,b466d563-74e6-4232-a5c6-f39f65f6f1fc,bieno-u-fs-adds-rg,start,24X7 Always Up
+bnlfsuw500005,azure,b466d563-74e6-4232-a5c6-f39f65f6f1fc,bnlwe-fs01-u-903572-is01-rg,start,24X7 Always Up
+bnlfsuw500002,azure,b466d563-74e6-4232-a5c6-f39f65f6f1fc,bnlwe-fs01-u-903575-is01-rg,start,24X7 Always Up
+bnlfsuwp00002,azure,b466d563-74e6-4232-a5c6-f39f65f6f1fc,bnlwe-fs01-u-903816-is01-rg,start,24X7 Always Up
+bnlfsuwp00003,azure,b466d563-74e6-4232-a5c6-f39f65f6f1fc,bnlwe-fs01-u-903816-is01-rg,start,24X7 Always Up
+gfrsppw200001,gcp,ul-sp-p-903698-prj,europe-west3-a,start,Up 5 days (Mon- Fri) 10 AM to 10 PM IST
+gfrspqlx00018,gcp,ul-sp-q-901853-prj,europe-west3-b,start,24X7 Always Up
+gfrspqlx00020,gcp,ul-sp-q-901853-prj,europe-west3-b,start,24X7 Always Up
+gfrspslx00015,gcp,ul-sp-s-903348-prj,europe-west3-a,start,Up 5 days (Mon- Fri) 10 AM to 10 PM IST
+gfrspslx00016,gcp,ul-sp-s-903348-prj,europe-west3-a,start,Up 5 days (Mon- Fri) 10 AM to 10 PM IST
+gfrspslx00017,gcp,ul-sp-s-903348-prj,europe-west3-a,start,Up 5 days (Mon- Fri) 10 AM to 10 PM IST
+gfrspslx00018,gcp,ul-sp-s-903348-prj,europe-west3-a,start,Up 5 days (Mon- Fri) 10 AM to 10 PM IST
+gsgcdul200017,gcp,ul-cd-u-930662-prj,asia-southeast1-a,start,Up 5 days (Mon- Fri) 6 AM to 11:59 PM IST
+gsgcdul200018,gcp,ul-cd-u-930662-prj,asia-southeast1-a,start,Up 5 days (Mon- Fri) 6 AM to 11:59 PM IST
+gsgcdpw200001,gcp,ul-cd-p-931571-prj,asia-southeast1-a,start,Up 5 days (Mon-Fri) 08:00 AM to 08:00 PM IST
+gfrspdlx00057,gcp,ul-sp-d-902606-prj,europe-west3-b,start,Up 5 days (Mon-Fri) 12:30 PM to 22:30 PM IST
+gfrspdlx00060,gcp,ul-sp-d-902606-prj,europe-west3-b,start,Up 5 days (Mon-Fri) 12:30 PM to 22:30 PM IST
+gfrspdlx00063,gcp,ul-sp-d-902605-prj,europe-west3-b,start,Up 5 days (Mon-Fri) 12:30 PM to 22:30 PM IST
+gfrprdw200009,gcp,ul-pr-d-57536-prj,europe-west3-a,start,Up 5 days (Mon- Fri) 9 AM to 9 PM IST
+gfrprqw200001,gcp,ul-pr-q-57554-prj,europe-west3-a,start,Up 5 days (Mon- Fri) 9 AM to 9 PM IST
+gfrtfdw200001,gcp,ul-tf-d-930039-prj,europe-west3-a,start,24X7 Always Up
+gfrtfdw200015,gcp,ul-tf-d-930039-prj,europe-west3-a,start,24X7 Always Up
+gfrtfdw200016,gcp,ul-tf-d-930039-prj,europe-west3-a,start,24X7 Always Up
+gfrtfqw200007,gcp,ul-tf-q-930038-prj,europe-west3-a,start,Up 5 days (Mon- Fri) 8 AM to 10 PM IST
+gfrtfqw200008,gcp,ul-tf-q-930038-prj,europe-west3-a,start,Up 5 days (Mon- Fri) 8 AM to 10 PM IST
+gfrtfqw200009,gcp,ul-tf-q-930038-prj,europe-west3-a,start,Up 5 days (Mon- Fri) 8 AM to 10 PM IST
+gfrtfqw200010,gcp,ul-tf-q-930038-prj,europe-west3-a,start,Up 5 days (Mon- Fri) 8 AM to 10 PM IST
+gfrtfqw200002,gcp,ul-tf-q-930038-prj,europe-west3-a,start,Up 5 days (Mon- Fri) 8 AM to 10 PM IST
+gfrtfqw200001,gcp,ul-tf-q-930038-prj,europe-west3-a,start,Up 5 days (Mon- Fri) 8 AM to 10 PM IST
+gfrprdw200004,gcp,ul-pr-d-57536-prj,europe-west3-a,start,Up 5 days (Mon- Fri) 9 AM to 9 PM IST
+gfrprdw200008,gcp,ul-pr-d-57536-prj,europe-west3-a,start,Up 5 days (Mon- Fri) 9 AM to 9 PM IST
+gfrprqw200002,gcp,ul-pr-q-57554-prj,europe-west3-a,start,Up 5 days (Mon- Fri) 9 AM to 9 PM IST
+gfrprtw200002,gcp,ul-pr-t-57555-prj,europe-west3-a,start,Up 5 days (Mon- Fri) 9 AM to 9 PM IST
+gfrprtw200001,gcp,ul-pr-t-57555-prj,europe-west3-a,start,Up 5 days (Mon- Fri) 9 AM to 9 PM IST
+gfrpruw200001,gcp,ul-pr-u-57556-prj,europe-west3-a,start,Up 5 days (Mon- Fri) 9 AM to 9 PM IST
+gfresqw200056,gcp,ul-es-q-55464-01-prj,europe-west3-a,start,Up 5 days (Mon-Fri) 10:30 AM to 10:30 PM IST
+gfresqw200057,gcp,ul-es-q-55464-01-prj,europe-west3-a,start,Up 5 days (Mon-Fri) 10:30 AM to 10:30 PM IST
+gfresqlx00011,gcp,ul-es-q-55464-01-prj,europe-west3-a,start,Up 5 days (Mon-Fri) 10 AM to 10:30 PM IST
+gfrespw200037,gcp,ul-es-p-57438-01-prj,europe-west3-a,start,Up 5 days (Mon-Fri) 10 AM to 10 PM IST
+gfrespw200038,gcp,ul-es-p-57438-01-prj,europe-west3-a,start,Up 5 days (Mon-Fri) 10 AM to 10 PM IST
+gfresplx00007,gcp,ul-es-p-57438-01-prj,europe-west3-a,start,Up 5 days (Mon-Fri) 10 AM to 10 PM IST
+gfrspqlx00021,gcp,ul-sp-q-902272-prj,europe-west3-a,start,Up 5 days (Mon-Fri) 11 AM to 11 PM IST
+gfrspdlx00066,gcp,ul-sp-d-901759-prj,europe-west3-b,start,Up 5 days (Mon-Fri) 10:30 AM to 10:30 PM IST
+gfrspqlx00022,gcp,ul-sp-q-902272-prj,europe-west3-a,start,Up 5 days (Mon-Fri) 11 AM to 11 PM IST
+gfrspdlx00067,gcp,ul-sp-d-901759-prj,europe-west3-b,start,Up 5 days (Mon-Fri) 10:30 AM to 10:30 PM IST
+gfrspdw200007,gcp,ul-sp-d-901261-prj,europe-west3-a,start,Up 5 days (Mon- Fri) 10 AM to 10 PM IST
+gfrspdw200006,gcp,ul-sp-d-901261-prj,europe-west3-a,start,Up 5 days (Mon- Fri) 10 AM to 10 PM IST
+gfrspdlx00061,gcp,ul-sp-d-902685-prj,europe-west3-b,start,Up 5 days (Mon- Fri) 10 AM to 10 PM IST
+gfrspdlx00062,gcp,ul-sp-d-902685-prj,europe-west3-b,start,Up 5 days (Mon- Fri) 10 AM to 10 PM IST
+bnlafpw201204,azure,beb54d1c-1125-46b2-aa73-3c28f6918c06,bnlwe-af01-p-57426-rg,start,24X7 Always Up
+gfrspslx00019,gcp,ul-sp-s-901820-prj,europe-west3-a,start,Up 5 days (Mon- Fri) 10 AM to 10 PM IST
+gfrspslx00020,gcp,ul-sp-s-901820-prj,europe-west3-a,start,Up 5 days (Mon- Fri) 10 AM to 10 PM IST
+gfrspqlx00023,gcp,ul-sp-q-902235-prj,europe-west3-a,start,Up 5 days (Mon-Fri) 11 AM to 11 PM IST
+gfrspqlx00025,gcp,ul-sp-q-902235-prj,europe-west3-a,start,Up 5 days (Mon-Fri) 11 AM to 11 PM IST
+gfrspqlx00027,gcp,ul-sp-q-902235-prj,europe-west3-a,start,Up 5 days (Mon-Fri) 11 AM to 11 PM IST
+gfrspqlx00028,gcp,ul-sp-q-902235-prj,europe-west3-a,start,Up 5 days (Mon-Fri) 11 AM to 11 PM IST
+gfrspqlx00029,gcp,ul-sp-q-902235-prj,europe-west3-a,start,Up 5 days (Mon-Fri) 11 AM to 11 PM IST
+gfrspqlx00024,gcp,ul-sp-q-903479-prj,europe-west3-a,start,Up 5 days (Mon-Fri) 10 AM to 8 PM IST
+gfrspqlx00030,gcp,ul-sp-q-901377-prj,europe-west3-a,start,24X7 Always Up
+gfrspqlx00031,gcp,ul-sp-q-901377-prj,europe-west3-a,start,24X7 Always Up
+gfrnwdw200001,gcp,ul-nw-d-930210-prj,europe-west3-a,start,Up 5 days 09:00 AM to 08:00 PM IST
+gfrgfpw200058,gcp,ul-gf-p-930058-prj,europe-west3-a,start,Up 6 days (Mon-Sat) 24*6 IST
+gfrgfpw200059,gcp,ul-gf-p-930058-prj,europe-west3-a,start,Up 6 days (Mon-Sat) 24*6 IST
+gfressw200013,gcp,ul-es-s-903437-prj,europe-west3-a,start,Up 5 days (Mon-Fri) 10:30 AM to 10:30 PM IST
+gsgcdul200019,gcp,ul-cd-u-930752-prj,asia-southeast1-a,start,Up 5 days (Mon- Fri) 6 AM to 11:59 PM IST
+gsgcdul200020,gcp,ul-cd-u-930752-prj,asia-southeast1-a,start,Up 5 days (Mon- Fri) 6 AM to 11:59 PM IST
+gfrspdlx00071,gcp,ul-sp-d-902812-prj,europe-west3-a,start,Up 5 days (Mon-Fri) 10 AM to 8 PM IST
+gfrspdlx00072,gcp,ul-sp-d-902812-prj,europe-west3-a,start,Up 5 days (Mon-Fri) 10 AM to 8 PM IST
+gfrspdlx00073,gcp,ul-sp-d-903220-prj,europe-west3-a,start,Up 5 days (Mon-Fri) 10 AM to 8 PM IST
+gfrspdlx00074,gcp,ul-sp-d-903220-prj,europe-west3-a,start,Up 5 days (Mon-Fri) 10 AM to 8 PM IST
+gfrspdlx00075,gcp,ul-sp-d-903123-prj,europe-west3-a,start,Up 5 days (Mon-Fri) 10 AM to 8 PM IST
+gfrspdlx00076,gcp,ul-sp-d-903220-prj,europe-west3-a,start,Up 5 days (Mon-Fri) 10 AM to 8 PM IST
+gfrspdlx00077,gcp,ul-sp-d-903123-prj,europe-west3-a,start,Up 5 days (Mon-Fri) 10 AM to 8 PM IST
+gfrspdlx00078,gcp,ul-sp-d-903123-prj,europe-west3-a,start,Up 5 days (Mon-Fri) 10 AM to 8 PM IST
+gfrspdlx00079,gcp,ul-sp-d-903123-prj,europe-west3-a,start,Up 5 days (Mon-Fri) 10 AM to 8 PM IST
+gfrspdw200008,gcp,ul-sp-d-902199-prj,europe-west3-a,start,Up 5 days (Mon-Fri) 10 AM to 8 PM IST
+gfrspqlx00034,gcp,ul-sp-q-903130-prj,europe-west3-a,start,Up 5 days (Mon-Fri) 10 AM to 8 PM IST
+gfrspqlx00035,gcp,ul-sp-q-903130-prj,europe-west3-a,start,Up 5 days (Mon-Fri) 10 AM to 8 PM IST
+gfrspqlx00036,gcp,ul-sp-q-902083-prj,europe-west3-a,start,Up 5 days (Mon-Fri) 10 AM to 8 PM IST
+gfrspqlx00037,gcp,ul-sp-q-902083-prj,europe-west3-a,start,Up 5 days (Mon-Fri) 10 AM to 8 PM IST
+gfrspqlx00038,gcp,ul-sp-q-902083-prj,europe-west3-a,start,Up 5 days (Mon-Fri) 10 AM to 8 PM IST
+gfrspqlx00039,gcp,ul-sp-q-57817-prj,europe-west3-a,start,Up 5 days (Mon-Fri) 10 AM to 8 PM IST
+gfrspqlx00042,gcp,ul-sp-q-902268-prj,europe-west3-a,start,Up 5 days (Mon-Fri) 10 AM to 8 PM IST
+gfrspqlx00043,gcp,ul-sp-q-902268-prj,europe-west3-a,start,Up 5 days (Mon-Fri) 10 AM to 8 PM IST
+gfrspqw200001,gcp,ul-sp-q-902268-prj,europe-west3-a,start,Up 5 days (Mon-Fri) 10 AM to 8 PM IST
+bnlwegspap20549,azure,a5365f29-0ca0-4ab8-a9f8-b94056880ca3,bnlwe-gs01-p-901647-is01-rg,start,Up 5 days (Mon-Fri) 09:00 AM to 09:00 PM IST
