@@ -431,17 +431,17 @@ class VmRow:
     group_or_zone: str  # Azure resource group / GCP zone
     source_text: str
     schedule: Optional[str]  # None = unmanaged
-    hold: bool = False
-    hold_until: Optional[datetime] = None
-    hold_reason: str = ""
-    hold_set_by: str = ""
+    override: bool = False
+    override_until: Optional[datetime] = None
+    override_reason: str = ""
+    override_set_by: str = ""
     schedule_forced: bool = False
 
 
 @dataclass
 class OverrideRow:
     vm_name: str
-    hold_until: Optional[datetime]
+    override_until: Optional[datetime]
     reason: str
     force_schedule: Optional[str]
     set_by: str = "initial-import"
@@ -530,20 +530,23 @@ def _parse_utc(value: str) -> Optional[datetime]:
 
 
 def load_overrides(path: str) -> List[OverrideRow]:
-    """Rows: vm_name, hold_until_utc (blank = until cleared), reason, force_schedule (optional)."""
+    """Rows: vm_name, override_until_utc (blank = until cleared), reason, force_schedule (optional)."""
     with open(path, newline="", encoding="utf-8-sig") as f:
         lines = [ln for ln in f if ln.strip() and not ln.lstrip().startswith("#")]
+    reader = csv.DictReader(lines)
+    if reader.fieldnames and "override_until_utc" not in reader.fieldnames:
+        raise ValueError(f"{path}: the header must be vm_name,override_until_utc,reason,force_schedule")
     out = []
-    for row in csv.DictReader(lines):
+    for row in reader:
         name = (row.get("vm_name") or "").strip()
         if name:
-            out.append(OverrideRow(name, _parse_utc(row.get("hold_until_utc")), (row.get("reason") or "").strip(),
-                                   (row.get("force_schedule") or "").strip() or None))
+            out.append(OverrideRow(name, _parse_utc(row.get("override_until_utc")),
+                                   (row.get("reason") or "").strip(), (row.get("force_schedule") or "").strip() or None))
     return out
 
 
 def apply_overrides(cat: Catalog, rows: List[OverrideRow]) -> List[str]:
-    """Mark VMs as held (and optionally force a schedule). Returns problems found."""
+    """Mark VMs as overridden (and optionally force a schedule). Returns problems found."""
     by_name: Dict[str, List[VmRow]] = {}
     for v in cat.vms:
         by_name.setdefault(v.vm_name.lower(), []).append(v)
@@ -557,7 +560,7 @@ def apply_overrides(cat: Catalog, rows: List[OverrideRow]) -> List[str]:
             errors.append(f"{r.vm_name}: unknown schedule '{r.force_schedule}'")
             continue
         for v in vms:
-            v.hold, v.hold_until, v.hold_reason, v.hold_set_by = True, r.hold_until, r.reason, r.set_by
+            v.override, v.override_until, v.override_reason, v.override_set_by = True, r.override_until, r.reason, r.set_by
             if r.force_schedule:
                 v.schedule, v.schedule_forced = r.force_schedule, True
     cat.override_errors = errors

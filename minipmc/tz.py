@@ -12,6 +12,15 @@ _FIXED_MINUTES = {
 _ETC_GMT = re.compile(r"^Etc/GMT([+-])(\d{1,2})$")
 
 
+def _have_tzdata() -> bool:
+    try:
+        from zoneinfo import ZoneInfo
+        ZoneInfo("Europe/London")
+        return True
+    except Exception:
+        return False
+
+
 def get_tz(name: str) -> tzinfo:
     try:
         from zoneinfo import ZoneInfo
@@ -23,4 +32,6 @@ def get_tz(name: str) -> tzinfo:
             return timezone(timedelta(hours=hours), name)
         if name in _FIXED_MINUTES:
             return timezone(timedelta(minutes=_FIXED_MINUTES[name]), name)
+        if _have_tzdata():
+            raise ValueError(f"Unknown time zone '{name}'. Use a name such as Europe/London, Asia/Kolkata or UTC.")
         raise ValueError(f"Time zone data unavailable for '{name}'. Install tzdata.")

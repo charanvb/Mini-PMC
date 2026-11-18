@@ -1,0 +1,14 @@
+{
+  "azure": {
+    "uami_client_id": "<client id of the user-assigned managed identity (CloudBAU-Automation)>",
+    "key_vault_url": "https://<your-vault-name>.vault.azure.net"
+  },
+  "gcp": {
+    "key_secret_name": "<name of the Key Vault secret holding the service-account JSON key>"
+  },
+  "logic_app": {
+    "url_secret_name": "<name of the Key Vault secret holding the Logic App 'HTTP POST URL'>",
+    "timeout_seconds": 30,
+    "retries": 3
+  }
+}

@@ -151,7 +151,7 @@ vm-d,GCP,proj-1,europe-west3-b,x,Dev Sche
 vm-e,Azure,sub-1,rg-1,x,Always Parked (excluding 10hr maintenance period) - Thursday/GMT
 """
 OVERRIDES = """# comment lines are ignored
-vm_name,hold_until_utc,reason,force_schedule
+vm_name,override_until_utc,reason,force_schedule
 vm-a,2026-12-31T23:59:59Z,until year end,
 VM-B,,keep it,ALWAYS_UP
 ghost,2026-12-31T23:59:59Z,not in the inventory,
@@ -178,22 +178,30 @@ def test_catalog_shares_one_schedule_between_equivalent_texts(files):
     assert cat.schedules[ALWAYS_PARKED].vms == 0
 
 
-def test_override_file_holds_forces_and_reports_problems(files):
+def test_override_file_sets_overrides_forces_and_reports_problems(files):
     inv, ov, _ = files
     cat = build_catalog(inv)
     errors = apply_overrides(cat, load_overrides(ov))
     by_vm = {v.vm_name: v for v in cat.vms}
 
-    assert by_vm["vm-a"].hold and by_vm["vm-a"].hold_until == datetime(2026, 12, 31, 23, 59, 59, tzinfo=timezone.utc)
-    assert by_vm["vm-a"].schedule == "IST Mon-Fri 10:00-22:00"  # a hold alone does not change the schedule
-    assert by_vm["vm-b"].hold and by_vm["vm-b"].hold_until is None  # blank end = until cleared
+    assert by_vm["vm-a"].override
+    assert by_vm["vm-a"].override_until == datetime(2026, 12, 31, 23, 59, 59, tzinfo=timezone.utc)
+    assert by_vm["vm-a"].schedule == "IST Mon-Fri 10:00-22:00"  # an override alone does not change the schedule
+    assert by_vm["vm-b"].override and by_vm["vm-b"].override_until is None  # blank end = until cleared
     assert by_vm["vm-b"].schedule == ALWAYS_UP and by_vm["vm-b"].schedule_forced
-    assert not by_vm["vm-c"].hold  # unknown schedule: nothing applied
+    assert not by_vm["vm-c"].override  # unknown schedule: nothing applied
     assert len(errors) == 2 and any("ghost" in e for e in errors) and any("NO_SUCH_SCHEDULE" in e for e in errors)
     assert cat.schedules["IST Mon-Fri 10:00-22:00"].vms == 1  # counts follow the forced schedule
 
 
-def test_workbook_has_every_tab_with_unmanaged_and_holds(files):
+def test_old_hold_column_name_gets_a_clear_message(tmp_path):
+    f = tmp_path / "old.csv"
+    f.write_text("vm_name,hold_until_utc,reason,force_schedule\nvm-a,,x,\n", encoding="utf-8")
+    with pytest.raises(ValueError, match="override_until_utc"):
+        load_overrides(str(f))
+
+
+def test_workbook_has_every_tab_with_unmanaged_and_overrides(files):
     inv, ov, tmp = files
     out = str(tmp / "out" / "seed.xlsx")
     build(inv, ov, out)
@@ -243,9 +251,9 @@ def test_real_inventory_is_consistent(real):
 def test_real_initial_overrides_are_all_found_and_correct():
     cat = build_catalog(REAL_CSV)
     assert apply_overrides(cat, load_overrides(REAL_OVERRIDES)) == []
-    held = {v.vm_name: v for v in cat.vms if v.hold}
-    assert len(held) == 17
+    overridden = {v.vm_name: v for v in cat.vms if v.override}
+    assert len(overridden) == 17
     year_end = datetime(2026, 12, 31, 23, 59, 59, tzinfo=timezone.utc)
-    assert sum(1 for v in held.values() if v.hold_until == year_end) == 16
-    host = held["bnlwefspap20560"]
-    assert host.hold_until is None and host.schedule == ALWAYS_UP and host.schedule_forced
+    assert sum(1 for v in overridden.values() if v.override_until == year_end) == 16
+    host = overridden["bnlwefspap20560"]
+    assert host.override_until is None and host.schedule == ALWAYS_UP and host.schedule_forced

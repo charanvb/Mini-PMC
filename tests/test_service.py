@@ -65,24 +65,24 @@ def test_remove_schedule_blocked_while_in_use(store):
         store.remove_schedule(importer.ALWAYS_UP)
 
 
-def test_hold_blocks_action_and_clear_restores_it(store):
+def test_override_blocks_action_and_clear_restores_it(store):
     store.add_vm("vm1", "azure", "s", "g", importer.ALWAYS_PARKED)
     assert store.explain("vm1", actual="running")["action"] == "STOP"
-    store.set_hold("vm1", datetime.now(timezone.utc) + timedelta(days=1), "testing")
+    store.set_override("vm1", datetime.now(timezone.utc) + timedelta(days=1), "testing")
     r = store.explain("vm1", actual="running")
     assert (r["action"], r["reason"]) == ("SKIP", "OVERRIDE_ACTIVE")
-    store.clear_hold("vm1")
+    store.clear_override("vm1")
     assert store.explain("vm1", actual="running")["action"] == "STOP"
     with pytest.raises(UserError):
-        store.clear_hold("vm1")
+        store.clear_override("vm1")
 
 
-def test_hold_in_the_past_rejected_and_expired_hold_ignored(store):
+def test_override_in_the_past_rejected_and_expired_override_ignored(store):
     store.add_vm("vm1", "azure", "s", "g", importer.ALWAYS_PARKED)
     with pytest.raises(UserError):
-        store.set_hold("vm1", datetime.now(timezone.utc) - timedelta(hours=1), "x")
+        store.set_override("vm1", datetime.now(timezone.utc) - timedelta(hours=1), "x")
     at = datetime.now(timezone.utc) + timedelta(days=3)
-    store.set_hold("vm1", datetime.now(timezone.utc) + timedelta(days=1), "x")
+    store.set_override("vm1", datetime.now(timezone.utc) + timedelta(days=1), "x")
     assert store.explain("vm1", at, "running")["action"] == "STOP"
 
 
@@ -148,31 +148,31 @@ def test_custom_schedule_and_bulk_vms(store):
 
 def test_every_change_is_audited_to_db_and_file(store):
     store.add_vm("vm1", "azure", "s", "g")
-    store.set_hold("vm1", None, "why")
+    store.set_override("vm1", None, "why")
     with db.connect(store.home) as con:
         actions = [r[0] for r in con.execute("SELECT action FROM events ORDER BY id")]
-    assert "VM_ADDED" in actions and "HOLD_SET" in actions
+    assert "VM_ADDED" in actions and "OVERRIDE_SET" in actions
     day = datetime.now(timezone.utc).strftime("%Y-%m-%d")
     lines = open(os.path.join(store.home, "logs", "audit", day + ".jsonl"), encoding="utf-8").read().splitlines()
     recs = [json.loads(x) for x in lines]
-    assert any(r["action"] == "HOLD_SET" and r["target"] == "vm1" and r["actor"] == "tester" for r in recs)
+    assert any(r["action"] == "OVERRIDE_SET" and r["target"] == "vm1" and r["actor"] == "tester" for r in recs)
     assert os.path.getsize(os.path.join(store.home, "logs", "app.log")) > 0
 
 
 def test_validate_reports_problems(store):
     store.add_vm("vm1", "azure", "s", "g")
     store.add_vm("vm2", "azure", "s", "g", importer.ALWAYS_UP)
-    store.set_hold("vm2", datetime.now(timezone.utc) + timedelta(days=2), "soon")
+    store.set_override("vm2", datetime.now(timezone.utc) + timedelta(days=2), "soon")
     msgs = [m for _, m in store.validate()]
     assert any("vm1" in m and "no schedule" in m for m in msgs)
-    assert any("vm2" in m and "hold ends" in m for m in msgs)
+    assert any("vm2" in m and "override ends" in m for m in msgs)
 
 
-def test_remove_vm_removes_hold(store):
+def test_remove_vm_removes_override(store):
     store.add_vm("vm1", "azure", "s", "g")
-    store.set_hold("vm1", None, "x")
+    store.set_override("vm1", None, "x")
     store.remove_vm("vm1")
-    assert store.list_holds() == []
+    assert store.list_overrides() == []
 
 
 def test_parse_until():
@@ -204,9 +204,12 @@ def test_cli_end_to_end(tmp_path, capsys):
     assert run_cli(home, "init") == 0
     assert run_cli(home, "vm", "add", "vm1", "--provider", "azure", "--scope", "s", "--group", "g",
                    "--schedule", importer.ALWAYS_UP) == 0
-    assert run_cli(home, "hold", "set", "vm1", "--days", "2", "--reason", "test") == 0
+    assert run_cli(home, "override", "set", "vm1", "--days", "2", "--reason", "test") == 0
+    assert run_cli(home, "override", "list") == 0
+    assert "vm1" in capsys.readouterr().out
     assert run_cli(home, "desired", "vm1") == 0
     assert "OVERRIDE_ACTIVE" in capsys.readouterr().out
+    assert run_cli(home, "override", "clear", "vm1") == 0
     assert run_cli(home, "vm", "add", "vm1", "--provider", "azure", "--scope", "s", "--group", "g") == 1
     assert run_cli(home, "vm", "show", "nope") == 1
     assert run_cli(home, "validate") in (0, 1)  # 1 only if this machine lacks tzdata

@@ -21,7 +21,7 @@ HEADER_FILL = PatternFill("solid", fgColor="1F3864")
 HEADER_FONT = Font(bold=True, color="FFFFFF")
 RED = PatternFill("solid", fgColor="F8CBAD")  # unmanaged: Mini PMC will not touch it
 YELLOW = PatternFill("solid", fgColor="FFF2CC")  # reading is a judgement call: please confirm
-BLUE = PatternFill("solid", fgColor="DDEBF7")  # on hold
+BLUE = PatternFill("solid", fgColor="DDEBF7")  # override active
 WRAP = Alignment(wrap_text=True, vertical="top")
 
 DST_ZONES = {"Europe/London", "Europe/Paris", "Europe/Athens", "Europe/Lisbon", "America/New_York",
@@ -97,7 +97,7 @@ def build(vms_csv: str, overrides_csv: str, out_path: str) -> Catalog:
 
     unmanaged_texts = [c for c in cat.conversions.values() if c.parsed.kind == "unmanaged"]
     flagged = [c for c in cat.conversions.values() if c.parsed.check]
-    held = [v for v in cat.vms if v.hold]
+    overridden = [v for v in cat.vms if v.override]
     forced = [v for v in cat.vms if v.schedule_forced]
     managed = [v for v in cat.vms if v.schedule]
     by_schedule = Counter(v.schedule for v in cat.vms if v.schedule)
@@ -127,14 +127,14 @@ def build(vms_csv: str, overrides_csv: str, out_path: str) -> Catalog:
         ("   always parked", by_schedule.get(ALWAYS_PARKED, 0)),
         ("VMs UNMANAGED - Mini PMC will not touch them (see Unmanaged tab)", len(cat.unmanaged)),
         ("Source texts to confirm (yellow in Conversions)", f"{len(flagged)} texts / {sum(c.vms for c in flagged)} VMs"),
-        ("VMs on hold (no start, no stop while active)", len(held)),
-        ("   hold until a date", sum(1 for v in held if v.hold_until)),
-        ("   hold until cleared by a person", sum(1 for v in held if not v.hold_until)),
+        ("VMs with an override (no start, no stop while active)", len(overridden)),
+        ("   override until a date", sum(1 for v in overridden if v.override_until)),
+        ("   override until cleared by a person", sum(1 for v in overridden if not v.override_until)),
         ("   schedule forced", len(forced)),
         ("Duplicate VM names in the inventory", ", ".join(cat.duplicate_names) or "none"),
         ("Override problems", "; ".join(cat.override_errors) or "none"),
         ("", ""),
-        ("Colours", "red = unmanaged   yellow = reading needs a human check   blue = on hold"),
+        ("Colours", "red = unmanaged   yellow = reading needs a human check   blue = override active"),
         ("Times", "Schedules are in their own time zone (see Schedules / Timezones); the server runs in UTC internally."),
     ]
     _table(ws, ["Item", "Value"], [([k, v], None) for k, v in summary], [66, 90])
@@ -178,16 +178,16 @@ def build(vms_csv: str, overrides_csv: str, out_path: str) -> Catalog:
         conv = cat.conversions[v.source_text]
         if not v.schedule:
             fill = RED
-        elif v.hold:
+        elif v.override:
             fill = BLUE
         else:
             fill = YELLOW if conv.parsed.check else None
         vm_rows.append(([v.vm_name, v.provider, v.scope, v.group_or_zone, v.schedule or "UNMANAGED",
-                         "YES" if v.schedule else "NO", "YES" if v.hold else "",
-                         _utc(v.hold_until) if v.hold else "", v.hold_reason, v.source_text], fill))
+                         "YES" if v.schedule else "NO", "YES" if v.override else "",
+                         _utc(v.override_until) if v.override else "", v.override_reason, v.source_text], fill))
     _table(wb.create_sheet("VMs"),
            ["VM name", "Provider", "Subscription / Project", "Resource group / Zone", "Mini PMC schedule", "Managed",
-            "On hold", "Hold until (UTC)", "Hold reason", "Source schedule text"],
+            "Override", "Override until (UTC)", "Override reason", "Source schedule text"],
            vm_rows, [24, 10, 40, 34, 34, 9, 8, 20, 40, 62])
 
     by_name = {v.vm_name.lower(): v for v in cat.vms}
@@ -195,15 +195,15 @@ def build(vms_csv: str, overrides_csv: str, out_path: str) -> Catalog:
     for r in rows:
         v = by_name.get(r.vm_name.lower())
         if v is None:
-            ov_rows.append(([r.vm_name, "", "", "", _utc(r.hold_until), _ist(r.hold_until), r.reason,
+            ov_rows.append(([r.vm_name, "", "", "", _utc(r.override_until), _ist(r.override_until), r.reason,
                              r.force_schedule or "", "NOT FOUND in inventory"], RED))
             continue
-        ov_rows.append(([v.vm_name, v.provider, v.source_text, v.schedule or "UNMANAGED", _utc(r.hold_until),
-                         _ist(r.hold_until), r.reason, r.force_schedule or "",
+        ov_rows.append(([v.vm_name, v.provider, v.source_text, v.schedule or "UNMANAGED", _utc(r.override_until),
+                         _ist(r.override_until), r.reason, r.force_schedule or "",
                          "applied (schedule forced)" if v.schedule_forced else "applied"], BLUE))
     _table(wb.create_sheet("Overrides"),
-           ["VM name", "Provider", "Original source schedule", "Mini PMC schedule", "Hold until (UTC)",
-            "Hold until (IST)", "Reason", "Forced schedule", "Status"],
+           ["VM name", "Provider", "Original source schedule", "Mini PMC schedule", "Override until (UTC)",
+            "Override until (IST)", "Reason", "Forced schedule", "Status"],
            ov_rows, [24, 10, 56, 34, 20, 20, 40, 18, 26], wrap=(3,))
 
     tz_rows = []
@@ -230,12 +230,12 @@ def main(argv=None) -> int:
     cat = build(args.vms, args.overrides, args.out)
     unmanaged_texts = sum(1 for c in cat.conversions.values() if c.parsed.kind == "unmanaged")
     flagged = [c for c in cat.conversions.values() if c.parsed.check]
-    held = [v for v in cat.vms if v.hold]
+    overridden = [v for v in cat.vms if v.override]
     print(f"VMs: {len(cat.vms)}  |  schedule texts: {len(cat.conversions)} ({unmanaged_texts} unmanaged)")
     print(f"Schedules: {len(cat.schedules)}  |  managed VMs: {sum(1 for v in cat.vms if v.schedule)}"
           f"  |  unmanaged VMs: {len(cat.unmanaged)}")
-    print(f"To confirm: {len(flagged)} texts / {sum(c.vms for c in flagged)} VMs  |  on hold: {len(held)}"
-          f" ({sum(1 for v in held if not v.hold_until)} until cleared)")
+    print(f"To confirm: {len(flagged)} texts / {sum(c.vms for c in flagged)} VMs  |  overrides: {len(overridden)}"
+          f" ({sum(1 for v in overridden if not v.override_until)} until cleared)")
     for name in cat.duplicate_names:
         print(f"WARNING duplicate VM name: {name}")
     for err in cat.override_errors:

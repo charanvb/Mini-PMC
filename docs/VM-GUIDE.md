@@ -112,7 +112,7 @@ Expected:
 ```
 VMs: 1891  |  schedule texts: 217 (4 unmanaged)
 Schedules: 184  |  managed VMs: 1884  |  unmanaged VMs: 7
-To confirm: 6 texts / 19 VMs  |  on hold: 17 (1 until cleared)
+To confirm: 6 texts / 19 VMs  |  with an override: 17 (1 until cleared)
 Wrote review\minipmc_seed.xlsx
 ```
 
@@ -136,9 +136,9 @@ mpmc vm list
 mpmc desired MYTESTVM --actual running     # what would the scheduler do right now?
 mpmc desired MYTESTVM --actual stopped --at 2026-11-23T05:00:00Z   # Monday 10:30 IST -> START
 
-mpmc hold set MYTESTVM --days 1 --reason "testing"
+mpmc override set MYTESTVM --days 1 --reason "testing"
 mpmc desired MYTESTVM --actual running     # -> SKIP / OVERRIDE_ACTIVE
-mpmc hold clear MYTESTVM
+mpmc override clear MYTESTVM
 
 mpmc validate
 mpmc vm show MYTESTVM                      # recent events
@@ -160,3 +160,33 @@ To load the whole inventory later: `mpmc import --vms vms_all.csv --overrides co
 | `validate` shows ERROR "time zone cannot be loaded" | `tzdata` is missing: `.\.venv\Scripts\python.exe -m pip install tzdata` |
 | `Unable to copy venvlauncher.exe` | `python -m venv` was run twice while the venv was in use; harmless, do not repeat |
 | `Activate.ps1` blocked | not needed; this guide always calls `.\.venv\Scripts\python.exe` directly |
+
+## Logic App URL and Omnibus signals
+
+The Logic App trigger's full **HTTP POST URL** contains a signature (`sig=`). Keep it out of Git and logs.
+Recommended: create a Key Vault secret (for example `logicapp-omnibus-url`) containing the complete URL,
+then set `logic_app.url_secret_name` in the git-ignored `config\settings.json`:
+
+```json
+{
+  "logic_app": {
+    "url_secret_name": "logicapp-omnibus-url",
+    "timeout_seconds": 30,
+    "retries": 3
+  }
+}
+```
+
+The attached `CloudBAU-Automation` user-assigned managed identity needs **Key Vault Secrets User** on that vault.
+For a quick, non-production test, `logic_app.url` can hold the URL directly in `config\settings.json` instead;
+the secret-name setting is preferred.
+
+Mini PMC sends `{"vms":[{"name":"...","project":"...","zone":"..."}],"action":"block"}` before a stop and
+`"unblock"` before a start. For Azure, `project` is the subscription ID and `zone` is the resource group; for GCP
+they are the project ID and zone. It does not poll the Logic App or wait after acceptance: on a 2xx response,
+Mini PMC immediately calls the corresponding VM start/stop API.
+Use **Settings > Connections** to check configuration and send a manually confirmed test signal. Do not send
+test signals to production Omnibus unless you intend to change the VM's alert state.
+
+The v3 database migration renames old hold records and events to overrides. Existing append-only JSONL audit
+files are not rewritten, so older files may still contain `HOLD_*` event names.

@@ -29,7 +29,7 @@ IN_DESIRED_STATE = "IN_DESIRED_STATE"
 
 @dataclass(frozen=True)
 class Override:
-    """A hold: while it is active the scheduler does nothing for the VM (no start, no stop)."""
+    """An override: while it is active the scheduler does nothing for the VM (no start, no stop)."""
     expires_at: Optional[datetime] = None  # UTC; None = until cleared by a person
     reason: str = ""
     set_by: str = ""

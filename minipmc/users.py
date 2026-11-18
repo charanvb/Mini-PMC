@@ -1,4 +1,4 @@
-"""Local users: username + password, three roles. Passwords are stored as salted PBKDF2 hashes."""
+"""Local users: username + password, two roles. Passwords are stored as salted PBKDF2 hashes."""
 import hashlib
 import hmac
 import secrets
@@ -8,7 +8,7 @@ from . import db
 from .logs import utcnow_iso
 from .service import Store, UserError
 
-ROLES = ("admin", "operator", "viewer")  # admin: everything; operator: holds/pause; viewer: read only
+ROLES = ("admin", "reader")  # admin: everything; reader: look only
 ITERATIONS = 200_000
 MIN_PASSWORD = 8
 
@@ -99,6 +99,13 @@ def remove_user(store: Store, username: str) -> None:
 def list_users(store: Store) -> List:
     with db.connect(store.home) as con:
         return con.execute("SELECT username, role, disabled, created_at FROM users ORDER BY username").fetchall()
+
+
+def active_role(store: Store, username: str) -> Optional[str]:
+    """Current role of an enabled user, or None if the user was removed or disabled."""
+    with db.connect(store.home) as con:
+        u = con.execute("SELECT role, disabled FROM users WHERE username=?", (username,)).fetchone()
+    return u["role"] if u and not u["disabled"] else None
 
 
 def authenticate(store: Store, username: str, password: str) -> Optional[dict]:

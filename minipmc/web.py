@@ -1,4 +1,4 @@
-"""Dashboard web server (standard library only). JSON API under /api, one static page at /."""
+"""Dashboard web server (standard library only). JSON API under /api, the page at / and its files under /static."""
 import json
 import logging
 import os
@@ -10,14 +10,19 @@ from http.cookies import SimpleCookie
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs, urlparse
 
-from . import grid as g, users
-from .service import Store, UserError, iso, parse_until
+from . import creds as cr, grid as g, health, signals, users
+from .service import Store, UserError, iso, parse_until, parse_utc
 
 log = logging.getLogger("minipmc.web")
 STATIC = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static")
+STATIC_TYPES = {".css": "text/css; charset=utf-8", ".js": "application/javascript; charset=utf-8",
+                ".svg": "image/svg+xml", ".ico": "image/x-icon"}
+# the page may load only its own files; nothing inline except styles, nothing from other sites
+CSP = ("default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self'; "
+       "frame-ancestors 'none'; form-action 'self'; base-uri 'none'")
 SESSION_HOURS = 12
 COOKIE = "minipmc_session"
-RANK = {"viewer": 0, "operator": 1, "admin": 2}
+RANK = {"reader": 0, "admin": 1}
 MAX_FAILS, LOCK_SECONDS = 5, 60
 
 
@@ -51,6 +56,12 @@ class App:
     def drop(self, token):
         with self.lock:
             self.sessions.pop(token or "", None)
+
+    def drop_user(self, username: str, keep: str = "") -> None:
+        """End every login of one user (after a password reset, disable or removal), except the token in `keep`."""
+        with self.lock:
+            self.sessions = {t: s for t, s in self.sessions.items()
+                             if t == keep or s["username"].lower() != username.lower()}
 
     def locked(self, ip: str) -> bool:
         with self.lock:
@@ -113,12 +124,21 @@ class Handler(BaseHTTPRequestHandler):
     def do_POST(self):
         self._handle("POST")
 
+    def _static(self, name: str):
+        ctype = "text/html; charset=utf-8" if name == "index.html" else STATIC_TYPES.get(os.path.splitext(name)[1].lower())
+        if not ctype or name not in os.listdir(STATIC):  # only files really in static\ (no paths) of a known type
+            return self._json({"error": "not found"}, 404)
+        with open(os.path.join(STATIC, name), "rb") as f:
+            body = f.read()
+        self._send(200, body, ctype, {"Content-Security-Policy": CSP} if name == "index.html" else None)
+
     def _handle(self, method: str):
         path = urlparse(self.path)
         try:
             if method == "GET" and path.path == "/":
-                with open(os.path.join(STATIC, "index.html"), "rb") as f:
-                    return self._send(200, f.read(), "text/html; charset=utf-8")
+                return self._static("index.html")
+            if method == "GET" and path.path.startswith("/static/"):
+                return self._static(path.path[len("/static/"):])
             if not path.path.startswith("/api/"):
                 return self._json({"error": "not found"}, 404)
             name = path.path[5:]
@@ -127,6 +147,13 @@ class Handler(BaseHTTPRequestHandler):
             if (method, name) == ("POST", "login"):
                 return self._login()
             sess = self.app.session(self._token())
+            if sess:  # a removed, disabled or re-roled user must not keep an old login
+                role = users.active_role(self.app.store(sess["username"]), sess["username"])
+                if role is None:
+                    self.app.drop(self._token())
+                    sess = None
+                else:
+                    sess["role"] = role
             if not sess:
                 return self._json({"error": "login required"}, 401)
             route = ROUTES.get((method, name))
@@ -166,38 +193,90 @@ def api_me(h, st, s, q):
     return {"username": s["username"], "role": s["role"]}
 
 
+def api_status(h, st, s, q):
+    """Cheap facts for the top bar (checked on every page change)."""
+    return {"paused": st.paused, "mode": st.get_setting("mode", "readonly"), "now_utc": iso(datetime.now(timezone.utc))}
+
+
 def api_logout(h, st, s, q):
     h.app.drop(h._token())
     return {"ok": True}
 
 
+def _name(q) -> str:
+    return (q.get("name") or [""])[0]
+
+
+def _names(b: dict) -> list:
+    """One VM ('name') or several ('names') from a request body."""
+    names = b.get("names")
+    if names is None:
+        names = [b.get("name", "")]
+    if not isinstance(names, list) or not 0 < len(names) <= 5000:
+        raise UserError("choose between 1 and 5000 VMs")
+    return [str(n) for n in names]
+
+
+def _each(names: list, fn) -> dict:
+    """Apply `fn` to each VM name. One bad name does not stop the rest (a single bad name is an error)."""
+    done, errors = 0, []
+    for n in names:
+        try:
+            fn(n)
+            done += 1
+        except UserError as e:
+            if len(names) == 1:
+                raise
+            errors.append(f"{n}: {e}")
+    return {"done": done, "errors": errors}
+
+
 def api_summary(h, st, s, q):
     rows = st.overview()
-    held = [r for r in rows if r["held"]]
-    limit = iso(datetime.now(timezone.utc) + timedelta(days=14))
-    soon = [r for r in held if r["hold_until"] and r["hold_until"] < limit]
-    return {"paused": st.paused, "vms": len(rows), "azure": sum(r["provider"] == "azure" for r in rows),
-            "gcp": sum(r["provider"] == "gcp" for r in rows), "held": len(held),
-            "unmanaged": sum(r["schedule"] is None for r in rows),
+    now = datetime.now(timezone.utc)
+    over = [r for r in rows if r["override"]]
+    limit = iso(now + timedelta(days=14))
+    soon = sorted((r for r in over if r["override_until"] and r["override_until"] < limit),
+                  key=lambda r: r["override_until"])
+    return {"paused": st.paused, "mode": st.get_setting("mode", "readonly"), "vms": len(rows),
+            "azure": sum(r["provider"] == "azure" for r in rows), "gcp": sum(r["provider"] == "gcp" for r in rows),
+            "overrides": len(over), "unmanaged": sum(r["schedule"] is None for r in rows),
             "disabled": sum(not r["enabled"] for r in rows),
-            "should_run": sum(r["says"] == "R" and r["enabled"] and not r["held"] for r in rows),
-            "should_stop": sum(r["says"] == "S" and r["enabled"] and not r["held"] for r in rows),
-            "holds_ending_soon": [{"name": r["name"], "until": r["hold_until"]} for r in soon],
+            "should_run": sum(r["says"] == "R" and r["enabled"] and not r["override"] for r in rows),
+            "should_stop": sum(r["says"] == "S" and r["enabled"] and not r["override"] for r in rows),
+            "overrides_ending_soon": [{"name": r["name"], "until": r["override_until"], "reason": r["override_reason"]}
+                                      for r in soon],
+            "upcoming": st.upcoming(24, now),
             "problems": [{"level": a, "message": m} for a, m in st.validate() if a != "INFO"][:50],
-            "now_utc": iso(datetime.now(timezone.utc))}
+            "now_utc": iso(now)}
 
 
 def api_vms(h, st, s, q):
     return {"vms": st.overview()}
 
 
+def api_vm(h, st, s, q):
+    vm, _, events = st.get_vm(_name(q))
+    out = {"vm": next(r for r in st.overview() if r["name"] == vm["name"]), "events": [dict(e) for e in events],
+           "windows": [], "tz": None, "grid": None, "time_check": None}
+    if vm["schedule"]:
+        sc = st.get_schedule(vm["schedule"])
+        out["tz"], out["grid"] = sc["tz"], sc["grid"]
+        out["windows"] = [g.run_label(a, n) for a, n in g.runs(g.from_string(sc["grid"]))]
+        try:
+            out["time_check"] = st.time_check(vm["schedule"])
+        except ValueError:
+            pass  # time zone data is not installed on this machine
+    return out
+
+
 def api_schedules(h, st, s, q):
-    return {"schedules": [{"name": r["name"], "tz": r["tz"], "description": r["description"],
-                           "vms": r["vm_count"]} for r in st.list_schedules()]}
+    return {"schedules": [{"name": r["name"], "kind": r["kind"], "tz": r["tz"], "description": r["description"],
+                           "vms": r["vm_count"], "grid": r["grid"]} for r in st.list_schedules()]}
 
 
 def api_schedule(h, st, s, q):
-    r = st.get_schedule((q.get("name") or [""])[0])
+    r = st.get_schedule(_name(q))
     return {"name": r["name"], "tz": r["tz"], "description": r["description"], "grid": r["grid"],
             "windows": [g.run_label(a, n) for a, n in g.runs(g.from_string(r["grid"]))]}
 
@@ -210,27 +289,42 @@ def api_events(h, st, s, q):
     return {"events": [dict(r) for r in st.recent_events(n, (q.get("q") or [""])[0])]}
 
 
-def api_hold_set(h, st, s, q):
+def _until(b: dict):
+    """When an override ends, from the request: 'forever', a date/time ('until'), or a number of 'days'."""
+    if b.get("forever"):
+        return None
+    if b.get("until"):
+        return parse_until(str(b["until"]))
+    try:
+        days = float(b.get("days"))
+    except (TypeError, ValueError):
+        raise UserError("give days, until, or forever")
+    if not 0 < days <= 3650:
+        raise UserError("days must be between 0 and 3650")
+    return datetime.now(timezone.utc) + timedelta(days=days)
+
+
+def api_overrides(h, st, s, q):
+    now = datetime.now(timezone.utc)
+    rows = []
+    for o in st.list_overrides():
+        row = dict(o)
+        row["active"] = row["expires_at"] is None or parse_utc(row["expires_at"]) > now
+        rows.append(row)
+    return {"overrides": rows}
+
+
+def api_override_set(h, st, s, q):
     b = h._body()
     reason = str(b.get("reason", "")).strip()
     if not reason:
         raise UserError("a reason is required")
-    if b.get("forever"):
-        until = None
-    elif b.get("until"):
-        until = parse_until(str(b["until"]))
-    else:
-        try:
-            until = datetime.now(timezone.utc) + timedelta(days=float(b.get("days")))
-        except (TypeError, ValueError):
-            raise UserError("give days, until, or forever")
-    st.set_hold(str(b.get("name", "")), until, reason)
-    return {"ok": True}
+    until = _until(b)
+    return _each(_names(b), lambda n: st.set_override(n, until, reason))
 
 
-def api_hold_clear(h, st, s, q):
-    st.clear_hold(str(h._body().get("name", "")))
-    return {"ok": True}
+def api_override_clear(h, st, s, q):
+    return _each(_names(h._body()), st.clear_override)
 
 
 def api_pause(h, st, s, q):
@@ -247,33 +341,63 @@ def api_vm_add(h, st, s, q):
 
 def api_vm_update(h, st, s, q):
     b = h._body()
-    name = str(b.get("name", ""))
-    if "schedule" in b:
-        st.set_schedule(name, b["schedule"] or None)
-    if "enabled" in b:
-        st.set_enabled(name, bool(b["enabled"]))
-    return {"ok": True}
+    if "schedule" not in b and "enabled" not in b:
+        raise UserError("nothing to change")
+
+    def apply(name):
+        if "schedule" in b:
+            st.set_schedule(name, b["schedule"] or None)
+        if "enabled" in b:
+            st.set_enabled(name, bool(b["enabled"]))
+    return _each(_names(b), apply)
 
 
 def api_vm_remove(h, st, s, q):
-    st.remove_vm(str(h._body().get("name", "")))
-    return {"ok": True}
+    return _each(_names(h._body()), st.remove_vm)
 
 
 def api_schedule_add(h, st, s, q):
     b = h._body()
+    name, tz = str(b.get("name", "")), str(b.get("tz", ""))
+    if b.get("grid") is not None:
+        return {"name": st.add_schedule_grid(name, tz, str(b["grid"]))}
     if b.get("windows") is not None:
-        return {"name": st.add_schedule_custom(str(b.get("name", "")), str(b.get("tz", "")), str(b["windows"]))}
-    return {"name": st.add_schedule_from_text(str(b.get("text", "")), b.get("name") or None)}
+        return {"name": st.add_schedule_custom(name, tz, str(b["windows"]))}
+    return {"name": st.add_schedule_from_text(str(b.get("text", "")), name or None)}
+
+
+def api_schedule_update(h, st, s, q):
+    b = h._body()
+    return {"vms": st.update_schedule(str(b.get("name", "")), str(b.get("tz", "")), str(b.get("grid", "")))}
+
+
+def api_schedule_remove(h, st, s, q):
+    st.remove_schedule(str(h._body().get("name", "")))
+    return {"ok": True}
+
+
+def api_schedule_preview(h, st, s, q):
+    """Turn 'Mon-Fri 09:00-17:00' lines into a grid, and/or describe a grid. Changes nothing."""
+    b = h._body()
+    if b.get("windows") is not None:
+        text = g.to_string(Store.grid_from_windows(str(b["windows"]))[0])
+    else:
+        text = Store.check_grid(str(b.get("grid", "")))
+    grid = g.from_string(text)
+    return {"grid": text, "description": g.describe(grid), "windows": [g.run_label(a, n) for a, n in g.runs(grid)]}
 
 
 def api_vm_bulk(h, st, s, q):
     b = h._body()
-    return st.add_vms_bulk(str(b.get("text", "")), b.get("schedule") or None)
+    return st.add_vms_bulk(str(b.get("text", "")), b.get("schedule") or None, str(b.get("provider", "")).lower(),
+                           str(b.get("scope", "")), str(b.get("group", "")))
 
 
 def api_schedule_test(h, st, s, q):
-    return st.time_check((q.get("name") or [""])[0])
+    try:
+        return st.time_check(_name(q))
+    except ValueError as e:  # time zone data not installed
+        raise UserError(str(e))
 
 
 def api_users(h, st, s, q):
@@ -284,10 +408,11 @@ def api_user_save(h, st, s, q):
     b = h._body()
     name = str(b.get("username", ""))
     if b.get("create"):
-        users.add_user(st, name, str(b.get("password", "")), str(b.get("role", "viewer")))
+        users.add_user(st, name, str(b.get("password", "")), str(b.get("role", "reader")))
         return {"ok": True}
     if b.get("password"):
         users.set_password(st, name, str(b["password"]))
+        h.app.drop_user(name, keep=h._token() if name.lower() == s["username"].lower() else "")
     if b.get("role"):
         users.set_role(st, name, str(b["role"]))
     if "disabled" in b:
@@ -296,7 +421,9 @@ def api_user_save(h, st, s, q):
 
 
 def api_user_remove(h, st, s, q):
-    users.remove_user(st, str(h._body().get("username", "")))
+    name = str(h._body().get("username", ""))
+    users.remove_user(st, name)
+    h.app.drop_user(name)
     return {"ok": True}
 
 
@@ -305,19 +432,67 @@ def api_change_password(h, st, s, q):
     if not users.authenticate(st, s["username"], str(b.get("old", ""))):
         raise UserError("current password is wrong")
     users.set_password(st, s["username"], str(b.get("new", "")))
+    h.app.drop_user(s["username"], keep=h._token())
     return {"ok": True}
 
 
+def api_connections(h, st, s, q):
+    """What is configured, for the Connections page. Never includes the Logic App URL's secret or any key."""
+    try:
+        cfg = cr.load_settings(st.home)
+    except cr.CredentialError as e:
+        return {"configured": False, "error": str(e)}
+    az, gcp, la = cfg.get("azure") or {}, cfg.get("gcp") or {}, cfg.get("logic_app") or {}
+    direct, secret = (la.get("url") or "").strip(), (la.get("url_secret_name") or "").strip()
+    if direct:
+        source, target = "settings file (logic_app.url)", signals.safe_target(direct)
+    elif secret:
+        source, target = f"Key Vault secret '{secret}'", ""
+    else:
+        source, target = "", ""
+    return {"configured": True,
+            "azure": {"uami_client_id": az.get("uami_client_id", ""),
+                      "key_vault": urlparse(az.get("key_vault_url", "")).hostname or ""},
+            "gcp": {"key_secret_name": gcp.get("key_secret_name", "")},
+            "logic_app": {"configured": bool(source), "source": source, "target": target,
+                          "timeout_seconds": la.get("timeout_seconds", 30), "retries": la.get("retries", 3)}}
+
+
+def api_connections_test(h, st, s, q):
+    vm = str(h._body().get("vm") or "").strip()
+    return {"results": health.check_connections(st, vm or None)}
+
+
+def api_signal_test(h, st, s, q):
+    """Really send one block/unblock signal for one VM (admin only; recorded in the audit log)."""
+    b = h._body()
+    action = str(b.get("action", ""))
+    if action not in signals.ACTIONS:
+        raise UserError("action must be block or unblock")
+    vm = st.get_vm(str(b.get("name", "")))[0]
+    try:
+        app = signals.LogicApp(cr.Credentials(cr.load_settings(st.home)))
+    except cr.CredentialError as e:
+        raise UserError(str(e))
+    r = signals.send_signal(st, action, [vm], app=app, reason="manual test from the dashboard")
+    return {"ok": r["ok"], "detail": r["detail"], "status": r["status"], "attempts": r["attempts"],
+            "action": action, "vm": vm["name"]}
+
+
 ROUTES = {
-    ("GET", "me"): (api_me, "viewer"), ("POST", "logout"): (api_logout, "viewer"),
-    ("GET", "summary"): (api_summary, "viewer"), ("GET", "vms"): (api_vms, "viewer"),
-    ("GET", "schedules"): (api_schedules, "viewer"), ("GET", "schedule"): (api_schedule, "viewer"),
-    ("GET", "schedule/test"): (api_schedule_test, "viewer"), ("POST", "vm/bulk"): (api_vm_bulk, "admin"),
-    ("GET", "events"): (api_events, "viewer"), ("POST", "change-password"): (api_change_password, "viewer"),
-    ("POST", "hold/set"): (api_hold_set, "operator"), ("POST", "hold/clear"): (api_hold_clear, "operator"),
-    ("POST", "pause"): (api_pause, "operator"),
-    ("POST", "vm/add"): (api_vm_add, "admin"), ("POST", "vm/update"): (api_vm_update, "admin"),
-    ("POST", "vm/remove"): (api_vm_remove, "admin"), ("POST", "schedule/add"): (api_schedule_add, "admin"),
+    ("GET", "me"): (api_me, "reader"), ("GET", "status"): (api_status, "reader"), ("POST", "logout"): (api_logout, "reader"),
+    ("GET", "summary"): (api_summary, "reader"), ("GET", "vms"): (api_vms, "reader"), ("GET", "vm"): (api_vm, "reader"),
+    ("GET", "schedules"): (api_schedules, "reader"), ("GET", "schedule"): (api_schedule, "reader"),
+    ("GET", "schedule/test"): (api_schedule_test, "reader"), ("POST", "schedule/preview"): (api_schedule_preview, "reader"),
+    ("GET", "events"): (api_events, "reader"), ("POST", "change-password"): (api_change_password, "reader"),
+    ("GET", "overrides"): (api_overrides, "reader"),
+    ("POST", "override/set"): (api_override_set, "admin"), ("POST", "override/clear"): (api_override_clear, "admin"),
+    ("POST", "pause"): (api_pause, "admin"), ("POST", "connections/test"): (api_connections_test, "admin"),
+    ("POST", "vm/add"): (api_vm_add, "admin"), ("POST", "vm/bulk"): (api_vm_bulk, "admin"),
+    ("POST", "vm/update"): (api_vm_update, "admin"), ("POST", "vm/remove"): (api_vm_remove, "admin"),
+    ("POST", "schedule/add"): (api_schedule_add, "admin"), ("POST", "schedule/update"): (api_schedule_update, "admin"),
+    ("POST", "schedule/remove"): (api_schedule_remove, "admin"),
+    ("GET", "connections"): (api_connections, "admin"), ("POST", "signal/test"): (api_signal_test, "admin"),
     ("GET", "users"): (api_users, "admin"), ("POST", "user/save"): (api_user_save, "admin"),
     ("POST", "user/remove"): (api_user_remove, "admin"),
 }

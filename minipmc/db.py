@@ -1,16 +1,34 @@
 """Single SQLite file. One short-lived connection per operation; WAL so readers never block the writer."""
+import json
 import os
 import sqlite3
 from contextlib import contextmanager
 
-SCHEMA_VERSION = 2
+from .logs import utcnow_iso, write_audit
+
+SCHEMA_VERSION = 4
 
 _USERS = """CREATE TABLE users (
         username TEXT PRIMARY KEY COLLATE NOCASE, pw_hash TEXT NOT NULL, role TEXT NOT NULL,
         disabled INTEGER NOT NULL DEFAULT 0, created_at TEXT NOT NULL)"""
 
-# version N -> statements that bring it to N+1
-_MIGRATIONS = {1: [_USERS]}
+
+def _two_roles(con) -> None:
+    """v4: only 'admin' (everything) and 'reader' (look only) remain; the old operator role becomes admin."""
+    con.execute("UPDATE users SET role='admin' WHERE role='operator'")
+    con.execute("UPDATE users SET role='reader' WHERE role='viewer'")
+
+
+def _rename_holds(con) -> None:
+    """v3: the earlier 'holds' table is now 'overrides' (and its audit events use the same word)."""
+    if con.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='holds'").fetchone():
+        con.execute("ALTER TABLE holds RENAME TO overrides")
+    con.execute("UPDATE events SET action='OVERRIDE_SET' WHERE action='HOLD_SET'")
+    con.execute("UPDATE events SET action='OVERRIDE_CLEARED' WHERE action='HOLD_CLEARED'")
+
+
+# version N -> steps that bring it to N+1 (SQL text, or a function taking the connection)
+_MIGRATIONS = {1: [_USERS], 2: [_rename_holds], 3: [_two_roles]}
 
 _SCHEMA = [
     _USERS,
@@ -24,7 +42,7 @@ _SCHEMA = [
         group_or_zone TEXT NOT NULL, schedule TEXT REFERENCES schedules(name),
         enabled INTEGER NOT NULL DEFAULT 1, source_text TEXT NOT NULL DEFAULT '',
         notes TEXT NOT NULL DEFAULT '', created_at TEXT NOT NULL, updated_at TEXT NOT NULL)""",
-    """CREATE TABLE holds (
+    """CREATE TABLE overrides (
         vm_name TEXT PRIMARY KEY COLLATE NOCASE REFERENCES vms(name) ON DELETE CASCADE,
         expires_at TEXT, reason TEXT NOT NULL DEFAULT '', set_by TEXT NOT NULL, set_at TEXT NOT NULL)""",
     """CREATE TABLE events (
@@ -71,12 +89,20 @@ def init(home: str) -> bool:
             ver = int(con.execute("SELECT value FROM meta WHERE key='schema_version'").fetchone()[0])
         if ver > SCHEMA_VERSION:
             raise RuntimeError(f"database schema is v{ver}, this program only knows up to v{SCHEMA_VERSION}")
+        start = ver
         while ver < SCHEMA_VERSION:
             with connect(home) as con:
-                for stmt in _MIGRATIONS[ver]:
-                    con.execute(stmt)
+                for step in _MIGRATIONS[ver]:
+                    step(con) if callable(step) else con.execute(step)
                 ver += 1
                 con.execute("UPDATE meta SET value=? WHERE key='schema_version'", (str(ver),))
+        if start < SCHEMA_VERSION:
+            rec = {"ts": utcnow_iso(), "actor": "system", "action": "SCHEMA_UPGRADED", "target": "",
+                   "detail": {"from": start, "to": SCHEMA_VERSION}}
+            with connect(home) as con:
+                con.execute("INSERT INTO events (ts, actor, action, target, detail) VALUES (?,?,?,?,?)",
+                            (rec["ts"], rec["actor"], rec["action"], "", json.dumps(rec["detail"])))
+            write_audit(home, rec)
         return False
     con = sqlite3.connect(path)
     try:

@@ -3,6 +3,7 @@ from datetime import datetime, timedelta, timezone
 import pytest
 
 from minipmc import grid as g
+from minipmc import tz
 from minipmc.importer import parse_schedule
 from minipmc.reconcile import (DEALLOCATED, GLOBAL_PAUSE, IN_DESIRED_STATE, OPERATION_IN_PROGRESS,
                                OVERRIDE_ACTIVE, RUNNING, SCHEDULE_DO_NOTHING, SCHEDULED, SKIP, START,
@@ -50,6 +51,31 @@ def test_runs_of_uniform_grids():
     assert g.runs(g.new_grid("R")) == [(0, g.CELLS)]
     assert g.describe(g.new_grid("S")) == "never up"
     assert g.describe(g.new_grid("R")) == "24x7"
+
+
+def test_unknown_timezone_is_distinguished_from_missing_timezone_data(monkeypatch):
+    import sys
+    import types
+
+    class HasData:
+        def __new__(cls, name):
+            if name == "Europe/London":
+                return timezone.utc
+            raise KeyError(name)
+
+    zoneinfo = types.ModuleType("zoneinfo")
+    zoneinfo.ZoneInfo = HasData
+    monkeypatch.setitem(sys.modules, "zoneinfo", zoneinfo)
+    with pytest.raises(ValueError, match="Unknown time zone"):
+        tz.get_tz("Mars/Base")
+
+    class NoData:
+        def __new__(cls, name):
+            raise KeyError(name)
+
+    zoneinfo.ZoneInfo = NoData
+    with pytest.raises(ValueError, match="Install tzdata"):
+        tz.get_tz("Mars/Base")
 
 
 # ---------------------------------------------------------------- parsing: single windows
@@ -163,21 +189,21 @@ def test_unsafe_situations_are_skipped(kwargs, reason):
     assert (d.action, d.reason) == (SKIP, reason)
 
 
-def test_active_hold_means_no_start_and_no_stop():
-    hold = Override(expires_at=datetime(2026, 11, 17, tzinfo=UTC))  # still active at both instants below
-    start_case = _rc(actual=STOPPED, override=hold)  # schedule says run
+def test_active_override_means_no_start_and_no_stop():
+    ov = Override(expires_at=datetime(2026, 11, 17, tzinfo=UTC))  # still active at both instants below
+    start_case = _rc(actual=STOPPED, override=ov)  # schedule says run
     assert (start_case.action, start_case.reason, start_case.desired) == (SKIP, OVERRIDE_ACTIVE, "R")
-    stop_case = _rc(actual=RUNNING, override=hold, now=NIGHT, status_time=NIGHT - timedelta(minutes=1))
+    stop_case = _rc(actual=RUNNING, override=ov, now=NIGHT, status_time=NIGHT - timedelta(minutes=1))
     assert (stop_case.action, stop_case.reason) == (SKIP, OVERRIDE_ACTIVE)  # schedule says stop
 
 
-def test_hold_without_end_time_lasts_until_cleared():
+def test_override_without_end_time_lasts_until_cleared():
     far_future = datetime(2030, 1, 1, tzinfo=UTC)
     d = _rc(override=Override(), now=far_future, status_time=far_future - timedelta(minutes=1))
     assert d.reason == OVERRIDE_ACTIVE
 
 
-def test_expired_hold_returns_the_vm_to_its_schedule():
+def test_expired_override_returns_the_vm_to_its_schedule():
     now = datetime(2026, 11, 16, 6, 0, tzinfo=UTC)
     assert _rc(override=Override(expires_at=now - timedelta(minutes=1))).action == START
     assert _rc(override=Override(expires_at=now)).action == START  # the end instant itself is already free

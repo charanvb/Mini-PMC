@@ -1,4 +1,4 @@
-"""All data operations (VMs, schedules, holds, settings, audit). Every change is written to the audit log."""
+"""All data operations (VMs, schedules, overrides, settings, audit). Every change is written to the audit log."""
 import csv
 import json
 import logging
@@ -148,16 +148,9 @@ class Store:
             self.audit(con, "SCHEDULE_ADDED", name, tz=tzname, text=text, notes=p.notes)
         return name
 
-    def add_schedule_custom(self, name: str, tzname: str, windows_text: str) -> str:
-        """Create a schedule from lines like 'Mon-Fri 09:00-17:00' (one running window per line, 24h clock)."""
-        name = (name or "").strip()
-        if not name:
-            raise UserError("a name is required")
-        try:
-            tz = get_tz(tzname)
-            del tz
-        except ValueError as e:
-            raise UserError(str(e))
+    @staticmethod
+    def grid_from_windows(windows_text: str):
+        """Lines like 'Mon-Fri 09:00-17:00' (24h clock, may run past midnight) -> (grid list, cleaned lines)."""
         grid = g.new_grid("S")
         lines = [ln.strip() for ln in windows_text.splitlines() if ln.strip()]
         if not lines:
@@ -166,7 +159,7 @@ class Store:
             m = re.match(r"^([A-Za-z,\- ]+?)\s+(\d{1,2}):(\d{2})\s*-\s*(\d{1,2}):(\d{2})$", ln)
             if not m:
                 raise UserError(f"cannot read '{ln}' - use e.g. Mon-Fri 09:00-17:00 or Sun 00:00-10:00")
-            days = self._days(m.group(1))
+            days = Store._days(m.group(1))
             s, e = int(m.group(2)) * 60 + int(m.group(3)), int(m.group(4)) * 60 + int(m.group(5))
             if not (0 <= s < 1440 and 0 <= e <= 1440) or s == e:
                 raise UserError(f"bad times in '{ln}'")
@@ -174,14 +167,62 @@ class Store:
                 e += 1440  # runs past midnight into the next day
             for d in days:
                 g.paint(grid, d, s, e, "R")
-        gs = g.to_string(grid)
+        return grid, lines
+
+    @staticmethod
+    def check_grid(text: str) -> str:
+        text = (text or "").strip().upper()
+        if len(text) != g.CELLS or set(text) - set("RS"):
+            raise UserError(f"the schedule grid must be {g.CELLS} cells (7 days x 96 quarter-hours) of R or S")
+        return text
+
+    @staticmethod
+    def _check_tz(tzname: str) -> str:
+        tzname = (tzname or "").strip()
+        try:
+            get_tz(tzname)
+        except ValueError as e:
+            raise UserError(str(e))
+        return tzname
+
+    def _insert_grid_schedule(self, name: str, tzname: str, grid_text: str, **extra) -> str:
+        name = (name or "").strip()
+        if not name:
+            raise UserError("a name is required")
+        tzname, grid_text = self._check_tz(tzname), self.check_grid(grid_text)
         with db.connect(self.home) as con:
             if con.execute("SELECT 1 FROM schedules WHERE name=?", (name,)).fetchone():
                 raise UserError(f"a schedule called '{name}' already exists")
-            con.execute("INSERT INTO schedules VALUES (?,?,?,?,?,?)",
-                        (name, "grid", tzname, gs, g.describe(grid), utcnow_iso()))
-            self.audit(con, "SCHEDULE_ADDED", name, tz=tzname, windows=lines)
+            desc = g.describe(g.from_string(grid_text))
+            con.execute("INSERT INTO schedules VALUES (?,?,?,?,?,?)", (name, "grid", tzname, grid_text, desc, utcnow_iso()))
+            self.audit(con, "SCHEDULE_ADDED", name, tz=tzname, description=desc, **extra)
         return name
+
+    def add_schedule_custom(self, name: str, tzname: str, windows_text: str) -> str:
+        """Create a schedule from lines like 'Mon-Fri 09:00-17:00' (one running window per line, 24h clock)."""
+        self._check_tz(tzname)
+        grid, lines = self.grid_from_windows(windows_text)
+        return self._insert_grid_schedule(name, tzname, g.to_string(grid), windows=lines)
+
+    def add_schedule_grid(self, name: str, tzname: str, grid_text: str) -> str:
+        """Create a schedule from a full 672-character R/S grid (what the grid editor sends)."""
+        return self._insert_grid_schedule(name, tzname, grid_text)
+
+    def update_schedule(self, name: str, tzname: str, grid_text: str) -> int:
+        """Change the time zone and/or grid of an existing schedule. Returns how many VMs use it."""
+        if name in (importer.ALWAYS_UP, importer.ALWAYS_PARKED):
+            raise UserError("built-in schedules cannot be edited")
+        tzname, grid_text = self._check_tz(tzname), self.check_grid(grid_text)
+        with db.connect(self.home) as con:
+            old = con.execute("SELECT * FROM schedules WHERE name=?", (name,)).fetchone()
+            if not old:
+                raise UserError(f"schedule not found: '{name}'")
+            n = con.execute("SELECT COUNT(*) FROM vms WHERE schedule=?", (name,)).fetchone()[0]
+            desc = g.describe(g.from_string(grid_text))
+            con.execute("UPDATE schedules SET tz=?, grid=?, description=? WHERE name=?", (tzname, grid_text, desc, name))
+            self.audit(con, "SCHEDULE_UPDATED", name, vms=n, old_tz=old["tz"], new_tz=tzname,
+                       old=old["description"], new=desc)
+        return n
 
     @staticmethod
     def _days(text: str) -> List[int]:
@@ -202,14 +243,21 @@ class Store:
                 raise UserError(f"unknown day in '{text}'")
         return sorted(set(out))
 
-    def add_vms_bulk(self, text: str, default_schedule: Optional[str] = None) -> dict:
-        """One VM per line: name,provider,scope,group_or_zone[,schedule]. Good lines are added; bad ones reported."""
+    def add_vms_bulk(self, text: str, default_schedule: Optional[str] = None, provider: str = "",
+                     scope: str = "", group: str = "") -> dict:
+        """One VM per line (commas or tabs, so a paste from Excel works).
+
+        With a shared provider/scope/group a line is just 'name[,schedule]'; otherwise it is
+        'name,provider,scope,group_or_zone[,schedule]'. Good lines are added; bad ones reported."""
+        shared = bool(provider and scope.strip() and group.strip())
         added, errors = [], []
         for n, ln in enumerate(text.splitlines(), 1):
             ln = ln.strip()
-            if not ln or ln.lower().startswith("name,"):
+            if not ln or ln.lower().startswith("name,") or ln.lower().startswith("name\t"):
                 continue
-            p = [x.strip() for x in ln.split(",")]
+            p = [x.strip() for x in ln.replace("\t", ",").split(",")]
+            if shared and len(p) <= 2:
+                p = [p[0], provider, scope, group] + p[1:]
             if len(p) < 4:
                 errors.append(f"line {n}: need name,provider,scope,group_or_zone[,schedule]")
                 continue
@@ -280,9 +328,9 @@ class Store:
             self.audit(con, "VM_SCHEDULE_CHANGED", vm["name"], old=vm["schedule"], new=schedule)
 
     def list_vms(self, text: str = "", unmanaged: bool = False) -> List[sqlite3.Row]:
-        q = """SELECT v.*, h.expires_at AS hold_until, h.set_by AS hold_by, h.reason AS hold_reason,
-                      (h.vm_name IS NOT NULL) AS held
-               FROM vms v LEFT JOIN holds h ON h.vm_name = v.name WHERE 1=1"""
+        q = """SELECT v.*, o.expires_at AS override_until, o.set_by AS override_by, o.reason AS override_reason,
+                      (o.vm_name IS NOT NULL) AS overridden
+               FROM vms v LEFT JOIN overrides o ON o.vm_name = v.name WHERE 1=1"""
         args: list = []
         if text:
             q += " AND (v.name LIKE ? OR v.schedule LIKE ?)"
@@ -295,40 +343,46 @@ class Store:
     def get_vm(self, name: str):
         with db.connect(self.home) as con:
             vm = self._vm(con, name)
-            hold = con.execute("SELECT * FROM holds WHERE vm_name=?", (name,)).fetchone()
+            override = con.execute("SELECT * FROM overrides WHERE vm_name=?", (name,)).fetchone()
             events = con.execute("SELECT ts, actor, action, detail FROM events WHERE target=? ORDER BY id DESC "
                                  "LIMIT 10", (vm["name"],)).fetchall()
-        return vm, hold, events
+        return vm, override, events
 
-    # ------------------------------------------------------------ holds
-    def set_hold(self, name: str, until: Optional[datetime], reason: str) -> None:
+    # ------------------------------------------------------------ overrides
+    def set_override(self, name: str, until: Optional[datetime], reason: str) -> None:
         if until is not None and until <= datetime.now(timezone.utc):
-            raise UserError("the hold end time is already in the past")
+            raise UserError("the override end time is already in the past")
         with db.connect(self.home) as con:
             vm = self._vm(con, name)
-            con.execute("INSERT OR REPLACE INTO holds VALUES (?,?,?,?,?)",
+            con.execute("INSERT OR REPLACE INTO overrides VALUES (?,?,?,?,?)",
                         (vm["name"], iso(until), reason, self.actor, utcnow_iso()))
-            self.audit(con, "HOLD_SET", vm["name"], until=iso(until) or "until-cleared", reason=reason)
+            self.audit(con, "OVERRIDE_SET", vm["name"], until=iso(until) or "until-cleared", reason=reason)
 
-    def clear_hold(self, name: str) -> None:
+    def clear_override(self, name: str) -> None:
         with db.connect(self.home) as con:
             vm = self._vm(con, name)
-            cur = con.execute("DELETE FROM holds WHERE vm_name=?", (name,))
+            cur = con.execute("DELETE FROM overrides WHERE vm_name=?", (name,))
             if not cur.rowcount:
-                raise UserError(f"'{name}' has no hold")
-            self.audit(con, "HOLD_CLEARED", vm["name"])
+                raise UserError(f"'{name}' has no override")
+            self.audit(con, "OVERRIDE_CLEARED", vm["name"])
 
-    def list_holds(self) -> List[sqlite3.Row]:
+    def list_overrides(self) -> List[sqlite3.Row]:
         with db.connect(self.home) as con:
-            return con.execute("SELECT * FROM holds ORDER BY expires_at IS NULL, expires_at, vm_name").fetchall()
+            return con.execute("""SELECT o.*, v.provider, v.schedule FROM overrides o JOIN vms v ON v.name = o.vm_name
+                                  ORDER BY o.expires_at IS NULL, o.expires_at, o.vm_name""").fetchall()
+
+    def log_event(self, action: str, target: str = "", **detail) -> None:
+        """Write one audit event (database and daily audit file) for something that is not a data change."""
+        with db.connect(self.home) as con:
+            self.audit(con, action, target, **detail)
 
     # ------------------------------------------------------------ what would happen
     def explain(self, name: str, at: Optional[datetime] = None, actual: str = "running") -> dict:
         now = at or datetime.now(timezone.utc)
-        vm, hold, _ = self.get_vm(name)
+        vm, ov, _ = self.get_vm(name)
         sched = self.get_schedule(vm["schedule"]) if vm["schedule"] else None
         tz = get_tz(sched["tz"]) if sched else None
-        override = rc.Override(parse_utc(hold["expires_at"]), hold["reason"], hold["set_by"]) if hold else None
+        override = rc.Override(parse_utc(ov["expires_at"]), ov["reason"], ov["set_by"]) if ov else None
         d = rc.reconcile_vm(enabled=bool(vm["enabled"]), paused=self.paused,
                             schedule_grid=sched["grid"] if sched else None, tz=tz, actual=actual.upper(),
                             status_time=now, override=override, op_in_progress=False, now=now)
@@ -341,7 +395,7 @@ class Store:
     # ------------------------------------------------------------ import
     def import_catalog(self, cat: "importer.Catalog", apply: bool) -> dict:
         """Add VMs and schedules from an inventory. Existing VMs are never changed."""
-        res = {"vms_new": 0, "vms_existing": 0, "schedules_new": 0, "holds_new": 0, "unmanaged": 0}
+        res = {"vms_new": 0, "vms_existing": 0, "schedules_new": 0, "overrides_new": 0, "unmanaged": 0}
         with db.connect(self.home) as con:
             for s in cat.schedules.values():
                 if s.kind != "grid" or con.execute("SELECT 1 FROM schedules WHERE name=?", (s.name,)).fetchone():
@@ -357,16 +411,17 @@ class Store:
                     continue
                 res["vms_new"] += 1
                 res["unmanaged"] += v.schedule is None
-                if v.hold:
-                    res["holds_new"] += 1
+                if v.override:
+                    res["overrides_new"] += 1
                 if apply:
                     con.execute("INSERT INTO vms (name, provider, scope, group_or_zone, schedule, enabled, source_text,"
                                 " notes, created_at, updated_at) VALUES (?,?,?,?,?,1,?,?,?,?)",
                                 (v.vm_name, v.provider, v.scope, v.group_or_zone, v.schedule, v.source_text,
                                  "", now, now))
-                    if v.hold:
-                        con.execute("INSERT INTO holds VALUES (?,?,?,?,?)",
-                                    (v.vm_name, iso(v.hold_until), v.hold_reason, v.hold_set_by or self.actor, now))
+                    if v.override:
+                        con.execute("INSERT INTO overrides VALUES (?,?,?,?,?)",
+                                    (v.vm_name, iso(v.override_until), v.override_reason,
+                                     v.override_set_by or self.actor, now))
             if apply:
                 self.audit(con, "IMPORT_APPLIED", **res)
             else:
@@ -389,14 +444,14 @@ class Store:
                 out.append(("WARN", f"VM {v['name']} has no schedule (unmanaged - nothing will be done)"))
             for v in con.execute("SELECT name FROM vms WHERE enabled=0"):
                 out.append(("INFO", f"VM {v['name']} is disabled"))
-            for h in con.execute("SELECT * FROM holds"):
-                exp = parse_utc(h["expires_at"])
+            for o in con.execute("SELECT * FROM overrides"):
+                exp = parse_utc(o["expires_at"])
                 if exp is None:
-                    out.append(("INFO", f"VM {h['vm_name']}: hold has no end (until cleared)"))
+                    out.append(("INFO", f"VM {o['vm_name']}: override has no end (until cleared)"))
                 elif exp <= now:
-                    out.append(("INFO", f"VM {h['vm_name']}: hold expired {h['expires_at']} (schedule applies)"))
+                    out.append(("INFO", f"VM {o['vm_name']}: override expired {o['expires_at']} (schedule applies)"))
                 elif exp - now < timedelta(days=14):
-                    out.append(("WARN", f"VM {h['vm_name']}: hold ends {h['expires_at']} - then the schedule applies"))
+                    out.append(("WARN", f"VM {o['vm_name']}: override ends {o['expires_at']} - then the schedule applies"))
             if self.paused:
                 out.append(("WARN", "the scheduler is PAUSED (python -m minipmc resume)"))
         order = {"ERROR": 0, "WARN": 1, "INFO": 2}
@@ -425,12 +480,12 @@ class Store:
                     local = now.astimezone(tz).strftime("%a %H:%M")
                 except ValueError:
                     says, local = "", "tz unavailable"
-            held = bool(v["held"]) and (v["hold_until"] is None or parse_utc(v["hold_until"]) > now)
+            active = bool(v["overridden"]) and (v["override_until"] is None or parse_utc(v["override_until"]) > now)
             out.append({"name": v["name"], "provider": v["provider"], "scope": v["scope"],
                         "group": v["group_or_zone"], "schedule": v["schedule"], "enabled": bool(v["enabled"]),
-                        "notes": v["notes"], "says": says, "local": local, "held": held,
-                        "hold_until": v["hold_until"], "hold_reason": v["hold_reason"] if v["held"] else "",
-                        "hold_by": v["hold_by"] if v["held"] else ""})
+                        "notes": v["notes"], "says": says, "local": local, "override": active,
+                        "override_until": v["override_until"], "override_reason": v["override_reason"] if v["overridden"] else "",
+                        "override_by": v["override_by"] if v["overridden"] else ""})
         return out
 
     def time_check(self, name: str, now: Optional[datetime] = None, days: int = 8) -> dict:
@@ -457,12 +512,45 @@ class Store:
                 prev = d
         return {"schedule": r["name"], "tz": r["tz"], "now": stamp(now), "now_state": cur, "switches": switches[:10]}
 
+    def upcoming(self, hours: int = 24, now: Optional[datetime] = None, limit: int = 12) -> List[dict]:
+        """Starts and stops the schedules will ask for in the next `hours` hours, grouped by moment.
+
+        Counts only enabled VMs that have a schedule and no override active at that moment. It is what the
+        schedules say, not a promise: the VM's actual state is checked just before any action.
+        """
+        now = (now or datetime.now(timezone.utc)).replace(second=0, microsecond=0)
+        now = now.replace(minute=now.minute - now.minute % 15)
+        scheds = {s["name"]: s for s in self.list_schedules()}
+        groups: dict = {}
+        for v in self.list_vms():
+            if v["enabled"] and v["schedule"] in scheds:
+                groups.setdefault(v["schedule"], []).append(v)
+        slots: dict = {}
+        for name, vms in groups.items():
+            try:
+                tz = get_tz(scheds[name]["tz"])
+            except ValueError:
+                continue
+            grid = scheds[name]["grid"]
+            prev = g.desired_at(grid, tz, now)
+            for i in range(1, hours * 4 + 1):
+                t = now + timedelta(minutes=15 * i)
+                cur = g.desired_at(grid, tz, t)
+                if cur != prev:
+                    n = sum(1 for v in vms if not (v["overridden"] and (
+                        v["override_until"] is None or parse_utc(v["override_until"]) > t)))
+                    if n:
+                        slot = slots.setdefault(t, {"start": 0, "stop": 0})
+                        slot["start" if cur == "R" else "stop"] += n
+                    prev = cur
+        return [{"at": iso(t), **c} for t, c in sorted(slots.items())][:limit]
+
     def export_vms_csv(self, path: str) -> int:
         rows = self.list_vms()
         with open(path, "w", newline="", encoding="utf-8") as f:
             w = csv.writer(f, lineterminator="\n")
-            w.writerow(["name", "provider", "scope", "group_or_zone", "schedule", "enabled", "hold_until", "notes"])
+            w.writerow(["name", "provider", "scope", "group_or_zone", "schedule", "enabled", "override_until", "notes"])
             for r in rows:
                 w.writerow([r["name"], r["provider"], r["scope"], r["group_or_zone"], r["schedule"] or "",
-                            r["enabled"], (r["hold_until"] or "until-cleared") if r["held"] else "", r["notes"]])
+                            r["enabled"], (r["override_until"] or "until-cleared") if r["overridden"] else "", r["notes"]])
         return len(rows)

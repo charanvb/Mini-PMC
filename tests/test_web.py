@@ -17,8 +17,8 @@ def srv(tmp_path):
     st = Store(home, actor="setup")
     st.init()
     users.add_user(st, "boss", "password-1", "admin")
-    users.add_user(st, "ops", "password-2", "operator")
-    users.add_user(st, "eye", "password-3", "viewer")
+    users.add_user(st, "ops", "password-2", "admin")
+    users.add_user(st, "eye", "password-3", "reader")
     st.add_vm("vm1", "azure", "sub", "rg", importer.ALWAYS_UP)
     server = web.make_server(home, "127.0.0.1", 0)
     t = threading.Thread(target=server.serve_forever, daemon=True)
@@ -78,27 +78,75 @@ def test_post_needs_csrf_header(srv):
 
 
 def test_roles_are_enforced(srv):
-    viewer, op = Client(srv[0]), Client(srv[0])
-    viewer.login("eye", "password-3")
-    op.login("ops", "password-2")
-    assert viewer.call("vms")[0] == 200
-    assert viewer.call("hold/set", {"name": "vm1", "forever": True, "reason": "x"})[0] == 403
-    assert op.call("hold/set", {"name": "vm1", "forever": True, "reason": "x"})[0] == 200
-    assert op.call("vm/remove", {"name": "vm1"})[0] == 403
-    assert op.call("users")[0] == 403
+    reader, admin = Client(srv[0]), Client(srv[0])
+    reader.login("eye", "password-3")
+    admin.login("ops", "password-2")
+    assert reader.call("vms")[0] == 200
+    for path, body in [("override/set", {"name": "vm1", "forever": True, "reason": "x"}), ("pause", {"paused": True}),
+                       ("vm/remove", {"name": "vm1"}), ("vm/bulk", {"text": "a"}), ("connections/test", {}),
+                       ("signal/test", {"name": "vm1", "action": "block"}), ("schedule/add", {})]:
+        assert reader.call(path, body)[0] == 403, path
+    assert reader.call("users")[0] == 403 and reader.call("connections")[0] == 403
+    assert admin.call("override/set", {"name": "vm1", "forever": True, "reason": "x"})[0] == 200
+    assert admin.call("users")[0] == 200
 
 
-def test_hold_flow_shows_in_overview_and_audit(srv):
+def test_bulk_add_with_shared_cloud_details(srv):
+    c = Client(srv[0])
+    c.login("boss", "password-1")
+    body = {"text": "n1\nn2\tALWAYS_UP\nvm1\nn3,azure,s,g\n\nname\tx", "schedule": "ALWAYS_PARKED",
+            "provider": "gcp", "scope": "prj", "group": "europe-west4-a"}
+    r = c.call("vm/bulk", body)[1]
+    assert r["added"] == ["n1", "n2", "n3"]
+    assert len(r["errors"]) == 1 and "vm1" in r["errors"][0]  # vm1 already exists
+    vms = {v["name"]: v for v in c.call("vms")[1]["vms"]}
+    assert vms["n1"]["provider"] == "gcp" and vms["n1"]["schedule"] == "ALWAYS_PARKED"
+    assert vms["n2"]["schedule"] == "ALWAYS_UP" and vms["n3"]["provider"] == "azure"
+
+
+def test_override_flow_shows_in_overview_and_audit(srv):
     c = Client(srv[0])
     c.login("ops", "password-2")
-    assert c.call("hold/set", {"name": "vm1", "days": 2, "reason": ""})[0] == 400  # reason required
-    assert c.call("hold/set", {"name": "vm1", "days": 2, "reason": "testing"})[0] == 200
+    assert c.call("override/set", {"name": "vm1", "days": 2, "reason": ""})[0] == 400  # reason required
+    assert c.call("override/set", {"name": "vm1", "days": 0, "reason": "x"})[0] == 400
+    assert c.call("override/set", {"name": "nope", "days": 2, "reason": "x"})[0] == 400
+    assert c.call("override/set", {"name": "vm1", "days": 2, "reason": "testing"})[1] == {"done": 1, "errors": []}
     vm = c.call("vms")[1]["vms"][0]
-    assert vm["held"] and vm["hold_by"] == "ops" and vm["says"] == "R"
-    assert c.call("summary")[1]["held"] == 1
-    assert c.call("hold/clear", {"name": "vm1"})[0] == 200
+    assert vm["override"] and vm["override_by"] == "ops" and vm["says"] == "R"
+    assert c.call("summary")[1]["overrides"] == 1
+    listed = c.call("overrides")[1]["overrides"]
+    assert [(o["vm_name"], o["active"], o["reason"]) for o in listed] == [("vm1", True, "testing")]
+    assert c.call("override/clear", {"name": "vm1"})[0] == 200
+    assert c.call("override/clear", {"name": "vm1"})[0] == 400  # nothing to clear
     actions = [e["action"] for e in c.call("events")[1]["events"]]
-    assert "HOLD_SET" in actions and "HOLD_CLEARED" in actions and "LOGIN_OK" in actions
+    assert "OVERRIDE_SET" in actions and "OVERRIDE_CLEARED" in actions and "LOGIN_OK" in actions
+
+
+def test_bulk_calls_report_each_failure_and_do_the_rest(srv):
+    boss = Client(srv[0])
+    boss.login("boss", "password-1")
+    boss.call("vm/add", {"name": "vm2", "provider": "gcp", "scope": "p", "group": "z", "schedule": ""})
+    r = boss.call("override/set", {"names": ["vm1", "vm2", "ghost"], "until": "2099-01-01", "reason": "freeze"})[1]
+    assert r["done"] == 2 and len(r["errors"]) == 1 and "ghost" in r["errors"][0]
+    vms = {v["name"]: v for v in boss.call("vms")[1]["vms"]}
+    assert vms["vm1"]["override"] and vms["vm2"]["override"]
+    assert boss.call("vm/update", {"names": ["vm1", "vm2"], "schedule": importer.ALWAYS_PARKED})[1]["done"] == 2
+    assert boss.call("vm/update", {"names": ["vm1", "vm2"], "enabled": False})[1]["done"] == 2
+    assert boss.call("vm/update", {"names": ["vm1"]})[0] == 400  # nothing to change
+    assert boss.call("override/clear", {"names": ["vm1", "vm2"]})[1]["done"] == 2
+    assert boss.call("vm/remove", {"names": ["vm1", "vm2"]})[1]["done"] == 2
+    assert boss.call("vms")[1]["vms"] == []
+    assert boss.call("vm/remove", {"names": []})[0] == 400
+
+
+def test_vm_detail(srv):
+    c = Client(srv[0])
+    c.login("eye", "password-3")
+    d = c.call("vm?name=VM1")[1]  # names are not case sensitive
+    assert d["vm"]["name"] == "vm1" and d["vm"]["schedule"] == importer.ALWAYS_UP and d["tz"] == "UTC"
+    assert d["windows"] == ["Mon 00:00>Sun 24:00"]  # always-up is a single run for the whole week
+    assert any(e["action"] == "VM_ADDED" for e in d["events"])
+    assert c.call("vm?name=ghost")[0] == 400
 
 
 def test_admin_manages_vms_schedules_users(srv):
@@ -113,8 +161,30 @@ def test_admin_manages_vms_schedules_users(srv):
     assert code == 200 and c.call("schedule/test?name=Office")[1]["switches"][0]["to"] == "R"
     code, body = c.call("vm/bulk", {"text": "z1,azure,s,g\nbad", "schedule": "Office"})
     assert body["added"] == ["z1"] and len(body["errors"]) == 1
-    assert c.call("user/save", {"create": True, "username": "new", "password": "longenough", "role": "viewer"})[0] == 200
+    assert c.call("user/save", {"create": True, "username": "new", "password": "longenough", "role": "reader"})[0] == 200
+    assert c.call("user/remove", {"username": "ops"})[0] == 200
     assert c.call("user/remove", {"username": "boss"})[0] == 400  # last admin protected
+
+
+def test_open_sessions_follow_user_changes(srv):
+    boss, ops, eye = Client(srv[0]), Client(srv[0]), Client(srv[0])
+    boss.login("boss", "password-1")
+    ops.login("ops", "password-2")
+    eye.login("eye", "password-3")
+    assert boss.call("user/save", {"username": "ops", "role": "reader"})[0] == 200
+    assert ops.call("me")[1]["role"] == "reader" and ops.call("pause", {"paused": True})[0] == 403  # demoted at once
+    assert boss.call("user/save", {"username": "eye", "disabled": True})[0] == 200
+    assert eye.call("me")[0] == 401  # disabled: logged out at once
+    assert boss.call("user/remove", {"username": "ops"})[0] == 200
+    assert ops.call("me")[0] == 401
+
+
+def test_password_reset_ends_other_logins(srv):
+    a, b = Client(srv[0]), Client(srv[0])
+    a.login("eye", "password-3")
+    b.login("eye", "password-3")
+    assert a.call("change-password", {"old": "password-3", "new": "password-4"})[0] == 200
+    assert a.call("me")[0] == 200 and b.call("me")[0] == 401
 
 
 def test_lockout_after_repeated_failures(srv):
@@ -148,3 +218,38 @@ def test_schema_migrates_from_v1(tmp_path):
     assert db.init(home) is False
     st = Store(home)
     users.add_user(st, "a", "longenough", "admin")
+
+
+def test_schema_migrates_v2_holds_and_events_to_overrides(tmp_path):
+    home = str(tmp_path)
+    st = Store(home, actor="tester")
+    st.init()
+    st.add_vm("vm1", "azure", "sub", "rg", importer.ALWAYS_UP)
+    st.set_override("vm1", None, "preserve me")
+    with db.connect(home) as con:
+        con.execute("UPDATE events SET action='HOLD_SET' WHERE action='OVERRIDE_SET'")
+        con.execute("ALTER TABLE overrides RENAME TO holds")
+        con.execute("UPDATE meta SET value='2' WHERE key='schema_version'")
+
+    assert db.init(home) is False
+    with db.connect(home) as con:
+        override = con.execute("SELECT vm_name, reason FROM overrides").fetchone()
+        actions = [r["action"] for r in con.execute("SELECT action FROM events ORDER BY id")]
+        version = con.execute("SELECT value FROM meta WHERE key='schema_version'").fetchone()[0]
+    assert (override["vm_name"], override["reason"]) == ("vm1", "preserve me")
+    assert "HOLD_SET" not in actions and "OVERRIDE_SET" in actions
+    assert actions[-1] == "SCHEMA_UPGRADED" and version == "4"
+
+
+def test_schema_v3_converts_old_roles(tmp_path):
+    home = str(tmp_path)
+    st = Store(home)
+    st.init()
+    users.add_user(st, "a", "longenough", "admin")
+    users.add_user(st, "b", "longenough", "reader")
+    with db.connect(home) as con:
+        con.execute("UPDATE users SET role='operator' WHERE username='a'")
+        con.execute("UPDATE users SET role='viewer' WHERE username='b'")
+        con.execute("UPDATE meta SET value='3' WHERE key='schema_version'")
+    db.init(home)
+    assert {u["username"]: u["role"] for u in users.list_users(st)} == {"a": "admin", "b": "reader"}
