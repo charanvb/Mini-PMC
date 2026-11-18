@@ -13,10 +13,12 @@ _GCP = {"RUNNING": rc.RUNNING, "TERMINATED": rc.STOPPED, "STOPPING": rc.STOPPING
 def azure_status(creds: Credentials, subscription: str, group: str, name: str):
     q = urllib.parse.quote
     url = (f"{ARM}subscriptions/{q(subscription)}/resourceGroups/{q(group)}/providers/Microsoft.Compute/"
-           f"virtualMachines/{q(name)}/instanceView?api-version=2024-03-01")
+           f"virtualMachines/{q(name)}?$expand=instanceView&api-version=2024-03-01")
     status, body = creds.http("GET", url, {"Authorization": "Bearer " + creds.azure_token(ARM)})
     if status != 200:
         raise CredentialError(f"Azure read failed (HTTP {status}): {(body.get('error') or {}).get('message', body)}")
+    # needs only virtualMachines/read; the statuses sit under properties.instanceView
+    body = (body.get("properties") or {}).get("instanceView") or body
     for s in body.get("statuses", []):
         code = s.get("code", "")
         if code.startswith("PowerState/"):
