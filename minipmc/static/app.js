@@ -225,12 +225,50 @@ function stopTimers() {
 }
 
 async function startApp() {
+  if (state.me && state.me.must_change) { showSetPassword(); return; }
   buildShell();
   if (!location.hash || location.hash === "#") history.replaceState(null, "", "#/dashboard");
   stopTimers();
   timers.push(setInterval(tickClock, 15000), setInterval(refreshStatus, 60000));
   drawStatus();
   await route();
+}
+
+/* First login with a one-time password: nothing else works until the user chooses their own. */
+function showSetPassword() {
+  stopTimers();
+  shell = null;
+  closeMenu = () => {};
+  document.title = "Set a new password \u00b7 Mini PMC";
+  const old = h("input", {type: "password", autocomplete: "current-password", "aria-label": "One-time password"});
+  const fresh = h("input", {type: "password", autocomplete: "new-password", "aria-label": "New password"});
+  const again = h("input", {type: "password", autocomplete: "new-password", "aria-label": "Repeat the new password"});
+  const err = h("div", {class: "form-err", role: "alert"});
+  const go = h("button", {type: "submit", class: "btn primary"}, "Set password and continue");
+  const form = h("form", {class: "login-card"},
+    h("div", {class: "logo"}, icon("lock", 24)),
+    h("h1", null, "Set a new password"),
+    h("p", {class: "mute"}, `Hello ${state.me.username}. You signed in with a one-time password, so choose your own before continuing.`),
+    field("One-time password", old), field("New password", fresh, "At least 8 characters, different from the one-time password."),
+    field("Repeat the new password", again), err, go);
+  form.addEventListener("submit", async e => {
+    e.preventDefault();
+    err.textContent = "";
+    if (!old.value || !fresh.value) { err.textContent = "Fill in all three boxes."; return; }
+    if (fresh.value !== again.value) { err.textContent = "The new passwords do not match."; return; }
+    go.disabled = true;
+    try {
+      await api("change-password", {old: old.value, new: fresh.value});
+      state.me = await api("me");
+    } catch (ex) {
+      err.textContent = ex.message;
+      go.disabled = false;
+      return;
+    }
+    await startApp();
+  });
+  root.replaceChildren(h("div", {class: "login-wrap"}, form));
+  old.focus();
 }
 
 /* ------------------------------------------------------------------ login / logout */

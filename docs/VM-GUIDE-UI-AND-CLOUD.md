@@ -95,3 +95,18 @@ switches. The Schedules tab in the dashboard shows the same under "Time check".
 ## 9. Data
 VMs, overrides and users live in `data\minipmc.db` (git-ignored). `git pull`, restarts and reboots never touch it.
 Only deleting `data\` (or `vm remove`) removes data. Back it up by copying `data\minipmc.db`; `python -m minipmc export --out vms.csv` writes the VM list.
+
+## 10. Team access over HTTPS (port 443), Start/Stop buttons, bulk onboarding
+
+**HTTPS on 443** (certificate must be PEM: a `.crt` with the chain and a `.key`):
+1. Get a certificate for the name people will type (corporate CA preferred). Have a `.pfx`? `python -m minipmc pfx-to-pem C:\path\cert.pfx --password xxx` writes `certs\minipmc.crt` and `certs\minipmc.key`. No certificate? `pip install cryptography`, then `python -m minipmc make-cert --names "bnlwefspap20560,bnlwefspap20560.yourdomain,10.x.x.x"` (self-signed: browsers warn until the .crt is trusted on each PC).
+2. Make sure nothing else uses 443 (`netstat -ano | findstr :443`; IIS/other web servers must be stopped or moved).
+3. Re-run once from an Administrator PowerShell: `.\scripts\install-service.ps1 -CertFile "<root>\certs\minipmc.crt" -KeyFile "<root>\certs\minipmc.key" -OpenFirewall` (port defaults to 443 with a certificate; this also opens the Windows firewall and points the watchdog at https).
+4. Azure: allow inbound TCP 443 in the VM's NSG, from your office/VPN ranges only.
+5. After that, code updates still only need `Stop-ScheduledTask MiniPMC; Start-ScheduledTask MiniPMC`. Renew a certificate by replacing the two files and restarting the task.
+
+**Team members:** Users tab > Add user. A one-time password is generated; send it to the person. At first login they must choose their own password before anything else works. An admin-set password for someone else is one-time as well. Roles: reader (view) / admin (change things).
+
+**Start/Stop buttons** (Resources tab; admin; Pilot or Live mode): per-row icon, or select rows then Start.../Stop.... If the schedule disagrees (e.g. VM parked by schedule and you start it) a dialog asks for an override: for N hours, until a date/time in IST, or until cleared, plus a reason. Manual actions go to the front of the queue and send the block/unblock signal like scheduled ones. The separate Override... button is unchanged.
+
+**Add many VMs:** `vm name, provider, project/subscription ID, zone/resource group, schedule` per line (blank or `none` = no schedule; header line skipped; paste or upload CSV). A file with extra columns (such as a start/stop column) must have the schedule name in column 5, otherwise that line is reported as "schedule not found".

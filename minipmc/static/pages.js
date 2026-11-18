@@ -442,17 +442,27 @@ async function usersTab() {
     list = (await api("users")).users;
     draw();
   }
+  function oneTimePassword() {
+    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789";
+    const b = new Uint32Array(14);
+    crypto.getRandomValues(b);
+    return Array.from(b, x => chars[x % chars.length]).join("");
+  }
   function addUser() {
+    const pw = oneTimePassword();
     formDialog({
       title: "Add user", submit: "Add user",
+      intro: "Give the user the one-time password below (copy it now; it is not shown again). " +
+        "At first login they are asked to choose their own password.",
       fields: [
         {name: "username", label: "Username", required: true, hint: "No spaces."},
-        {name: "password", label: "Password", type: "password", required: true, autocomplete: "new-password", hint: "At least 8 characters."},
+        {name: "password", label: "One-time password", required: true, value: pw, autocomplete: "off", hint: "Generated for you; you can type your own (8+ characters)."},
         {name: "role", label: "Role", type: "select", options: ROLE_OPTIONS, value: "reader"},
       ],
       run: async v => {
-        await api("user/save", {create: true, username: v.username.trim(), password: v.password, role: v.role});
-        toast(`User ${v.username.trim()} added.`);
+        await api("user/save", {create: true, must_change: true, username: v.username.trim(), password: v.password, role: v.role});
+        try { await navigator.clipboard.writeText(v.password); } catch (e) { /* clipboard needs HTTPS or localhost */ }
+        showResults("User added", `${v.username.trim()} can log in with this one-time password (copied to the clipboard when the browser allows it):`, [v.password]);
         await reload();
       },
     });
@@ -463,7 +473,8 @@ async function usersTab() {
       title: "Edit " + u.username, submit: "Save",
       fields: [
         {name: "role", label: "Role", type: "select", options: ROLE_OPTIONS, value: u.role},
-        {name: "password", label: "New password", type: "password", autocomplete: "new-password", hint: "Leave empty to keep the current password."},
+        {name: "password", label: "New password", type: "password", autocomplete: "new-password",
+          hint: "Leave empty to keep the current password. A password set here for another user is one-time: they must change it at next login."},
         {name: "disabled", label: "Disabled (cannot log in)", type: "checkbox", value: !!u.disabled},
       ],
       run: async v => {
@@ -489,7 +500,7 @@ async function usersTab() {
       return h("tr", null,
         h("td", null, h("b", null, u.username), self ? h("span", {class: "sub"}, " (you)") : null),
         h("td", null, u.role),
-        h("td", null, u.disabled ? chip("Disabled", "stop") : chip("Active", "run")),
+        h("td", null, u.disabled ? chip("Disabled", "stop") : u.must_change ? chip("Must set password", "ovr", "Still has a one-time password") : chip("Active", "run")),
         h("td", {class: "nowrap"}, fmtDay(u.created_at)),
         h("td", {class: "nowrap"}, btn("Edit", {sm: true, onclick: () => editUser(u)}), " ",
           btn("Remove", {sm: true, kind: "outline-danger", disabled: self, title: self ? "You cannot remove yourself" : "", onclick: () => removeUser(u)})));

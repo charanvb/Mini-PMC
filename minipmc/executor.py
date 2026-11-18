@@ -20,7 +20,7 @@ from datetime import datetime, timedelta, timezone
 
 from . import alerts, creds as cr, db, providers, reconcile as rc, signals, status
 from .logs import utcnow_iso
-from .service import iso, parse_utc
+from .service import UserError, iso, parse_utc
 from .tz import get_tz
 
 log = logging.getLogger("minipmc.executor")
@@ -41,6 +41,32 @@ def slot_key(now: datetime) -> str:
 def pilot_vms(store) -> set:
     return {x.strip().lower() for x in store.get_setting("pilot_vms", "").replace(";", ",").replace("\n", ",").split(",")
             if x.strip()}
+
+
+def check_manual(store, vm_name: str, action: str, guard: set = frozenset()) -> None:
+    """Raise UserError when a person may not start/stop this VM right now (nothing is changed)."""
+    if action not in ("start", "stop"):
+        raise UserError("action must be start or stop")
+    mode = store.get_setting("mode", "readonly")
+    if mode not in ("pilot", "live"):
+        raise UserError(f"the scheduler is in {mode} mode; start/stop buttons work in Pilot or Live mode only")
+    if mode == "pilot" and vm_name.lower() not in pilot_vms(store):
+        raise UserError("pilot mode: this VM is not in the pilot list")
+    if action == "stop" and vm_name.lower() in guard:
+        raise UserError("this is the machine running Mini PMC; it is never stopped from here")
+    with db.connect(store.home) as con:
+        if con.execute("SELECT 1 FROM ops WHERE vm_name=? AND outcome IN ('QUEUED','PENDING')", (vm_name,)).fetchone():
+            raise UserError("an action is already in progress for this VM")
+
+
+def queue_manual(store, vm_name: str, action: str, guard: set = frozenset()) -> None:
+    """A person pressed Start/Stop. Queued like any action (sent within seconds, signals included) but the
+    schedule is not consulted again; the caller sets an override first when the schedule would undo it."""
+    check_manual(store, vm_name, action, guard)
+    with db.connect(store.home) as con:
+        con.execute("INSERT INTO ops (vm_name, action, started_at, outcome, detail, manual) VALUES (?,?,?,'QUEUED','',1)",
+                    (vm_name, action, utcnow_iso()))
+    store.log_event("MANUAL_" + action.upper(), vm_name)
 
 
 class Engine:
@@ -198,7 +224,9 @@ class Engine:
         """Send one wave of queued operations. Returns how many were sent to the cloud."""
         now = now or self.clock()
         if not force and self._last_wave and (now - self._last_wave).total_seconds() < self._ws:
-            return 0
+            with db.connect(self.store.home) as con:  # a person is waiting: do not hold a button press for a minute
+                if not con.execute("SELECT 1 FROM ops WHERE outcome='QUEUED' AND manual=1").fetchone():
+                    return 0
         with self._lock:
             return self._wave(now)
 
@@ -207,7 +235,7 @@ class Engine:
         cfg = self.cfg(creds)
         self._ws = cfg["wave_seconds"]
         with db.connect(self.store.home) as con:
-            queued = [dict(r) for r in con.execute("SELECT * FROM ops WHERE outcome='QUEUED' ORDER BY id LIMIT ?",
+            queued = [dict(r) for r in con.execute("SELECT * FROM ops WHERE outcome='QUEUED' ORDER BY manual DESC, id LIMIT ?",
                                                    (cfg["wave_size"],))]
         if not queued:
             return 0
@@ -232,6 +260,10 @@ class Engine:
             state, raw, err = status.read_one(creds, vm)
             if err:
                 return None, "could not read the live state: " + err
+            if op.get("manual"):  # a person asked: only skip if it is already in the wanted state
+                if (op["action"] == "start" and state == rc.RUNNING) or (op["action"] == "stop" and state in rc.DOWN_STATES):
+                    return None, f"no longer needed (VM is already {state})"
+                return vm, ""
             override = None
             if vm["overridden"]:
                 override = rc.Override(parse_utc(vm["override_until"]), vm["override_reason"] or "", vm["override_by"] or "")

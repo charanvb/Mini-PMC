@@ -118,3 +118,20 @@ def test_slot_is_planned_once(world):
     st.set_setting("mode", "live")
     assert eng.tick()["planned"] == 3
     assert eng.tick()["planned"] == 0
+
+
+def test_manual_action_overrides_schedule_and_runs_first(world):
+    st, eng, state, calls, sent = world
+    with pytest.raises(Exception, match='readonly'):
+        executor.queue_manual(st, 'b', 'start')
+    st.set_setting('mode', 'live')
+    executor.queue_manual(st, 'c', 'start')  # schedule says parked, a person said start
+    with pytest.raises(Exception, match='already in progress'):
+        executor.queue_manual(st, 'c', 'start')
+    with pytest.raises(Exception, match='never stopped'):
+        executor.queue_manual(st, 'hostvm', 'stop', {'hostvm'})
+    state['c'] = rc.DEALLOCATED
+    st.set_override('c', datetime.now(timezone.utc) + timedelta(hours=2), 'need it')
+    eng.pump(force=True)
+    assert calls[0] == ('c', 'start')  # manual first, and the override did not stop it
+

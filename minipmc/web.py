@@ -3,6 +3,7 @@ import json
 import logging
 import os
 import secrets
+import socket
 import threading
 import time
 from datetime import datetime, timedelta, timezone
@@ -44,6 +45,7 @@ class Download:
 class App:
     def __init__(self, home: str):
         self.home = home
+        self.tls = False
         self.sessions = {}  # token -> {"username", "role", "expires"}
         self.fails = {}  # ip -> [count, locked_until]
         self.lock = threading.Lock()
@@ -102,6 +104,8 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header("Cache-Control", "no-store")
         self.send_header("X-Content-Type-Options", "nosniff")
         self.send_header("X-Frame-Options", "DENY")
+        if getattr(self.app, "tls", False):
+            self.send_header("Strict-Transport-Security", "max-age=31536000")
         for k, v in (headers or {}).items():
             self.send_header(k, v)
         self.end_headers()
@@ -163,14 +167,16 @@ class Handler(BaseHTTPRequestHandler):
                 return self._login()
             sess = self.app.session(self._token())
             if sess:  # a removed, disabled or re-roled user must not keep an old login
-                role = users.active_role(self.app.store(sess["username"]), sess["username"])
-                if role is None:
+                info = users.active_info(self.app.store(sess["username"]), sess["username"])
+                if info is None:
                     self.app.drop(self._token())
                     sess = None
                 else:
-                    sess["role"] = role
+                    sess["role"], sess["must_change"] = info["role"], info["must_change"]
             if not sess:
                 return self._json({"error": "login required"}, 401)
+            if sess["must_change"] and name not in ("me", "change-password", "logout", "status"):
+                return self._json({"error": "you must set a new password first", "password_change_required": True}, 403)
             route = ROUTES.get((method, name))
             if not route:
                 return self._json({"error": "not found"}, 404)
@@ -203,13 +209,15 @@ class Handler(BaseHTTPRequestHandler):
             return self._json({"error": "wrong username or password"}, 401)
         token = self.app.new_session(user)
         cookie = f"{COOKIE}={token}; HttpOnly; SameSite=Strict; Path=/; Max-Age={SESSION_HOURS * 3600}"
+        if self.app.tls:
+            cookie += "; Secure"
         self._json(user, headers={"Set-Cookie": cookie})
 
 
 # -------------------------------------------------------------- API handlers: (handler, store, session, query)
 
 def api_me(h, st, s, q):
-    return {"username": s["username"], "role": s["role"]}
+    return {"username": s["username"], "role": s["role"], "must_change": s.get("must_change", False)}
 
 
 def api_status(h, st, s, q):
@@ -318,10 +326,18 @@ def _until(b: dict):
         return None
     if b.get("until"):
         return parse_until(str(b["until"]))
+    if b.get("hours") is not None:
+        try:
+            hours = float(b.get("hours"))
+        except (TypeError, ValueError):
+            raise UserError("hours must be a number")
+        if not 0 < hours <= 24 * 365:
+            raise UserError("hours must be between 0 and 8760")
+        return datetime.now(timezone.utc) + timedelta(hours=hours)
     try:
         days = float(b.get("days"))
     except (TypeError, ValueError):
-        raise UserError("give days, until, or forever")
+        raise UserError("give hours, days, until, or forever")
     if not 0 < days <= 3650:
         raise UserError("days must be between 0 and 3650")
     return datetime.now(timezone.utc) + timedelta(days=days)
@@ -348,6 +364,46 @@ def api_override_set(h, st, s, q):
 
 def api_override_clear(h, st, s, q):
     return _each(_names(h._body()), st.clear_override)
+
+
+def api_vm_action(h, st, s, q):
+    """Start or stop VMs now. When the schedule says the opposite (and no override is active) an override is required,
+    otherwise the scheduler would undo the action at its next pass; the override fields are the same as override/set."""
+    b = h._body()
+    action = str(b.get("action", "")).lower()
+    if action not in ("start", "stop"):
+        raise UserError("action must be start or stop")
+    names = _names(b)
+    if len(names) > 500:
+        raise UserError("at most 500 VMs per click")
+    ov = b.get("override") if isinstance(b.get("override"), dict) else None
+    rows = {r["name"].lower(): r for r in st.overview()}
+    guard = set()
+    if action == "stop":
+        try:
+            eng = executor.Engine(st)
+            guard = eng.guarded(eng.new_creds())
+        except Exception:
+            guard = {socket.gethostname().lower()}
+
+    def apply(name):
+        r = rows.get(name.lower())
+        if r is None:
+            raise UserError("VM not found")
+        if not r["enabled"]:
+            raise UserError("this VM is disabled (Mini PMC is not managing it)")
+        wrong = r["schedule"] and not r["override"] and r["says"] == ("S" if action == "start" else "R")
+        if wrong and not ov:
+            raise UserError(f"the schedule says {'stop' if action == 'start' else 'run'}; an override is required")
+        # check everything that can fail before the override is written, so a refusal leaves no override behind
+        executor.check_manual(st, r["name"], action, guard)
+        if ov and (wrong or ov.get("always")):
+            reason = str(ov.get("reason", "")).strip()
+            if not reason:
+                raise UserError("a reason is required")
+            st.set_override(r["name"], _until(ov), reason)
+        executor.queue_manual(st, r["name"], action, guard)
+    return _each(names, apply)
 
 
 def api_pause(h, st, s, q):
@@ -431,11 +487,13 @@ def api_user_save(h, st, s, q):
     b = h._body()
     name = str(b.get("username", ""))
     if b.get("create"):
-        users.add_user(st, name, str(b.get("password", "")), str(b.get("role", "reader")))
+        users.add_user(st, name, str(b.get("password", "")), str(b.get("role", "reader")),
+                       must_change=bool(b.get("must_change", True)))
         return {"ok": True}
     if b.get("password"):
-        users.set_password(st, name, str(b["password"]))
-        h.app.drop_user(name, keep=h._token() if name.lower() == s["username"].lower() else "")
+        own = name.lower() == s["username"].lower()
+        users.set_password(st, name, str(b["password"]), must_change=bool(b.get("must_change", not own)) and not own)
+        h.app.drop_user(name, keep=h._token() if own else "")
     if b.get("role"):
         users.set_role(st, name, str(b["role"]))
     if "disabled" in b:
@@ -454,7 +512,10 @@ def api_change_password(h, st, s, q):
     b = h._body()
     if not users.authenticate(st, s["username"], str(b.get("old", ""))):
         raise UserError("current password is wrong")
-    users.set_password(st, s["username"], str(b.get("new", "")))
+    new = str(b.get("new", ""))
+    if new == str(b.get("old", "")):
+        raise UserError("the new password must be different from the current one")
+    users.set_password(st, s["username"], new)
     h.app.drop_user(s["username"], keep=h._token())
     return {"ok": True}
 
@@ -659,6 +720,7 @@ ROUTES = {
     ("GET", "events"): (api_events, "reader"), ("POST", "change-password"): (api_change_password, "reader"),
     ("GET", "overrides"): (api_overrides, "reader"),
     ("POST", "override/set"): (api_override_set, "admin"), ("POST", "override/clear"): (api_override_clear, "admin"),
+    ("POST", "vm/action"): (api_vm_action, "admin"),
     ("POST", "pause"): (api_pause, "admin"), ("POST", "connections/test"): (api_connections_test, "admin"),
     ("POST", "vm/add"): (api_vm_add, "admin"), ("POST", "vm/bulk"): (api_vm_bulk, "admin"),
     ("POST", "vm/update"): (api_vm_update, "admin"), ("POST", "vm/remove"): (api_vm_remove, "admin"),
@@ -670,16 +732,28 @@ ROUTES = {
 }
 
 
-def make_server(home: str, host: str = "127.0.0.1", port: int = 8080) -> ThreadingHTTPServer:
-    handler = type("BoundHandler", (Handler,), {"app": App(home)})
+def make_server(home: str, host: str = "127.0.0.1", port: int = 8080, cert: str = "", key: str = "") -> ThreadingHTTPServer:
+    app = App(home)
+    handler = type("BoundHandler", (Handler,), {"app": app})
     srv = ThreadingHTTPServer((host, port), handler)
     srv.daemon_threads = True
+    if cert:
+        import ssl
+        ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+        ctx.minimum_version = ssl.TLSVersion.TLSv1_2
+        try:
+            ctx.load_cert_chain(cert, key or None)
+        except (OSError, ssl.SSLError) as e:
+            srv.server_close()
+            raise UserError(f"cannot load the certificate/key ({e}); both must be PEM files") from e
+        srv.socket = ctx.wrap_socket(srv.socket, server_side=True)
+        app.tls = True
     return srv
 
 
-def serve(home: str, host: str, port: int, run_scheduler: bool = True) -> None:
-    srv = make_server(home, host, port)
-    log.info("dashboard listening on http://%s:%s", host, srv.server_address[1])
+def serve(home: str, host: str, port: int, run_scheduler: bool = True, cert: str = "", key: str = "") -> None:
+    srv = make_server(home, host, port, cert, key)
+    log.info("dashboard listening on %s://%s:%s", "https" if cert else "http", host, srv.server_address[1])
     if run_scheduler:
         scheduler.Scheduler(Store(home, actor="scheduler")).start()
         log.info("scheduler started (mode: %s)", Store(home).get_setting("mode", "readonly"))

@@ -82,7 +82,16 @@ def build_parser() -> argparse.ArgumentParser:
     x = sub.add_parser("serve", help="run the dashboard and the scheduler (the background loops that start/stop VMs)")
     x.add_argument("--host", default="127.0.0.1", help="use 0.0.0.0 to let the team reach it")
     x.add_argument("--port", type=int, default=8080)
+    x.add_argument("--cert", default="", help="PEM certificate (chain) file: serve HTTPS instead of HTTP")
+    x.add_argument("--key", default="", help="PEM private key file for --cert")
     x.add_argument("--no-scheduler", action="store_true", help="dashboard only (no status reads, no start/stop)")
+    x = sub.add_parser("make-cert", help="create a self-signed HTTPS certificate (needs: pip install cryptography)")
+    x.add_argument("--names", required=True, help="host names / IPs users will type, comma-separated")
+    x.add_argument("--days", type=int, default=825)
+    x.add_argument("--out", help="folder for minipmc.crt and minipmc.key (default: <home>\\certs)")
+    x = sub.add_parser("pfx-to-pem", help="convert a .pfx/.p12 certificate to the PEM files serve needs (needs: pip install cryptography)")
+    x.add_argument("pfx"); x.add_argument("--password", default="")
+    x.add_argument("--out", help="folder for minipmc.crt and minipmc.key (default: <home>\\certs)")
     x = sub.add_parser("mode", help="show or set what the scheduler may do: readonly | dryrun | pilot | live")
     x.add_argument("name", nargs="?", choices=["readonly", "dryrun", "pilot", "live"])
     x.add_argument("--vms", help="pilot only: comma-separated VM names")
@@ -256,8 +265,20 @@ def run(args, store: Store) -> int:
 
     if c == "serve":
         from . import web
-        out("dashboard on http://%s:%d  (Ctrl+C to stop)" % (args.host, args.port))
-        web.serve(store.home, args.host, args.port, run_scheduler=not args.no_scheduler)
+        out("dashboard on %s://%s:%d  (Ctrl+C to stop)" % ("https" if args.cert else "http", args.host, args.port))
+        web.serve(store.home, args.host, args.port, run_scheduler=not args.no_scheduler, cert=args.cert, key=args.key)
+        return 0
+
+    if c in ("make-cert", "pfx-to-pem"):
+        import os
+        from . import certs
+        folder = args.out or os.path.join(store.home, "certs")
+        if c == "make-cert":
+            crt, key = certs.make_self_signed([n.strip() for n in args.names.split(",") if n.strip()], folder, args.days)
+        else:
+            crt, key = certs.pfx_to_pem(args.pfx, args.password, folder)
+        out("certificate:", crt); out("private key:", key)
+        out("start with: serve --port 443 --cert \"%s\" --key \"%s\"" % (crt, key))
         return 0
 
     if c == "mode":

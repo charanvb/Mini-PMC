@@ -6,7 +6,7 @@ from contextlib import contextmanager
 
 from .logs import utcnow_iso, write_audit
 
-SCHEMA_VERSION = 5
+SCHEMA_VERSION = 6
 
 # v5: last known power state per VM, cloud start/stop operations, and cached subscription names
 _STATUS = """CREATE TABLE IF NOT EXISTS vm_status (
@@ -40,7 +40,18 @@ def _rename_holds(con) -> None:
 
 
 # version N -> steps that bring it to N+1 (SQL text, or a function taking the connection)
-_MIGRATIONS = {1: [_USERS], 2: [_rename_holds], 3: [_two_roles], 4: [_STATUS, _OPS, _OPS_INDEX, _SUB_NAMES]}
+def _add_columns(con) -> None:
+    """v6: users must change a one-time password at first login; ops can be manual (a person clicked Start/Stop)."""
+    def have(table, col):
+        return any(r[1] == col for r in con.execute(f"PRAGMA table_info({table})"))
+    if not have("users", "must_change"):
+        con.execute("ALTER TABLE users ADD COLUMN must_change INTEGER NOT NULL DEFAULT 0")
+    if not have("ops", "manual"):
+        con.execute("ALTER TABLE ops ADD COLUMN manual INTEGER NOT NULL DEFAULT 0")
+
+
+_MIGRATIONS = {1: [_USERS], 2: [_rename_holds], 3: [_two_roles], 4: [_STATUS, _OPS, _OPS_INDEX, _SUB_NAMES],
+               5: [_add_columns]}
 
 _SCHEMA = [
     _USERS,
@@ -122,6 +133,7 @@ def init(home: str) -> bool:
         con.execute("PRAGMA journal_mode=WAL")
         for stmt in _SCHEMA:
             con.execute(stmt)
+        _add_columns(con)
         con.execute("INSERT INTO meta VALUES ('schema_version', ?)", (str(SCHEMA_VERSION),))
         con.commit()
     finally:

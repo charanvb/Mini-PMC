@@ -71,34 +71,42 @@ function reportBulk(title, r) {
 }
 
 /* ------------------------------------------------------------------ override dialog */
-/* overrideDialog({names, askNames, onDone}) - "For N days", "Until a date" or "Until cleared", with a required reason. */
+/* "How long?" choices shared by the override and Start/Stop dialogs: N hours, until a date and time in IST, or until cleared.
+   read() returns {hours}, {until: ISO with +05:30} or {forever: true}, or throws a message for the user. */
+function durationWidget(label) {
+  const group = "dur" + (++durationSeq);
+  const hours = h("input", {type: "number", min: 1, max: 8760, value: 8, class: "w80", "aria-label": "Number of hours"});
+  const when = h("input", {type: "datetime-local", "aria-label": "End date and time in IST"});
+  const rHours = h("input", {type: "radio", name: group, checked: true});
+  const rUntil = h("input", {type: "radio", name: group});
+  const rForever = h("input", {type: "radio", name: group});
+  hours.addEventListener("focus", () => { rHours.checked = true; });
+  when.addEventListener("focus", () => { rUntil.checked = true; });
+  const node = h("div", {class: "fld"},
+    h("span", {class: "fld-l"}, label || "How long?"),
+    h("label", {class: "radio"}, rHours, "For", hours, "hours"),
+    h("label", {class: "radio"}, rUntil, "Until", when, h("span", {class: "mute"}, "IST (India time)")),
+    h("label", {class: "radio"}, rForever, "Until someone clears it"));
+  const read = () => {
+    if (rForever.checked) return {forever: true};
+    if (rUntil.checked) {
+      if (!when.value) throw new Error("Choose the end date and time (IST).");
+      const iso = when.value + (when.value.length === 16 ? ":00" : "") + "+05:30";
+      if (!(new Date(iso).getTime() > serverNow().getTime())) throw new Error("That time has already passed (IST). Choose a later time.");
+      return {until: iso};
+    }
+    const n = Number(hours.value);
+    if (!(n > 0)) throw new Error("Enter how many hours (1 or more).");
+    return {hours: n};
+  };
+  return {node, read};
+}
+
+/* overrideDialog({names, askNames, onDone}) - the standalone Override: how long (hours / until IST time / until cleared) and a reason. */
 function overrideDialog(o) {
   const names = o.names || [];
-  const group = "dur" + (++durationSeq);
-  const days = h("input", {type: "number", min: 1, max: 3650, value: 7, class: "w80", "aria-label": "Number of days"});
-  const date = h("input", {type: "date", "aria-label": "End date"});
-  const rDays = h("input", {type: "radio", name: group, checked: true});
-  const rDate = h("input", {type: "radio", name: group});
-  const rForever = h("input", {type: "radio", name: group});
-  days.addEventListener("focus", () => { rDays.checked = true; });
-  date.addEventListener("focus", () => { rDate.checked = true; });
-  const duration = h("div", {class: "fld"},
-    h("span", {class: "fld-l"}, "How long?"),
-    h("label", {class: "radio"}, rDays, "For", days, "days"),
-    h("label", {class: "radio"}, rDate, "Until the end of", date, h("span", {class: "mute"}, "(UTC)")),
-    h("label", {class: "radio"}, rForever, "Until someone clears it"));
-  const readDuration = () => {
-    if (rForever.checked) return {forever: true};
-    if (rDate.checked) {
-      if (!date.value) throw new Error("Choose the end date.");
-      if (date.value < serverNow().toISOString().slice(0, 10)) throw new Error("That date has already passed. Choose today or a later date.");
-      return {until: date.value};
-    }
-    const n = Number(days.value);
-    if (!(n > 0)) throw new Error("Enter how many days (1 or more).");
-    return {days: n};
-  };
-
+  const dur = durationWidget();
+  const duration = dur.node, readDuration = dur.read;
   const fields = [];
   if (o.askNames) {
     fields.push({name: "names", label: "VM names", type: "textarea", rows: 3, required: true,
@@ -129,6 +137,45 @@ function overrideDialog(o) {
   });
 }
 
+/* ------------------------------------------------------------------ Start / Stop buttons */
+/* True when the schedule says the opposite of this action, so the scheduler would undo it unless an override is set. */
+function needsOverride(r, action) {
+  return !!(r.schedule && r.enabled && !r.override && r.says === (action === "start" ? "S" : "R"));
+}
+/* actionDialog({rows, action, onDone}) - start or stop VMs now; asks for an override (hours / until IST time / until cleared)
+   only for VMs where the schedule disagrees. */
+function actionDialog(o) {
+  const verb = o.action === "start" ? "Start" : "Stop";
+  const rows = o.rows;
+  const clash = rows.filter(r => needsOverride(r, o.action));
+  const who = rows.length === 1 ? rows[0].name : plural(rows.length, "VM");
+  const send = async extra => {
+    const r = await api("vm/action", Object.assign({names: rows.map(x => x.name), action: o.action}, extra));
+    reportBulk(`${verb} requested`, r);
+    if (o.onDone) await o.onDone();
+  };
+  if (!clash.length) {
+    return confirmDialog({
+      title: `${verb} ${who}`, confirm: verb,
+      message: `${verb} ${who} now? Mini PMC sends the request within seconds; the status changes once the cloud finishes.`,
+      run: () => send({}),
+    });
+  }
+  const dur = durationWidget("Keep it that way for how long?");
+  const others = rows.length - clash.length;
+  return formDialog({
+    title: `${verb} ${who}`, submit: `Set override and ${verb.toLowerCase()}`,
+    intro: `${plural(clash.length, "VM")} ${clash.length === 1 ? "is" : "are"} scheduled to ${o.action === "start" ? "be stopped" : "be running"} right now, ` +
+      `so the schedule would reverse this at its next check. An override makes the schedule leave ${clash.length === 1 ? "it" : "them"} alone for the time you choose.` +
+      (others ? ` The other ${plural(others, "selected VM")} just ${o.action === "start" ? "start" : "stop"}, with no override.` : ""),
+    fields: [
+      {name: "when", label: "How long?", node: dur.node, read: dur.read},
+      {name: "reason", label: "Reason", required: true, maxlength: 200, placeholder: "e.g. patching window / urgent test",
+        hint: "Everyone can see this reason, and it is written to the audit log."},
+    ],
+    run: async v => send({override: Object.assign({reason: v.reason.trim()}, v.when)}),
+  });
+}
 /* ------------------------------------------------------------------ add resources (admin) */
 function addResourcesDialog(schedules, onDone, mode) {
   mode = mode || "one";
@@ -143,21 +190,29 @@ function addResourcesDialog(schedules, onDone, mode) {
     const bProvider = h("select", {"aria-label": "Cloud"}, h("option", {value: "azure"}, "Azure"), h("option", {value: "gcp"}, "Google Cloud"));
     const bScope = h("input", {type: "text", autocomplete: "off", placeholder: "Subscription ID / project ID"});
     const bGroup = h("input", {type: "text", autocomplete: "off", placeholder: "Resource group / zone"});
+    const file = h("input", {type: "file", accept: ".csv,.txt,.tsv", "aria-label": "Upload a CSV file"});
+    const area = h("textarea", {rows: 9, spellcheck: false, required: true,
+      placeholder: "vm name, provider, project/subscription ID, zone/resource group, schedule\ngnlgsqw200002,gcp,my-project,europe-west4-a,Always Parked\nvmweb01,azure,00000000-0000-0000-0000-000000000000,my-rg,none"});
+    file.addEventListener("change", () => {
+      const f = file.files[0];
+      if (!f) return;
+      const rd = new FileReader();
+      rd.onload = () => { area.value = String(rd.result); };
+      rd.readAsText(f);
+    });
     m = formDialog({
       title: "Add many VMs", wide: true, submit: "Add VMs",
-      intro: "Fill in the three shared boxes and paste only VM names (one per line). " +
-        "Or leave them empty and paste full lines: name,cloud,subscription-or-project,resource-group-or-zone[,schedule]. Excel paste works too.",
+      intro: "One VM per line, 5 columns: vm name, provider (azure or gcp), project/subscription ID, zone/resource group, schedule name. " +
+        "Leave the schedule empty or write none for no schedule. A header line is skipped. Paste from Excel, or upload a CSV file.",
       fields: [
         {node: switcher},
-        {name: "provider", label: "Cloud (shared)", node: field("Cloud (shared)", bProvider), read: () => bProvider.value},
-        {name: "scope", label: "Subscription / project (shared)", node: field("Subscription / project (shared)", bScope), read: () => bScope.value},
-        {name: "group", label: "Resource group / zone (shared)", node: field("Resource group / zone (shared)", bGroup), read: () => bGroup.value},
-        {name: "text", label: "VMs, one per line", type: "textarea", rows: 8, required: true,
-          placeholder: "vm-one\nvm-two,SCHEDULE_NAME\nvm-three",
-          hint: "With shared boxes filled: name or name,schedule per line."},
-        {name: "schedule", label: "Default schedule", type: "select", options, value: "", hint: "Used for lines that do not name a schedule."},
-      ],
-      run: async v => {
+        {name: "text", label: "VM list", node: field("VM list", area), read: () => area.value},
+        {name: "file", label: "Or upload a CSV", node: field("Or upload a CSV", file), read: () => ""},
+        {name: "schedule", label: "Default schedule", type: "select", options, value: "", hint: "Only for lines whose schedule column is empty."},
+        {name: "provider", label: "Shortcut: cloud", node: field("Shortcut: cloud (optional)", bProvider), read: () => bProvider.value},
+        {name: "scope", label: "Shortcut: subscription / project", node: field("Shortcut: subscription / project (optional)", bScope), read: () => bScope.value},
+        {name: "group", label: "Shortcut: resource group / zone", node: field("Shortcut: resource group / zone (optional)", bGroup), read: () => bGroup.value},
+      ],      run: async v => {
         const r = await api("vm/bulk", {text: v.text, schedule: v.schedule || null, provider: v.provider,
           scope: v.scope.trim(), group: v.group.trim()});
         if (r.errors.length) showResults("Add resources", `${plural(r.added.length, "VM")} added, ${plural(r.errors.length, "line")} skipped:`, r.errors);
@@ -310,7 +365,7 @@ async function resourcesPage(ctx) {
         ? h("div", {class: "sched-cell"}, strip(schedGrid.get(r.schedule)), h("span", null, r.schedule))
         : chip("Unmanaged", "unm", "No schedule: Mini PMC never starts or stops this VM")),
       h("td", {class: "nowrap"}, statusChip(r), r.pending_action ? [" ", chip(r.pending_action === "START" ? "Starting\u2026" : "Stopping\u2026", "ovr", "Mini PMC has sent or queued this action")] : null,
-        " ", refreshBtn(r.name),
+        " ", refreshBtn(r.name), actionBtn(r),
         mismatch(r) ? h("div", {class: "sub"}, "differs from schedule") : null),
       h("td", {class: "nowrap"}, stateChip(r.says),
         r.local ? h("div", {class: "sub", title: "Time now in the schedule's time zone: " + (schedTz.get(r.schedule) || "")}, r.local + (gmtLabel(schedTz.get(r.schedule)) ? " " + gmtLabel(schedTz.get(r.schedule)) : "")) : null),
@@ -372,6 +427,8 @@ async function resourcesPage(ctx) {
     bulkBox.appendChild(h("div", {class: "bulk"},
       h("b", null, `${fmtNum(selected.size)} selected`),
       btn("Refresh status", {sm: true, icon: "refresh", onclick: () => refreshStatus([...selected])}),
+      can("admin") ? btn("Start\u2026", {sm: true, onclick: () => actionDialog({rows, action: "start", onDone: afterChange})}) : null,
+      can("admin") ? btn("Stop\u2026", {sm: true, onclick: () => actionDialog({rows, action: "stop", onDone: afterChange})}) : null,
       can("admin") ? btn("Override\u2026", {sm: true, icon: "shield", onclick: () => overrideDialog({names: [...selected], onDone: afterChange})}) : null,
       can("admin") ? btn("Clear override", {sm: true, disabled: !withOverride.length,
         title: withOverride.length ? "" : "None of the selected VMs has an override", onclick: () => clearOverrides(withOverride)}) : null,
@@ -427,6 +484,14 @@ async function resourcesPage(ctx) {
   function refreshBtn(name) {
     return h("button", {type: "button", class: "icon-btn", title: "Refresh this VM's status", "aria-label": "Refresh status of " + name,
       onclick: e => { e.stopPropagation(); refreshStatus([name]); }}, icon("refresh", 14));
+  }
+  function actionBtn(r) {
+    if (!can("admin") || r.pending_action) return null;
+    const down = r.status === "STOPPED" || r.status === "DEALLOCATED";
+    if (!down && r.status !== "RUNNING") return null;
+    const action = down ? "start" : "stop";
+    return h("button", {type: "button", class: "icon-btn", title: (down ? "Start " : "Stop ") + r.name, "aria-label": (down ? "Start " : "Stop ") + r.name,
+      onclick: e => { e.stopPropagation(); actionDialog({rows: [r], action, onDone: afterChange}); }}, icon(down ? "play" : "stop", 14));
   }
   async function refreshStatus(names) {
     if (refreshing) { toast("A refresh is already running.", "err"); return; }

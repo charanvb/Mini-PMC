@@ -250,24 +250,37 @@ class Store:
 
     def add_vms_bulk(self, text: str, default_schedule: Optional[str] = None, provider: str = "",
                      scope: str = "", group: str = "") -> dict:
-        """One VM per line (commas or tabs, so a paste from Excel works).
+        """One VM per line, comma or tab separated (so a paste from Excel or a CSV works):
+        'name, provider, project-or-subscription, zone-or-resource-group[, schedule]'.
 
-        With a shared provider/scope/group a line is just 'name[,schedule]'; otherwise it is
-        'name,provider,scope,group_or_zone[,schedule]'. Good lines are added; bad ones reported."""
+        A blank schedule or none / (none) / - means no schedule. A header line is skipped. With a shared
+        provider/scope/group a line may be just 'name[,schedule]'. Good lines are added; bad ones reported."""
+        import csv
         shared = bool(provider and scope.strip() and group.strip())
+        with db.connect(self.home) as con:
+            known = {r[0].lower(): r[0] for r in con.execute("SELECT name FROM schedules")}
+        default = known.get(default_schedule.lower(), default_schedule) if default_schedule else None
         added, errors = [], []
-        for n, ln in enumerate(text.splitlines(), 1):
-            ln = ln.strip()
-            if not ln or ln.lower().startswith("name,") or ln.lower().startswith("name\t"):
+        lines = text.splitlines()
+        for n, ln in enumerate(lines, 1):
+            row = next(csv.reader([ln], delimiter="\t" if "\t" in ln else ",", skipinitialspace=True), [])
+            p = [x.strip() for x in row]
+            if not any(p):
                 continue
-            p = [x.strip() for x in ln.replace("\t", ",").split(",")]
+            if p[0].lower() in ("name", "vmname", "vm name", "vm") or (len(p) > 1 and p[1].lower() == "provider"):
+                continue
             if shared and len(p) <= 2:
                 p = [p[0], provider, scope, group] + p[1:]
             if len(p) < 4:
-                errors.append(f"line {n}: need name,provider,scope,group_or_zone[,schedule]")
+                errors.append(f"line {n}: need name, provider, project/subscription, zone/resource group[, schedule]")
                 continue
+            sched = p[4] if len(p) > 4 else ""
+            if sched.lower() in ("", "none", "(none)", "-", "n/a"):
+                sched = ""
+            elif sched.lower() in known:
+                sched = known[sched.lower()]
             try:
-                self.add_vm(p[0], p[1], p[2], p[3], (p[4] if len(p) > 4 and p[4] else default_schedule) or None)
+                self.add_vm(p[0], p[1], p[2], p[3], sched or default or None)
                 added.append(p[0])
             except UserError as e:
                 errors.append(f"line {n} ({p[0]}): {e}")

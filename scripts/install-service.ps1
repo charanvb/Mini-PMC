@@ -2,13 +2,21 @@
   Installs Mini PMC as a Windows Scheduled Task that starts at boot (before anyone logs in), runs as SYSTEM,
   and restarts itself if it ever stops. Uses only what Windows already has - nothing to download.
   Run from an ADMINISTRATOR PowerShell:   .\scripts\install-service.ps1 [-Port 8080] [-OpenFirewall]
+  HTTPS on 443 (PEM files, see docs):     .\scripts\install-service.ps1 -CertFile C:\mpmc\certs\minipmc.crt -KeyFile C:\mpmc\certs\minipmc.key -OpenFirewall
 #>
 param(
-    [int]$Port = 8080,
+    [int]$Port = 0,
     [string]$BindHost = '0.0.0.0',
+    [string]$CertFile = '',
+    [string]$KeyFile = '',
     [switch]$OpenFirewall
 )
 $ErrorActionPreference = 'Stop'
+$https = [bool]$CertFile
+if ($https -and -not $KeyFile) { throw 'HTTPS needs both -CertFile and -KeyFile (PEM files).' }
+if ($https -and -not (Test-Path $CertFile)) { throw "Not found: $CertFile" }
+if ($https -and -not (Test-Path $KeyFile)) { throw "Not found: $KeyFile" }
+if ($Port -eq 0) { $Port = if ($https) { 443 } else { 8080 } }
 $id = [Security.Principal.WindowsIdentity]::GetCurrent()
 if (-not (New-Object Security.Principal.WindowsPrincipal $id).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
     throw 'Run this from an Administrator PowerShell.'
@@ -20,6 +28,7 @@ if (-not (Test-Path (Join-Path $root 'data\minipmc.db'))) { throw 'Run "mpmc ini
 
 $name = 'MiniPMC'
 $arg = "-m minipmc --home `"$root`" serve --host $BindHost --port $Port"
+if ($https) { $arg += " --cert `"$CertFile`" --key `"$KeyFile`"" }
 $action    = New-ScheduledTaskAction -Execute $py -Argument $arg -WorkingDirectory $root
 $trigger   = New-ScheduledTaskTrigger -AtStartup
 $principal = New-ScheduledTaskPrincipal -UserId 'SYSTEM' -LogonType ServiceAccount -RunLevel Highest
@@ -42,8 +51,9 @@ Start-ScheduledTask -TaskName $name
 
 # Watchdog: every 5 minutes, start/restart the main task if it is down or not doing its cycles.
 $wdName = 'MiniPMC-Watchdog'
-$wdAction  = New-ScheduledTaskAction -Execute 'powershell.exe' -WorkingDirectory $root `
-    -Argument "-NoProfile -ExecutionPolicy Bypass -File `"$(Join-Path $root 'scripts\watchdog.ps1')`" -Port $Port"
+$wdArgs = "-NoProfile -ExecutionPolicy Bypass -File `"$(Join-Path $root 'scripts\watchdog.ps1')`" -Port $Port"
+if ($https) { $wdArgs += ' -Https' }
+$wdAction  = New-ScheduledTaskAction -Execute 'powershell.exe' -WorkingDirectory $root -Argument $wdArgs
 $wdTrigger = New-ScheduledTaskTrigger -Once -At (Get-Date).AddMinutes(1) -RepetitionInterval (New-TimeSpan -Minutes 5)
 $wdSettings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -StartWhenAvailable `
     -MultipleInstances IgnoreNew -ExecutionTimeLimit (New-TimeSpan -Minutes 3)
@@ -52,6 +62,6 @@ Register-ScheduledTask -TaskName $wdName -Action $wdAction -Trigger $wdTrigger -
     -Description 'Restarts Mini PMC if it is not running or not doing its cycles' | Out-Null
 Start-Sleep -Seconds 4
 Get-ScheduledTask -TaskName $name | Select-Object TaskName, State | Format-Table -AutoSize
-Write-Host "Installed. Dashboard: http://localhost:$Port   Logs: $root\logs\app.log"
+Write-Host "Installed. Dashboard: $(if ($https) { 'https' } else { 'http' })://localhost:$Port   Logs: $root\logs\app.log"
 Write-Host 'Stop: Stop-ScheduledTask MiniPMC   Start: Start-ScheduledTask MiniPMC   Remove: .\scripts\uninstall-service.ps1'
 Write-Host 'After a code update (git pull): Stop-ScheduledTask MiniPMC; Start-ScheduledTask MiniPMC  (no reinstall needed).'

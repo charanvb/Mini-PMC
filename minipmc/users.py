@@ -37,13 +37,14 @@ def _check_new(username: str, password: str, role: str) -> None:
         raise UserError(f"password must be at least {MIN_PASSWORD} characters")
 
 
-def add_user(store: Store, username: str, password: str, role: str) -> None:
+def add_user(store: Store, username: str, password: str, role: str, must_change: bool = False) -> None:
     _check_new(username, password, role)
     with db.connect(store.home) as con:
         if con.execute("SELECT 1 FROM users WHERE username=?", (username,)).fetchone():
             raise UserError(f"user already exists: {username}")
-        con.execute("INSERT INTO users VALUES (?,?,?,0,?)", (username, hash_password(password), role, utcnow_iso()))
-        store.audit(con, "USER_ADDED", username, role=role)
+        con.execute("INSERT INTO users (username, pw_hash, role, disabled, created_at, must_change) VALUES (?,?,?,0,?,?)",
+                    (username, hash_password(password), role, utcnow_iso(), int(must_change)))
+        store.audit(con, "USER_ADDED", username, role=role, temporary_password=must_change)
 
 
 def _require(con, username: str):
@@ -58,13 +59,15 @@ def _other_active_admins(con, username: str) -> int:
                        (username,)).fetchone()[0]
 
 
-def set_password(store: Store, username: str, password: str) -> None:
+def set_password(store: Store, username: str, password: str, must_change: bool = False) -> None:
+    """must_change=True makes it a one-time password: the user has to choose their own at the next login."""
     if len(password) < MIN_PASSWORD:
         raise UserError(f"password must be at least {MIN_PASSWORD} characters")
     with db.connect(store.home) as con:
         u = _require(con, username)
-        con.execute("UPDATE users SET pw_hash=? WHERE username=?", (hash_password(password), u["username"]))
-        store.audit(con, "USER_PASSWORD_CHANGED", u["username"])
+        con.execute("UPDATE users SET pw_hash=?, must_change=? WHERE username=?",
+                    (hash_password(password), int(must_change), u["username"]))
+        store.audit(con, "USER_PASSWORD_CHANGED", u["username"], temporary_password=must_change)
 
 
 def set_role(store: Store, username: str, role: str) -> None:
@@ -98,7 +101,14 @@ def remove_user(store: Store, username: str) -> None:
 
 def list_users(store: Store) -> List:
     with db.connect(store.home) as con:
-        return con.execute("SELECT username, role, disabled, created_at FROM users ORDER BY username").fetchall()
+        return con.execute("SELECT username, role, disabled, created_at, must_change FROM users ORDER BY username").fetchall()
+
+
+def active_info(store: Store, username: str) -> Optional[dict]:
+    """{'role', 'must_change'} of an enabled user, or None if the user was removed or disabled."""
+    with db.connect(store.home) as con:
+        u = con.execute("SELECT role, disabled, must_change FROM users WHERE username=?", (username,)).fetchone()
+    return {"role": u["role"], "must_change": bool(u["must_change"])} if u and not u["disabled"] else None
 
 
 def active_role(store: Store, username: str) -> Optional[str]:
@@ -116,4 +126,4 @@ def authenticate(store: Store, username: str, password: str) -> Optional[dict]:
         if not u:  # same work for unknown users so timing does not reveal which names exist
             check_password(password, hash_password("x"))
         store.audit(con, "LOGIN_OK" if ok else "LOGIN_FAILED", username)
-    return {"username": u["username"], "role": u["role"]} if ok else None
+    return {"username": u["username"], "role": u["role"], "must_change": bool(u["must_change"])} if ok else None

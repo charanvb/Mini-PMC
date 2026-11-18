@@ -5,7 +5,7 @@
     - running but unhealthy  -> restart it (only if it has been up for 10+ minutes, so a slow start is left alone)
   Writes what it did to logs\watchdog.log. Uses only what Windows already has.
 #>
-param([int]$Port = 8080)
+param([int]$Port = 8080, [switch]$Https)
 $ErrorActionPreference = 'Stop'
 $name = 'MiniPMC'
 $root = Split-Path -Parent $PSScriptRoot
@@ -26,7 +26,14 @@ if ($task.State -ne 'Running') {
 
 $healthy = $false
 try {
-    $r = Invoke-WebRequest -Uri "http://127.0.0.1:$Port/healthz" -UseBasicParsing -TimeoutSec 15
+    # The probe talks to itself on 127.0.0.1, so the certificate name cannot match: skip validation for this local check only.
+    $scheme = 'http'
+    if ($Https) {
+        $scheme = 'https'
+        [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+        [Net.ServicePointManager]::ServerCertificateValidationCallback = { $true }
+    }
+    $r = Invoke-WebRequest -Uri "${scheme}://127.0.0.1:$Port/healthz" -UseBasicParsing -TimeoutSec 15
     $healthy = ($r.StatusCode -eq 200)
 } catch { $healthy = $false }
 

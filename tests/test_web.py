@@ -65,7 +65,7 @@ def test_login_and_wrong_password(srv):
     c = Client(srv[0])
     assert c.login("boss", "nope")[0] == 401
     assert c.login("boss", "password-1")[0] == 200
-    assert c.call("me")[1] == {"username": "boss", "role": "admin"}
+    assert c.call("me")[1] == {"username": "boss", "role": "admin", "must_change": False}
     assert c.call("logout", {})[0] == 200
     assert c.call("me")[0] == 401
 
@@ -253,3 +253,57 @@ def test_schema_v3_converts_old_roles(tmp_path):
         con.execute("UPDATE meta SET value='3' WHERE key='schema_version'")
     db.init(home)
     assert {u["username"]: u["role"] for u in users.list_users(st)} == {"a": "admin", "b": "reader"}
+
+
+def test_one_time_password_forces_change(srv):
+    base, home = srv
+    adm = Client(base)
+    adm.login("boss", "password-1")
+    assert adm.call("user/save", {"create": True, "username": "newbie", "password": "temp-pass-1", "role": "reader"})[0] == 200
+    c = Client(base)
+    assert c.login("newbie", "temp-pass-1")[0] == 200
+    assert c.call("me")[1]["must_change"] is True
+    code, body = c.call("vms")
+    assert code == 403 and body["password_change_required"]
+    assert c.call("change-password", {"old": "temp-pass-1", "new": "temp-pass-1"})[0] == 400
+    assert c.call("change-password", {"old": "temp-pass-1", "new": "my-own-pass-9"})[0] == 200
+    assert c.call("vms")[0] == 200 and c.call("me")[1]["must_change"] is False
+
+
+def test_vm_action_needs_override_when_schedule_disagrees(srv):
+    base, home = srv
+    from minipmc.service import Store
+    c = Client(base)
+    c.login("boss", "password-1")
+    code, r = c.call("vm/action", {"names": ["vm1"], "action": "start"})  # schedule agrees: no override needed
+    assert code == 400 and "readonly" in r["error"]
+    Store(home).set_setting("mode", "live")
+    code, r = c.call("vm/action", {"names": ["vm1"], "action": "stop"})
+    assert code == 400 and "override is required" in r["error"]
+    ov = {"hours": 2, "reason": "maintenance"}
+    assert c.call("vm/action", {"names": ["vm1"], "action": "stop", "override": ov})[0] == 200
+    with db.connect(home) as con:
+        assert con.execute("SELECT manual FROM ops WHERE vm_name='vm1'").fetchone()[0] == 1
+    assert [o["vm_name"] if "vm_name" in o.keys() else o[0] for o in Store(home).list_overrides()]
+
+
+def test_bulk_csv_onboarding_format(tmp_path):
+    st = Store(str(tmp_path)); st.init()
+    r = st.add_vms_bulk('VMName,Provider,ProjectOrSubscription,ZoneOrResource,Schedule\nv1,gcp,prj,eu-a,none\nv2,azure,sub,rg,always_up\nv3,gcp,prj,eu-a,\n"v4",gcp,prj,eu-a,nosuch\n')
+    assert r["added"] == ["v1", "v2", "v3"] and len(r["errors"]) == 1 and "nosuch" in r["errors"][0]
+
+
+def test_https_with_generated_certificate(tmp_path):
+    pytest.importorskip("cryptography")
+    import ssl
+    from minipmc import certs
+    Store(str(tmp_path)).init()
+    crt, key = certs.make_self_signed(["localhost", "127.0.0.1"], str(tmp_path / "c"))
+    server = web.make_server(str(tmp_path), "127.0.0.1", 0, crt, key)
+    threading.Thread(target=server.serve_forever, daemon=True).start()
+    try:
+        r = urllib.request.urlopen(f"https://localhost:{server.server_address[1]}/", context=ssl.create_default_context(cafile=crt))
+        assert r.status == 200 and r.headers.get("Strict-Transport-Security")
+    finally:
+        server.shutdown()
+        server.server_close()
