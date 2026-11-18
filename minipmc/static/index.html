@@ -76,7 +76,9 @@ const opt = (o) => Array.isArray(o) ? h("option", { value: o[0] }, o[1]) : h("op
 function dialog(title, fields, onOk, okText) {
   const d = $("#dlg"), err = h("div", { class: "err" }), inputs = {};
   const body = fields.map((f) => {
-    const el = f.type === "select" ? h("select", {}, f.options.map(opt)) : h("input", { type: f.type || "text", placeholder: f.placeholder || "" });
+    const el = f.type === "select" ? h("select", {}, f.options.map(opt))
+      : f.type === "textarea" ? h("textarea", { rows: 6, placeholder: f.placeholder || "", style: "width:100%;font-family:monospace" })
+      : h("input", { type: f.type || "text", placeholder: f.placeholder || "" });
     if (f.value != null) el.value = f.value;
     inputs[f.name] = el;
     return [h("label", {}, f.label), el];
@@ -187,7 +189,8 @@ async function vmsView() {
     input("q", h("input", { placeholder: "Search VM or schedule", style: "min-width:260px" })),
     input("provider", h("select", {}, [["", "All clouds"], ["azure", "Azure"], ["gcp", "GCP"]].map(opt))),
     input("state", h("select", {}, [["", "All"], ["held", "On hold"], ["unmanaged", "Unmanaged"], ["disabled", "Disabled"], ["run", "Should run now"], ["stop", "Should be stopped now"]].map(opt))),
-    can("admin") ? h("button", { class: "b", onclick: addVm }, "+ Add VM") : null, info);
+    can("admin") ? h("button", { class: "b", onclick: addVm }, "+ Add VM") : null,
+    can("admin") ? h("button", { class: "b sec", onclick: bulkVms }, "+ Bulk add") : null, info);
   draw();
   return [bar, out];
 }
@@ -202,6 +205,17 @@ function addVm() {
     { name: "schedule", label: "Schedule", type: "select", options: scheduleOptions(true) }, { name: "notes", label: "Notes" }],
     async (v) => { await api("vm/add", v); render(); }, "Add");
 }
+function bulkVms() {
+  dialog("Bulk add VMs", [
+    { name: "text", label: "One VM per line: name,provider,subscription-or-project,resource-group-or-zone[,schedule]", type: "textarea",
+      placeholder: "bnlafqw200264,azure,beb54d1c-...,bnlwe-af01-q-57427-rg\ngnlfstlx00002,gcp,ul-fs-t-902550-prj,europe-west4-a" },
+    { name: "schedule", label: "Schedule for lines that don't name one", type: "select", options: scheduleOptions(true) }],
+    async (v) => {
+      const r = await api("vm/bulk", v);
+      if (r.errors.length) throw new Error("Added " + r.added.length + ". Not added:\n" + r.errors.join("\n"));
+      toast("Added " + r.added.length + " VM(s)"); render();
+    }, "Add all");
+}
 function editVm(vm) {
   dialog("Edit " + vm.name, [
     { name: "schedule", label: "Schedule", type: "select", options: scheduleOptions(true), value: vm.schedule || "" },
@@ -214,9 +228,16 @@ async function schedulesView() {
   cache.schedules = schedules;
   const detail = h("div", {});
   return [
-    can("admin") ? h("div", { class: "bar" }, h("button", { class: "b", onclick: () => dialog("New schedule from text", [
+    can("admin") ? h("div", { class: "bar" }, h("button", { class: "b", onclick: () => dialog("New schedule", [
+      { name: "name", label: "Name" },
+      { name: "tz", label: "Time zone (the clock these times are read in)", type: "select",
+        options: [...new Set(["Asia/Kolkata", "Europe/London", "UTC", "Africa/Cairo", "Europe/Istanbul", "Asia/Singapore", "America/Sao_Paulo"].concat(schedules.map((s) => s.tz)))] },
+      { name: "windows", label: "Running windows, one per line (24h clock). A window may cross midnight, e.g. Mon-Fri 22:00-06:00", type: "textarea",
+        placeholder: "Mon-Fri 09:00-17:00\nSat 08:00-12:00" }],
+      async (v) => { const r = await api("schedule/add", v); toast("Schedule ready: " + r.name); render(); }, "Create") }, "+ New schedule"),
+      h("button", { class: "b sec", onclick: () => dialog("New schedule from text", [
       { name: "text", label: "Schedule text", placeholder: "IST 10AM-6PM Mon-Fri" }, { name: "name", label: "Name (optional)" }],
-      async (v) => { const r = await api("schedule/add", v); toast("Schedule ready: " + r.name); render(); }, "Create") }, "+ New schedule")) : null,
+      async (v) => { const r = await api("schedule/add", v); toast("Schedule ready: " + r.name); render(); }, "Create") }, "+ From text")) : null,
     h("div", { class: "panel scroll", style: "max-height:35vh" }, h("table", {}, h("tr", {}, ["Schedule", "Time zone", "VMs", ""].map((x) => h("th", {}, x))),
       schedules.map((s) => h("tr", {}, h("td", {}, s.name), h("td", {}, s.tz), h("td", {}, s.vms),
         h("td", {}, h("button", { class: "b sm sec", onclick: guard(() => showSchedule(s.name, detail)) }, "View")))))),
@@ -224,12 +245,17 @@ async function schedulesView() {
 }
 async function showSchedule(name, box) {
   const s = await api("schedule?name=" + encodeURIComponent(name));
+  const t = await api("schedule/test?name=" + encodeURIComponent(name));
   const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"], rows = [];
   rows.push(h("div", { class: "hours" }, h("span", {}), [...Array(24).keys()].map((i) => h("span", {}, i))));
   days.forEach((d, di) => rows.push(h("div", { class: "grid" }, h("i", { class: "l" }, d),
     [...Array(96).keys()].map((c) => h("i", { class: s.grid[di * 96 + c], title: d + " " + String(Math.floor(c / 4)).padStart(2, "0") + ":" + String((c % 4) * 15).padStart(2, "0") })))));
   box.replaceChildren(h("div", { class: "panel" }, h("h3", {}, s.name + "  (" + s.tz + ", local time)"), rows,
-    h("div", { class: "mute" }, "Green = running, grey = stopped. Windows: " + s.windows.join("; "))));
+    h("div", { class: "mute" }, "Green = running, grey = stopped. Windows: " + s.windows.join("; "))),
+    h("div", { class: "panel" }, h("h3", {}, "Time check - next switches"),
+      h("div", {}, "Now: UTC " + t.now.utc + " | London " + t.now.london + " | " + t.tz + " " + t.now.schedule + " -> should be " + (t.now_state === "R" ? "RUNNING" : "STOPPED")),
+      h("table", {}, h("tr", {}, ["Switch to", "UTC", "London", t.tz].map((x) => h("th", {}, x))),
+        t.switches.map((w) => h("tr", {}, h("td", {}, w.to === "R" ? "RUNNING" : "STOPPED"), h("td", {}, w.utc), h("td", {}, w.london), h("td", {}, w.schedule)))))));
 }
 
 async function auditView() {

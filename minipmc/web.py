@@ -262,7 +262,18 @@ def api_vm_remove(h, st, s, q):
 
 def api_schedule_add(h, st, s, q):
     b = h._body()
+    if b.get("windows") is not None:
+        return {"name": st.add_schedule_custom(str(b.get("name", "")), str(b.get("tz", "")), str(b["windows"]))}
     return {"name": st.add_schedule_from_text(str(b.get("text", "")), b.get("name") or None)}
+
+
+def api_vm_bulk(h, st, s, q):
+    b = h._body()
+    return st.add_vms_bulk(str(b.get("text", "")), b.get("schedule") or None)
+
+
+def api_schedule_test(h, st, s, q):
+    return st.time_check((q.get("name") or [""])[0])
 
 
 def api_users(h, st, s, q):
@@ -301,6 +312,7 @@ ROUTES = {
     ("GET", "me"): (api_me, "viewer"), ("POST", "logout"): (api_logout, "viewer"),
     ("GET", "summary"): (api_summary, "viewer"), ("GET", "vms"): (api_vms, "viewer"),
     ("GET", "schedules"): (api_schedules, "viewer"), ("GET", "schedule"): (api_schedule, "viewer"),
+    ("GET", "schedule/test"): (api_schedule_test, "viewer"), ("POST", "vm/bulk"): (api_vm_bulk, "admin"),
     ("GET", "events"): (api_events, "viewer"), ("POST", "change-password"): (api_change_password, "viewer"),
     ("POST", "hold/set"): (api_hold_set, "operator"), ("POST", "hold/clear"): (api_hold_clear, "operator"),
     ("POST", "pause"): (api_pause, "operator"),

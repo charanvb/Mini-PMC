@@ -129,7 +129,7 @@ mpmc schedule list                          # the library
 mpmc schedule show "IST Mon-Fri 10:00-18:00"
 
 # add one test VM (use a real name, subscription id and resource group)
-mpmc vm add MYTESTVM --provider azure --scope <subscription-id> --group <resource-group> --schedule "IST Mon-Fri 10:00-18:00"
+mpmc vm add MYTESTVM --provider azure --scope <subscription-id> --group <resource-group> --schedule "ALWAYS_PARKED"
 # GCP: mpmc vm add MYGCPVM --provider gcp --scope <project> --group <zone> --schedule ALWAYS_PARKED
 
 mpmc vm list

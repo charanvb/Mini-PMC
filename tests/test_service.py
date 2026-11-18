@@ -109,6 +109,43 @@ def test_ist_schedule_uses_local_time(store):
     assert r3["action"] == "STOP"
 
 
+def test_time_check_lists_switches_in_utc_and_schedule_zone(store):
+    name = store.add_schedule_from_text("IST 10AM-6PM Mon-Fri")
+    r = store.time_check(name, datetime(2026, 11, 23, 4, 0, tzinfo=timezone.utc))  # Mon 09:30 IST
+    assert r["now_state"] == "S" and r["tz"] == "Asia/Kolkata"
+    first = r["switches"][0]
+    assert first["to"] == "R" and first["utc"] == "Mon 23 Nov 04:30" and "10:00" in first["schedule"]
+    assert r["switches"][1]["to"] == "S" and r["switches"][1]["utc"] == "Mon 23 Nov 12:30"  # 18:00 IST
+
+
+def test_time_check_handles_uk_clock_change(store):
+    try:
+        from minipmc.tz import get_tz
+        get_tz("Europe/London")
+    except ValueError:
+        pytest.skip("tz data not installed (pip install tzdata)")
+    name = store.add_schedule_from_text("Up 5 days (Mon-Fri) 9 AM to 5 PM Europe/London")
+    # Fri 27 Mar 2026 is GMT, Mon 30 Mar is BST (clocks changed 29 Mar): 09:00 local = 09:00 then 08:00 UTC
+    r = store.time_check(name, datetime(2026, 3, 27, 18, 0, tzinfo=timezone.utc), days=4)
+    starts = [w for w in r["switches"] if w["to"] == "R"]
+    assert starts[0]["utc"] == "Mon 30 Mar 08:00" and "09:00 BST" in starts[0]["london"]
+
+
+def test_custom_schedule_and_bulk_vms(store):
+    name = store.add_schedule_custom("Office", "Asia/Kolkata", "Mon-Fri 09:00-17:00\nSat 22:00-02:00")
+    r = store.time_check(name, datetime(2026, 11, 23, 3, 0, tzinfo=timezone.utc))  # Mon 08:30 IST
+    assert r["switches"][0]["to"] == "R" and r["switches"][0]["utc"] == "Mon 23 Nov 03:30"
+    # Saturday 22:00 window runs through to Sunday 02:00
+    sat = store.get_schedule(name)["grid"]
+    assert sat[5 * 96 + 22 * 4] == "R" and sat[6 * 96 + 1 * 4] == "R" and sat[6 * 96 + 2 * 4] == "S"
+    for bad in ("Mon-Fri 9-5", "Funday 09:00-17:00", ""):
+        with pytest.raises(UserError):
+            store.add_schedule_custom("X" + bad[:3], "Asia/Kolkata", bad)
+    res = store.add_vms_bulk("a1,azure,sub,rg\nb1,gcp,proj,zone,Office\nbroken\na1,azure,sub,rg", name)
+    assert res["added"] == ["a1", "b1"] and len(res["errors"]) == 2
+    assert {v["name"]: v["schedule"] for v in store.list_vms()} == {"a1": "Office", "b1": "Office"}
+
+
 def test_every_change_is_audited_to_db_and_file(store):
     store.add_vm("vm1", "azure", "s", "g")
     store.set_hold("vm1", None, "why")

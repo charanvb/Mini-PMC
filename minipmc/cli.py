@@ -39,6 +39,8 @@ def build_parser() -> argparse.ArgumentParser:
     x = sp.add_parser("add", help="create a schedule from schedule text"); x.add_argument("text")
     x.add_argument("--name")
     x = sp.add_parser("remove"); x.add_argument("name")
+    x = sp.add_parser("test", help="show how a schedule maps UTC / London time to its own time zone")
+    x.add_argument("name"); x.add_argument("--at", help="UTC time, e.g. 2026-03-29T00:30:00Z (default: now)")
 
     vp = sub.add_parser("vm", help="VMs").add_subparsers(dest="sub", required=True)
     x = vp.add_parser("list"); x.add_argument("--find", default=""); x.add_argument("--unmanaged", action="store_true")
@@ -112,12 +114,13 @@ def creds_check(store: Store, vm_name=None) -> int:
             return False
 
     c = cr.Credentials(cr.load_settings(store.home))
-    if step("Azure managed identity token (ARM)", lambda: c.azure_token(cr.ARM) and ""):
+    vm = store.get_vm(vm_name)[0] if vm_name else None
+    step("Azure managed identity token (ARM)", lambda: c.azure_token(cr.ARM) and "")
+    if vm is None or vm["provider"] == "gcp":  # the GCP key is only needed for GCP VMs
         if step("Key Vault: read GCP key secret", lambda: "(secret found)" if c.gcp_info() else ""):
             step("GCP service account", lambda: c.gcp_info()["client_email"])
             step("Google access token", lambda: c.gcp_token() and "")
-    if vm_name:
-        vm, _, _ = store.get_vm(vm_name)
+    if vm:
         step("read power state of " + vm["name"],
              lambda: "%s (%s)" % providers.vm_status(c, vm["provider"], vm["scope"], vm["group_or_zone"], vm["name"]))
     return 0 if ok else 1
@@ -145,6 +148,16 @@ def run(args, store: Store) -> int:
                 out("  ", g.run_label(a, n))
         elif s == "add":
             out("schedule ready:", store.add_schedule_from_text(args.text, args.name))
+        elif s == "test":
+            r = store.time_check(args.name, parse_utc(args.at) if args.at else None)
+            out("%s  (time zone %s)" % (r["schedule"], r["tz"]))
+            n = r["now"]
+            out("At UTC %s | London %s | schedule %s  ->  should be %s" %
+                (n["utc"], n["london"], n["schedule"], "RUNNING" if r["now_state"] == "R" else "STOPPED"))
+            out("Next switches:")
+            for w in r["switches"]:
+                out("  -> %-7s UTC %s | London %s | schedule %s" %
+                    ("RUNNING" if w["to"] == "R" else "STOPPED", w["utc"], w["london"], w["schedule"]))
         elif s == "remove":
             store.remove_schedule(args.name)
             out("removed", args.name)

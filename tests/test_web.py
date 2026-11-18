@@ -109,6 +109,10 @@ def test_admin_manages_vms_schedules_users(srv):
     code, body = c.call("schedule/add", {"text": "IST 10AM-6PM Mon-Fri"})
     assert code == 200 and body["name"].startswith("IST")
     assert c.call("schedule?name=" + body["name"].replace(" ", "%20"))[1]["windows"][0].startswith("Mon")
+    code, body = c.call("schedule/add", {"name": "Office", "tz": "Asia/Kolkata", "windows": "Mon-Fri 09:00-17:00"})
+    assert code == 200 and c.call("schedule/test?name=Office")[1]["switches"][0]["to"] == "R"
+    code, body = c.call("vm/bulk", {"text": "z1,azure,s,g\nbad", "schedule": "Office"})
+    assert body["added"] == ["z1"] and len(body["errors"]) == 1
     assert c.call("user/save", {"create": True, "username": "new", "password": "longenough", "role": "viewer"})[0] == 200
     assert c.call("user/remove", {"username": "boss"})[0] == 400  # last admin protected
 

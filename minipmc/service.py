@@ -3,6 +3,7 @@ import csv
 import json
 import logging
 import os
+import re
 import sqlite3
 from datetime import date, datetime, timedelta, timezone
 from typing import List, Optional
@@ -146,6 +147,78 @@ class Store:
                         (name, "grid", tzname, grid, desc, utcnow_iso()))
             self.audit(con, "SCHEDULE_ADDED", name, tz=tzname, text=text, notes=p.notes)
         return name
+
+    def add_schedule_custom(self, name: str, tzname: str, windows_text: str) -> str:
+        """Create a schedule from lines like 'Mon-Fri 09:00-17:00' (one running window per line, 24h clock)."""
+        name = (name or "").strip()
+        if not name:
+            raise UserError("a name is required")
+        try:
+            tz = get_tz(tzname)
+            del tz
+        except ValueError as e:
+            raise UserError(str(e))
+        grid = g.new_grid("S")
+        lines = [ln.strip() for ln in windows_text.splitlines() if ln.strip()]
+        if not lines:
+            raise UserError("add at least one window, e.g. Mon-Fri 09:00-17:00")
+        for ln in lines:
+            m = re.match(r"^([A-Za-z,\- ]+?)\s+(\d{1,2}):(\d{2})\s*-\s*(\d{1,2}):(\d{2})$", ln)
+            if not m:
+                raise UserError(f"cannot read '{ln}' - use e.g. Mon-Fri 09:00-17:00 or Sun 00:00-10:00")
+            days = self._days(m.group(1))
+            s, e = int(m.group(2)) * 60 + int(m.group(3)), int(m.group(4)) * 60 + int(m.group(5))
+            if not (0 <= s < 1440 and 0 <= e <= 1440) or s == e:
+                raise UserError(f"bad times in '{ln}'")
+            if e < s:
+                e += 1440  # runs past midnight into the next day
+            for d in days:
+                g.paint(grid, d, s, e, "R")
+        gs = g.to_string(grid)
+        with db.connect(self.home) as con:
+            if con.execute("SELECT 1 FROM schedules WHERE name=?", (name,)).fetchone():
+                raise UserError(f"a schedule called '{name}' already exists")
+            con.execute("INSERT INTO schedules VALUES (?,?,?,?,?,?)",
+                        (name, "grid", tzname, gs, g.describe(grid), utcnow_iso()))
+            self.audit(con, "SCHEDULE_ADDED", name, tz=tzname, windows=lines)
+        return name
+
+    @staticmethod
+    def _days(text: str) -> List[int]:
+        t = text.strip().lower().replace(" ", "")
+        if t in ("daily", "everyday", "all"):
+            return list(range(7))
+        out = []
+        for part in t.split(","):
+            if "-" in part:
+                a, b = part.split("-", 1)
+                if a[:3] not in g.DAYS or b[:3] not in g.DAYS:
+                    raise UserError(f"unknown day in '{text}'")
+                i, j = g.DAYS.index(a[:3]), g.DAYS.index(b[:3])
+                out += [(i + k) % 7 for k in range(((j - i) % 7) + 1)]
+            elif part[:3] in g.DAYS:
+                out.append(g.DAYS.index(part[:3]))
+            else:
+                raise UserError(f"unknown day in '{text}'")
+        return sorted(set(out))
+
+    def add_vms_bulk(self, text: str, default_schedule: Optional[str] = None) -> dict:
+        """One VM per line: name,provider,scope,group_or_zone[,schedule]. Good lines are added; bad ones reported."""
+        added, errors = [], []
+        for n, ln in enumerate(text.splitlines(), 1):
+            ln = ln.strip()
+            if not ln or ln.lower().startswith("name,"):
+                continue
+            p = [x.strip() for x in ln.split(",")]
+            if len(p) < 4:
+                errors.append(f"line {n}: need name,provider,scope,group_or_zone[,schedule]")
+                continue
+            try:
+                self.add_vm(p[0], p[1], p[2], p[3], (p[4] if len(p) > 4 and p[4] else default_schedule) or None)
+                added.append(p[0])
+            except UserError as e:
+                errors.append(f"line {n} ({p[0]}): {e}")
+        return {"added": added, "errors": errors}
 
     def remove_schedule(self, name: str) -> None:
         if name in (importer.ALWAYS_UP, importer.ALWAYS_PARKED):
@@ -359,6 +432,30 @@ class Store:
                         "hold_until": v["hold_until"], "hold_reason": v["hold_reason"] if v["held"] else "",
                         "hold_by": v["hold_by"] if v["held"] else ""})
         return out
+
+    def time_check(self, name: str, now: Optional[datetime] = None, days: int = 8) -> dict:
+        """Explain how a schedule reads the clock now and list its next run/stop switches."""
+        now = (now or datetime.now(timezone.utc)).replace(second=0, microsecond=0)
+        now = now.replace(minute=now.minute - now.minute % 15)
+        r = self.get_schedule(name)
+        grid, tz = g.from_string(r["grid"]), get_tz(r["tz"])
+        try:
+            london = get_tz("Europe/London")
+        except ValueError:
+            london = timezone.utc  # tz data missing (laptop only)
+
+        def stamp(t):
+            return {"utc": t.strftime("%a %d %b %H:%M"), "london": t.astimezone(london).strftime("%a %d %b %H:%M %Z"),
+                    "schedule": t.astimezone(tz).strftime("%a %d %b %H:%M %Z")}
+        cur = g.desired_at(grid, tz, now)
+        switches, prev = [], cur
+        for i in range(1, days * 96 + 1):
+            t = now + timedelta(minutes=15 * i)
+            d = g.desired_at(grid, tz, t)
+            if d != prev:
+                switches.append({"to": d, **stamp(t)})
+                prev = d
+        return {"schedule": r["name"], "tz": r["tz"], "now": stamp(now), "now_state": cur, "switches": switches[:10]}
 
     def export_vms_csv(self, path: str) -> int:
         rows = self.list_vms()

@@ -21,7 +21,8 @@ def azure_status(creds: Credentials, subscription: str, group: str, name: str):
         code = s.get("code", "")
         if code.startswith("PowerState/"):
             return _AZURE.get(code.split("/", 1)[1], rc.UNKNOWN), code
-    return rc.UNKNOWN, "no PowerState reported"
+    return rc.UNKNOWN, "no PowerState reported; statuses=" + ", ".join(
+        s.get("code", "?") for s in body.get("statuses", [])) + "; keys=" + ",".join(sorted(body))
 
 
 def gcp_status(creds: Credentials, project: str, zone: str, name: str):

@@ -54,8 +54,19 @@ Do not keep a `serve` running in a terminal at the same time (port clash).
 
 ## 6. Check
 ```
-python -m minipmc creds-check
-python -m minipmc creds-check --vm <azure-vm-name>
-python -m minipmc creds-check --vm <gcp-vm-name>
+python -m minipmc creds-check --vm <azure-vm-name>   # Azure VM: only the managed identity + that VM
+python -m minipmc creds-check --vm <gcp-vm-name>     # GCP VM: also Key Vault key + Google token
 ```
 This only reads; it never starts or stops anything. Paste the output back.
+
+## 7. Time zones - how to check
+```
+python -m minipmc schedule test "<schedule name>"
+python -m minipmc schedule test "<schedule name>" --at 2026-03-29T00:30:00Z
+```
+Shows the same instant in UTC, London (BST/GMT) and the schedule's own zone, what state is expected, and the next
+switches. The Schedules tab in the dashboard shows the same under "Time check".
+
+## 8. Data
+VMs, holds and users live in `data\minipmc.db` (git-ignored). `git pull`, restarts and reboots never touch it.
+Only deleting `data\` (or `vm remove`) removes data. Back it up by copying `data\minipmc.db`; `python -m minipmc export --out vms.csv` writes the VM list.
