@@ -2,7 +2,7 @@
 
 Small, reliable start/stop scheduler for the 1,891 VMs in `vms_all.csv` (1,123 Azure / 768 GCP). One server (Windows Server 2016), no external database, everything logged. Built in small steps; each step is tested on the laptop and then on the VM ([docs/VM-GUIDE.md](docs/VM-GUIDE.md)).
 
-**Build status:** the schedule engine, SQLite store, CLI, local login, cloud credentials, REST APIs and portal UI are implemented. The current test suite passes (111 passed, 2 skipped). The collector and automatic start/stop executor are not implemented yet; they are the next major build steps.
+**Build status:** the schedule engine, SQLite store, CLI, local login, cloud credentials, REST APIs, portal UI, bulk status collector, queued executor (waves of 100 VMs/minute, fire-and-forget block/unblock signals, host guard), email reports/alerts via Logic App, Excel export and the watchdog are implemented (139 tests pass). Remaining: the pilot and go-live on the real estate, following `readonly` -> `dryrun` -> `pilot` -> `live` (`python -m minipmc mode <name>` or the dashboard "Change mode").
 
 ## 1. Decisions
 | Topic | Decision |
@@ -75,9 +75,9 @@ Later steps add `minipmc/` modules for storage, CLI, web, providers and the exec
 | 1b | Run the engine tests on the VM | **Complete** |
 | 2 | SQLite storage, logging, CLI, schedules and override management | **Complete** |
 | 3 | Dashboard + login: VMs, schedule grid editor, overrides, audit and unmanaged resources | **Implemented; browser QA in progress** |
-| 4 | Azure / GCP providers + collector (read-only status) | **Provider calls implemented; periodic collector pending** |
-| 5 | Executor + Logic App client in dry-run, crash recovery, host guard | **Signal client implemented; executor pending** |
-| 6 | Windows scheduled service, production hardening, pilot runbook; then pilot and live | **Service scripts exist; pilot pending** |
+| 4 | Azure / GCP providers + collector (read-only status) | **Done** (bulk list per subscription/project) |
+| 5 | Executor + Logic App client in dry-run, crash recovery, host guard | **Done** (SQLite ops queue, waves, stuck detection) |
+| 6 | Windows scheduled service, production hardening, pilot runbook; then pilot and live | **Task + watchdog + /healthz done; pilot pending** |
 
 ## 7. Still open (asked when we reach the step)
 - One-click "Start now" / "Stop now" in the dashboard?

@@ -171,7 +171,7 @@ const COMMON_TZ = ["UTC", "Europe/London", "Europe/Paris", "Europe/Berlin", "Eur
   "Europe/Moscow", "Asia/Kolkata", "Asia/Dubai", "Asia/Singapore", "Asia/Shanghai", "Asia/Tokyo", "Australia/Sydney",
   "America/New_York", "America/Chicago", "America/Los_Angeles", "America/Sao_Paulo", "Etc/GMT-2"];
 function tzDatalist(id, inUse) {
-  return h("datalist", {id}, [...new Set(COMMON_TZ.concat(inUse || []))].sort().map(z => h("option", {value: z})));
+  return h("datalist", {id}, [...new Set(COMMON_TZ.concat(inUse || []))].sort().map(z => h("option", {value: z, label: `${z}  (${gmtLabel(z) || "?"})`}, gmtLabel(z))));
 }
 
 /* The "Time check": what the schedule says now, and the next switches in UTC, London and the schedule's own zone. */
@@ -207,7 +207,7 @@ async function schedulesPage(ctx) {
       h("td", null, h("b", null, s.name), s.kind !== "grid" ? h("span", {class: "sub"}, " built-in") : null),
       h("td", null, strip(s.grid)),
       h("td", null, s.description),
-      h("td", {class: "nowrap"}, s.tz),
+      h("td", {class: "nowrap"}, s.tz, " ", gmtLabel(s.tz) ? h("span", {class: "mute"}, `(${gmtLabel(s.tz)})`) : null),
       h("td", {class: "num"}, s.vms ? h("a", {href: "#/resources?schedule=" + encodeURIComponent(s.name)}, fmtNum(s.vms)) : "0"));
     tr.addEventListener("click", e => { if (!e.target.closest("a")) openRow(s.name); });
     tr.addEventListener("keydown", e => { if (e.key === "Enter") openRow(s.name); });
@@ -227,6 +227,7 @@ async function schedulesPage(ctx) {
 
   return h("div", null,
     pageHead("Schedules",
+      btn("Export Excel", {icon: "file", onclick: () => downloadPost("export/schedules", {}, "minipmc-schedules.xlsx").catch(e => toast(e.message, "err"))}),
       can("admin") ? btn("From text\u2026", {onclick: scheduleFromTextDialog, title: "Build a schedule from text such as \u201cUp 5 days (Mon-Fri) 10 AM to 10 PM IST\u201d"}) : null,
       can("admin") ? btn("New schedule", {kind: "primary", icon: "plus", onclick: () => { location.hash = "#/schedules/new"; }}) : null),
     h("div", {class: "toolbar"}, h("div", {class: "search"}, icon("search", 16), search), count),
@@ -267,6 +268,10 @@ async function scheduleEditorPage(ctx) {
 
   const nameIn = h("input", {type: "text", value: origName, disabled: editing || !editable, maxlength: 60, placeholder: "e.g. IST_Mon-Fri_10-22"});
   const tzIn = h("input", {type: "text", value: meta ? meta.tz : "", list: "tz-list", disabled: !editable, placeholder: "e.g. Asia/Kolkata"});
+  const tzGmt = h("span", {class: "chip"});
+  const showGmt = () => { const g = gmtLabel(tzIn.value.trim()); tzGmt.textContent = g; tzGmt.style.display = g ? "" : "none"; };
+  tzIn.addEventListener("input", showGmt);
+  showGmt();
   const info = h("div");
   const formErr = h("div", {class: "form-err", role: "alert"});
   let seq = 0;
@@ -363,7 +368,7 @@ async function scheduleEditorPage(ctx) {
       notices,
       h("div", {class: "form-row"},
         field("Name", nameIn, editing ? "The name cannot be changed." : "Letters, numbers, dashes and underscores work best."),
-        field("Time zone", tzIn, "The grid below is in this zone. Summer/winter clock changes are handled automatically.")),
+        field("Time zone", h("div", {class: "nowrap"}, tzIn, " ", tzGmt), "The grid below is in this zone. Summer/winter clock changes are handled automatically.")),
       tools,
       ed.node,
       h("div", {style: {marginTop: "14px"}}, info),

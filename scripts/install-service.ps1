@@ -39,7 +39,19 @@ if ($OpenFirewall) {
     Write-Host "Firewall: inbound TCP $Port allowed (Windows firewall only - also check the Azure NSG)."
 }
 Start-ScheduledTask -TaskName $name
+
+# Watchdog: every 5 minutes, start/restart the main task if it is down or not doing its cycles.
+$wdName = 'MiniPMC-Watchdog'
+$wdAction  = New-ScheduledTaskAction -Execute 'powershell.exe' -WorkingDirectory $root `
+    -Argument "-NoProfile -ExecutionPolicy Bypass -File `"$(Join-Path $root 'scripts\watchdog.ps1')`" -Port $Port"
+$wdTrigger = New-ScheduledTaskTrigger -Once -At (Get-Date).AddMinutes(1) -RepetitionInterval (New-TimeSpan -Minutes 5)
+$wdSettings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -StartWhenAvailable `
+    -MultipleInstances IgnoreNew -ExecutionTimeLimit (New-TimeSpan -Minutes 3)
+if (Get-ScheduledTask -TaskName $wdName -ErrorAction SilentlyContinue) { Unregister-ScheduledTask -TaskName $wdName -Confirm:$false }
+Register-ScheduledTask -TaskName $wdName -Action $wdAction -Trigger $wdTrigger -Principal $principal -Settings $wdSettings `
+    -Description 'Restarts Mini PMC if it is not running or not doing its cycles' | Out-Null
 Start-Sleep -Seconds 4
 Get-ScheduledTask -TaskName $name | Select-Object TaskName, State | Format-Table -AutoSize
 Write-Host "Installed. Dashboard: http://localhost:$Port   Logs: $root\logs\app.log"
 Write-Host 'Stop: Stop-ScheduledTask MiniPMC   Start: Start-ScheduledTask MiniPMC   Remove: .\scripts\uninstall-service.ps1'
+Write-Host 'After a code update (git pull): Stop-ScheduledTask MiniPMC; Start-ScheduledTask MiniPMC  (no reinstall needed).'

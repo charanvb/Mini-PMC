@@ -13,9 +13,37 @@ const STATE_FILTERS = {
   disabled: r => !r.enabled,
   run: r => r.says === "R" && r.enabled && !r.override,
   stop: r => r.says === "S" && r.enabled && !r.override,
+  mismatch: r => mismatch(r),
+  running: r => r.status === "RUNNING",
+  down: r => r.status === "STOPPED" || r.status === "DEALLOCATED",
+  unchecked: r => !r.status,
 };
 const STATE_OPTIONS = [["", "Any state"], ["override", "Has an override"], ["unmanaged", "Unmanaged (no schedule)"],
-  ["disabled", "Disabled"], ["run", "Should be running now"], ["stop", "Should be stopped now"]];
+  ["disabled", "Disabled"], ["run", "Should be running now"], ["stop", "Should be stopped now"],
+  ["mismatch", "Status differs from schedule"], ["running", "Currently running"], ["down", "Currently stopped"], ["unchecked", "Status not checked"]];
+
+const STATUS_KIND = {RUNNING: "run", STOPPED: "stop", DEALLOCATED: "stop", STARTING: "ovr", STOPPING: "ovr", UNKNOWN: ""};
+const STATUS_BATCH = 200;
+const STATUS_STALE_MS = 20 * 60 * 1000;
+
+/* The VM's power state as last read from the cloud, with its age in the tooltip. */
+function statusChip(r) {
+  if (!r.status) return chip("Not checked", "", "Mini PMC has not read this VM's state yet. Use the refresh icon.");
+  const age = r.status_checked ? ` \u00b7 checked ${inWords(r.status_checked)}` : "";
+  const stale = r.status_checked && Date.now() + state.skew - new Date(r.status_checked).getTime() > STATUS_STALE_MS;
+  const label = r.status.charAt(0) + r.status.slice(1).toLowerCase();
+  return chip(label, STATUS_KIND[r.status] || "", (r.status_error || r.status_raw || r.status) + age + (stale ? " (old)" : ""));
+}
+/* True when the VM is managed, has no override and its state is the opposite of what the schedule says. */
+function mismatch(r) {
+  if (!r.schedule || !r.enabled || r.override) return false;
+  const down = r.status === "STOPPED" || r.status === "DEALLOCATED";
+  return (r.says === "R" && down) || (r.says === "S" && r.status === "RUNNING");
+}
+/* Names pasted as a list (comma / semicolon / new line, or several exact VM names separated by spaces). */
+function splitNames(q) {
+  return [...new Set(q.split(/[\s,;]+/).map(s => s.trim()).filter(Boolean))];
+}
 
 function overrideRank(r) {
   if (r.override) return r.override_until ? 0 : 1; // timed first, then "until cleared"
@@ -26,6 +54,7 @@ const COMPARE = {
   group: (a, b) => collator.compare(a.group, b.group) || collator.compare(a.name, b.name),
   schedule: (a, b) => (!a.schedule - !b.schedule) || collator.compare(a.schedule || "", b.schedule || "") || collator.compare(a.name, b.name),
   says: (a, b) => (a.says || "~").localeCompare(b.says || "~") || collator.compare(a.name, b.name),
+  status: (a, b) => (a.status || "~").localeCompare(b.status || "~") || collator.compare(a.name, b.name),
   override: (a, b) => (overrideRank(a) - overrideRank(b)) || String(a.override_until || "").localeCompare(String(b.override_until || ""))
     || collator.compare(a.name, b.name),
 };
@@ -185,13 +214,14 @@ async function resourcesPage(ctx) {
 
   const bulkBox = h("div");
   const note = h("div", {class: "selnote hide"});
+  const missingNote = h("div", {class: "selnote hide"});
   const thead = h("thead");
   const tbody = h("tbody");
   const pager = h("div", {class: "pager"});
   const count = h("span", {class: "mute"});
   const clearFilters = h("button", {type: "button", class: "linkbtn hide"}, "Clear filters");
 
-  const search = h("input", {type: "text", value: f.q, placeholder: "Search name, project, zone, schedule\u2026", "aria-label": "Search VMs"});
+  const search = h("input", {type: "text", value: f.q, placeholder: "Search, or paste VM names separated by comma, space or new line\u2026", "aria-label": "Search VMs"});
   const cloudSel = h("select", {"aria-label": "Cloud", value: f.cloud},
     h("option", {value: ""}, "All clouds"), h("option", {value: "azure"}, "Azure"), h("option", {value: "gcp"}, "Google Cloud"));
   const schedSel = h("select", {"aria-label": "Schedule"});
@@ -201,7 +231,7 @@ async function resourcesPage(ctx) {
     const [a, b] = await Promise.all([api("vms"), api("schedules")]);
     vms = a.vms;
     for (const r of vms) {
-      r._hay = [r.name, r.provider, r.scope, r.group, r.schedule, r.notes, r.override_reason, r.override_by].join(" ").toLowerCase();
+      r._hay = [r.name, r.provider, r.scope, r.scope_name, r.group, r.schedule, r.notes, r.override_reason, r.override_by, r.status].join(" ").toLowerCase();
     }
     schedules = b.schedules;
     schedTz = new Map(schedules.map(s => [s.name, s.tz]));
@@ -214,14 +244,32 @@ async function resourcesPage(ctx) {
     schedSel.value = f.schedule;
   }
 
+  let missing = [];
   function recompute() {
-    const terms = f.q.toLowerCase().split(/\s+/).filter(Boolean);
     const byState = STATE_FILTERS[f.state];
+    const tokens = splitNames(f.q);
+    const names = new Map(vms.map(r => [r.name.toLowerCase(), r]));
+    const exact = tokens.filter(t => names.has(t.toLowerCase())).length;
+    const listMode = tokens.length > 1 && (/[,;\n]/.test(f.q) || exact >= 2);
+    let match;
+    missing = [];
+    if (listMode) {
+      const want = new Set();
+      for (const t of tokens) {
+        const lo = t.toLowerCase();
+        if (names.has(lo)) { want.add(names.get(lo).name); continue; }
+        const part = vms.filter(r => r.name.toLowerCase().includes(lo));
+        if (part.length) part.forEach(r => want.add(r.name)); else missing.push(t);
+      }
+      match = r => want.has(r.name);
+    } else {
+      const terms = f.q.toLowerCase().split(/\s+/).filter(Boolean);
+      match = r => terms.every(t => r._hay.includes(t));
+    }
     view = vms.filter(r =>
       (!f.cloud || r.provider === f.cloud) &&
       (!f.schedule || (f.schedule === NO_SCHEDULE ? !r.schedule : r.schedule === f.schedule)) &&
-      (!byState || byState(r)) &&
-      terms.every(t => r._hay.includes(t)));
+      (!byState || byState(r)) && match(r));
     const cmp = COMPARE[sortKey];
     view.sort((a, b) => sortDir * cmp(a, b));
     page = Math.min(page, Math.max(0, Math.ceil(view.length / size) - 1));
@@ -257,12 +305,15 @@ async function resourcesPage(ctx) {
     const tr = h("tr", {class: "click" + (r.override ? " ovr" : "") + (selected.has(r.name) ? " sel" : "")},
       h("td", {class: "cb"}, cb),
       h("td", null, h("div", {class: "nowrap"}, h("b", null, r.name), " ", cloudChip(r.provider), r.enabled ? null : [" ", chip("Disabled", "stop", "Mini PMC is not managing this VM")])),
-      h("td", null, h("div", null, r.group), h("div", {class: "sub"}, r.scope)),
+      h("td", null, h("div", null, r.group), h("div", {class: "sub", title: r.scope}, r.scope_name || r.scope)),
       h("td", null, r.schedule
         ? h("div", {class: "sched-cell"}, strip(schedGrid.get(r.schedule)), h("span", null, r.schedule))
         : chip("Unmanaged", "unm", "No schedule: Mini PMC never starts or stops this VM")),
-      h("td", {class: "nowrap"}, r.local || "", r.schedule ? h("div", {class: "sub"}, schedTz.get(r.schedule) || "") : null),
-      h("td", null, stateChip(r.says)),
+      h("td", {class: "nowrap"}, statusChip(r), r.pending_action ? [" ", chip(r.pending_action === "START" ? "Starting\u2026" : "Stopping\u2026", "ovr", "Mini PMC has sent or queued this action")] : null,
+        " ", refreshBtn(r.name),
+        mismatch(r) ? h("div", {class: "sub"}, "differs from schedule") : null),
+      h("td", {class: "nowrap"}, stateChip(r.says),
+        r.local ? h("div", {class: "sub", title: "Time now in the schedule's time zone: " + (schedTz.get(r.schedule) || "")}, r.local + (gmtLabel(schedTz.get(r.schedule)) ? " " + gmtLabel(schedTz.get(r.schedule)) : "")) : null),
       h("td", null, overrideCell(r)));
     cb.addEventListener("change", () => {
       if (cb.checked) selected.add(r.name); else selected.delete(r.name);
@@ -297,7 +348,7 @@ async function resourcesPage(ctx) {
       }}, label, sortKey === key ? h("span", {class: "sortmark"}, icon(sortDir > 0 ? "arrowUp" : "arrowDown", 12)) : null)
       : h("th", null, label);
     return h("tr", null, h("th", {class: "cb"}, cb), th("Name", "name"), th("Location", "group"), th("Schedule", "schedule"),
-      th("Local time", null), th("Schedule says", "says"), th("Override", "override"));
+      th("Current status", "status"), th("Schedule says", "says"), th("Override", "override"));
   }
   function drawNote(rows) {
     note.replaceChildren();
@@ -320,6 +371,7 @@ async function resourcesPage(ctx) {
     const withOverride = rows.filter(r => r.override || r.override_by);
     bulkBox.appendChild(h("div", {class: "bulk"},
       h("b", null, `${fmtNum(selected.size)} selected`),
+      btn("Refresh status", {sm: true, icon: "refresh", onclick: () => refreshStatus([...selected])}),
       can("admin") ? btn("Override\u2026", {sm: true, icon: "shield", onclick: () => overrideDialog({names: [...selected], onDone: afterChange})}) : null,
       can("admin") ? btn("Clear override", {sm: true, disabled: !withOverride.length,
         title: withOverride.length ? "" : "None of the selected VMs has an override", onclick: () => clearOverrides(withOverride)}) : null,
@@ -350,6 +402,12 @@ async function resourcesPage(ctx) {
     drawBulk();
     drawPager();
     count.textContent = `${fmtNum(view.length)} of ${fmtNum(vms.length)} VMs`;
+    missingNote.replaceChildren();
+    missingNote.classList.toggle("hide", !missing.length);
+    if (missing.length) {
+      missingNote.append(`${plural(missing.length, "name")} not found: `, h("b", null, missing.slice(0, 15).join(", ") + (missing.length > 15 ? " \u2026" : "")), " ",
+        h("button", {type: "button", class: "linkbtn", onclick: () => navigator.clipboard && navigator.clipboard.writeText(missing.join("\n")).then(() => toast("Copied."))}, "Copy"));
+    }
     clearFilters.classList.toggle("hide", !filtersOn());
   }
   function draw() {
@@ -362,6 +420,42 @@ async function resourcesPage(ctx) {
     search.value = "";
     cloudSel.value = schedSel.value = stateSel.value = "";
     filtersChanged();
+  }
+
+  /* ---- status refresh ---- */
+  let refreshing = false;
+  function refreshBtn(name) {
+    return h("button", {type: "button", class: "icon-btn", title: "Refresh this VM's status", "aria-label": "Refresh status of " + name,
+      onclick: e => { e.stopPropagation(); refreshStatus([name]); }}, icon("refresh", 14));
+  }
+  async function refreshStatus(names) {
+    if (refreshing) { toast("A refresh is already running.", "err"); return; }
+    if (!names.length) { toast("Nothing to refresh."); return; }
+    refreshing = true;
+    let done = 0;
+    const errors = [];
+    try {
+      for (let i = 0; i < names.length; i += STATUS_BATCH) {
+        if (names.length > STATUS_BATCH) toast(`Refreshing status\u2026 ${fmtNum(Math.min(i, names.length))} of ${fmtNum(names.length)}`);
+        const r = await api("vm/refresh", {names: names.slice(i, i + STATUS_BATCH)});
+        done += r.done || 0;
+        errors.push(...(r.errors || []));
+      }
+    } catch (e) {
+      toast(e.message, "err");
+    } finally {
+      refreshing = false;
+    }
+    await afterChange();
+    if (errors.length) showResults("Refresh status", `${plural(done, "VM")} refreshed, ${errors.length} failed:`, errors);
+    else toast(`Status refreshed for ${plural(done, "VM")}.`);
+  }
+  async function exportXlsx() {
+    try {
+      await downloadPost("export/resources", selected.size ? {names: [...selected]} : {}, "minipmc-resources.xlsx");
+    } catch (e) {
+      toast(e.message, "err");
+    }
   }
 
   /* ---- bulk actions ---- */
@@ -427,9 +521,13 @@ async function resourcesPage(ctx) {
   return h("div", null,
     pageHead("Resources",
       btn("Refresh", {icon: "refresh", onclick: () => afterChange().then(() => toast("Refreshed."), e => toast(e.message, "err"))}),
+      btn("Refresh status", {icon: "refresh", title: "Read the live power state from the cloud for the VMs in the current view (or the selected ones)",
+        onclick: () => refreshStatus(selected.size ? [...selected] : view.map(r => r.name))}),
+      btn("Export Excel", {icon: "file", title: "Selected VMs, or everything if none are selected", onclick: exportXlsx}),
       can("admin") ? btn("Add resources", {kind: "primary", icon: "plus", onclick: () => addResourcesDialog(schedules, afterChange)}) : null),
     h("div", {class: "toolbar"},
       h("div", {class: "search"}, icon("search", 16), search), cloudSel, schedSel, stateSel, count, clearFilters),
+    missingNote,
     bulkBox,
     h("div", {class: "panel"}, note,
       h("div", {class: "table-wrap"}, h("table", {class: "t"}, thead, tbody)), pager));

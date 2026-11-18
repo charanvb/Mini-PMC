@@ -9,6 +9,7 @@ import base64
 import hashlib
 import json
 import os
+import re
 import time
 import urllib.error
 import urllib.parse
@@ -19,6 +20,7 @@ ARM = "https://management.azure.com/"
 VAULT = "https://vault.azure.net"
 GCP_SCOPE = "https://www.googleapis.com/auth/compute"
 SETTINGS_FILE = os.path.join("config", "settings.json")
+SECRET_NAME = re.compile(r"[0-9A-Za-z-]{1,127}")  # Key Vault's rule for secret names
 
 # DER prefix of DigestInfo for SHA-256 (RFC 8017, EMSA-PKCS1-v1_5)
 _SHA256_PREFIX = bytes.fromhex("3031300d060960864801650304020105000420")
@@ -149,11 +151,18 @@ class Credentials:
         vault = self.cfg.get("azure", {}).get("key_vault_url", "").rstrip("/")
         if not vault.startswith("https://"):
             raise CredentialError("settings: azure.key_vault_url must look like https://<name>.vault.azure.net")
+        if not SECRET_NAME.fullmatch(name):
+            raise CredentialError(f"Key Vault secret name {name!r} is invalid: use only letters, digits and hyphens "
+                                  "(1-127 characters), and put the secret NAME here, not its value or the URL")
         status, body = self.http("GET", f"{vault}/secrets/{urllib.parse.quote(name)}?api-version=7.4",
                                  {"Authorization": "Bearer " + self.azure_token(VAULT)})
         if status != 200 or "value" not in body:
             hint = {401: "token rejected", 404: "secret name not found",
                     403: "the identity lacks 'Key Vault Secrets User' (or the vault firewall blocks this VM)"}.get(status, "")
+            err = body.get("error")
+            msg = (err.get("message") if isinstance(err, dict) else "") or ""
+            if msg and status not in (401, 403, 404):
+                hint = (hint + " " + msg[:150]).strip()
             raise CredentialError(f"Key Vault read failed (HTTP {status}) {hint}".strip())
         return body["value"]
 

@@ -238,7 +238,7 @@ def test_schema_migrates_v2_holds_and_events_to_overrides(tmp_path):
         version = con.execute("SELECT value FROM meta WHERE key='schema_version'").fetchone()[0]
     assert (override["vm_name"], override["reason"]) == ("vm1", "preserve me")
     assert "HOLD_SET" not in actions and "OVERRIDE_SET" in actions
-    assert actions[-1] == "SCHEMA_UPGRADED" and version == "4"
+    assert actions[-1] == "SCHEMA_UPGRADED" and version == str(db.SCHEMA_VERSION)
 
 
 def test_schema_v3_converts_old_roles(tmp_path):

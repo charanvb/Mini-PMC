@@ -292,10 +292,83 @@ async function settingsPage(ctx) {
     items.push({key: "connections", label: "Connections", href: "#/settings/connections"}, {key: "users", label: "Users", href: "#/settings/users"});
   }
   items.push({key: "account", label: "My account", href: "#/settings/account"});
+  if (can("admin")) items.splice(2, 0, {key: "email", label: "Email & alerts", href: "#/settings/email"});
   const tab = ctx.parts[1] || items[0].key;
   if (!items.some(i => i.key === tab)) throw new Error("That settings page does not exist, or you do not have access to it.");
-  const body = tab === "connections" ? await connectionsTab() : tab === "users" ? await usersTab() : accountTab();
+  const body = tab === "connections" ? await connectionsTab() : tab === "users" ? await usersTab() : tab === "email" ? await emailTab() : accountTab();
   return h("div", null, pageHead("Settings"), tabs(items, tab), body);
+}
+
+/* What may the scheduler do? readonly / dryrun / pilot / live. */
+function modeDialog() {
+  const cur = state.status ? state.status.mode : "readonly";
+  const text = {
+    readonly: "Read-only: only reads VM status. Nothing is started or stopped.",
+    dryrun: "Dry run: decides and logs what it would do (audit log), but sends nothing.",
+    pilot: "Pilot: really starts/stops only the VMs you list below.",
+    live: "Live: really starts/stops every managed VM on its schedule.",
+  };
+  return formDialog({
+    title: "Scheduler mode", submit: "Apply mode",
+    intro: "Current mode: " + (MODE_LABEL[cur] ? MODE_LABEL[cur][0] : cur) + ". Roll out in this order: Read-only, Dry run, Pilot, Live.",
+    fields: [
+      {name: "mode", label: "Mode", type: "select", value: cur, options: Object.keys(text).map(k => [k, text[k]])},
+      {name: "pilot_vms", label: "Pilot VMs (Pilot mode only)", type: "textarea", rows: 3, placeholder: "vm-one, vm-two", hint: "Names must already be in Mini PMC."},
+      {name: "confirm", label: "Type LIVE to confirm (Live mode only)", placeholder: "LIVE", autocomplete: "off"},
+    ],
+    run: async v => {
+      const r = await api("mode", {mode: v.mode, pilot_vms: v.pilot_vms, confirm: v.confirm.trim()});
+      toast(`Mode is now ${v.mode}.`);
+      (r.warnings || []).forEach(w => toast(w, "err"));
+      await refreshStatus();
+      route();
+    },
+  });
+}
+
+async function emailTab() {
+  const e = await api("email");
+  const reportTo = h("input", {type: "text", value: e.report_to, placeholder: "name@company.com; other@company.com"});
+  const alertTo = h("input", {type: "text", value: e.alert_to, placeholder: "name@company.com; other@company.com"});
+  const auto = h("input", {type: "checkbox", checked: e.report_auto});
+  const time = h("input", {type: "time", value: e.report_time});
+  const tz = h("input", {type: "text", value: e.report_tz, list: "report-tz"});
+  const tzGmt = h("span", {class: "chip"});
+  const showGmt = () => { tzGmt.textContent = gmtLabel(tz.value.trim()); tzGmt.style.display = tzGmt.textContent ? "" : "none"; };
+  tz.addEventListener("input", showGmt);
+  showGmt();
+  const out = h("div");
+  const show = (ok, text) => out.replaceChildren(noteBox(ok ? "ok" : "bad", ok ? "check" : "alert", text));
+  const guard = fn => async () => {
+    try { await fn(); } catch (x) { show(false, x.message); }
+  };
+  const save = guard(async () => {
+    await api("email/save", {report_to: reportTo.value, alert_to: alertTo.value, report_auto: auto.checked,
+      report_time: time.value, report_tz: tz.value.trim()});
+    show(true, "Saved.");
+  });
+  const test = guard(async () => {
+    const r = await api("email/test", {});
+    show(r.ok, (r.ok ? "Test email sent to " + (r.to || []).join("; ") : "Test email failed: ") + (r.ok ? "" : r.detail));
+  });
+  const sendNow = guard(async () => {
+    await save();
+    const r = await api("report/send", {});
+    show(r.ok, r.ok ? "Report sent. Check the inbox (attachment: Excel)." : "Report not sent: " + r.detail);
+  });
+  const zones = [...new Set(["UTC", "Europe/London", "Europe/Amsterdam", "Asia/Kolkata", "Asia/Dubai", "Asia/Singapore", "America/New_York", e.report_tz])];
+  return h("div", {class: "panel"}, h("div", {class: "panel-body"},
+    e.configured ? null : noteBox("bad", "alert", h("b", null, "The email Logic App is not configured."),
+      h("div", null, "Add an \"email_logic_app\" section (url or url_secret_name) to config\\settings.json and restart the service.")),
+    h("datalist", {id: "report-tz"}, zones.map(z => h("option", {value: z, label: `${z} (${gmtLabel(z)})`}, gmtLabel(z)))),
+    field("Report recipients", reportTo, "Separate several addresses with ; , or a space. The daily report has an Excel attachment (VMs and schedules)."),
+    field("Alert recipients", alertTo, "Gets an email when a start/stop fails, gets stuck, or the scheduler stops responding."),
+    h("label", {class: "radio"}, auto, "Send the report automatically every day"),
+    field("Report time", h("div", {class: "nowrap"}, time, " ", tz, " ", tzGmt)),
+    e.report_last ? h("p", {class: "mute"}, "Last report sent: " + fmtDate(e.report_last)) : null,
+    h("div", {class: "row"}, btn("Save", {kind: "primary", icon: "check", onclick: save}),
+      btn("Send test email", {onclick: test}), btn("Send report now", {onclick: sendNow})),
+    out));
 }
 
 async function connectionsTab() {

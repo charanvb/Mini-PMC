@@ -5,4 +5,8 @@ if (Get-ScheduledTask -TaskName 'MiniPMC' -ErrorAction SilentlyContinue) {
     Unregister-ScheduledTask -TaskName 'MiniPMC' -Confirm:$false
     Write-Host 'Task removed.'
 } else { Write-Host 'Task was not installed.' }
+if (Get-ScheduledTask -TaskName 'MiniPMC-Watchdog' -ErrorAction SilentlyContinue) {
+    Unregister-ScheduledTask -TaskName 'MiniPMC-Watchdog' -Confirm:$false
+    Write-Host 'Watchdog task removed.'
+}
 Remove-NetFirewallRule -DisplayName 'Mini PMC' -ErrorAction SilentlyContinue

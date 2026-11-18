@@ -48,9 +48,11 @@ def safe_target(url: str) -> str:
 
 
 class LogicApp:
-    def __init__(self, creds: cr.Credentials, sleep=time.sleep):
-        self.creds = creds
-        self.cfg = creds.cfg.get("logic_app", {}) or {}
+    """One Logic App HTTP trigger. `section` is the settings.json section that holds its URL (and retries/timeout)."""
+
+    def __init__(self, creds: cr.Credentials, sleep=time.sleep, section: str = "logic_app"):
+        self.creds, self.section = creds, section
+        self.cfg = creds.cfg.get(section, {}) or {}
         self.sleep, self.clock = sleep, creds.clock
         self._url, self._url_expires = "", 0.0
 
@@ -63,8 +65,8 @@ class LogicApp:
             return self._url
         direct, secret = (self.cfg.get("url") or "").strip(), (self.cfg.get("url_secret_name") or "").strip()
         if not (direct or secret):
-            raise SignalError("the Logic App URL is not configured: set logic_app.url_secret_name (Key Vault secret "
-                              "holding the URL) or logic_app.url in config\\settings.json")
+            raise SignalError(f"the Logic App URL is not configured: set {self.section}.url_secret_name (Key Vault "
+                              f"secret holding the URL) or {self.section}.url in config\\settings.json")
         url = direct or self.creds.keyvault_secret(secret).strip()
         if not url.lower().startswith("https://") or not urllib.parse.urlsplit(url).hostname:
             raise SignalError("the Logic App URL must be the full 'HTTP POST URL' of the trigger, starting with https://")
@@ -72,8 +74,12 @@ class LogicApp:
         return url
 
     def send(self, action: str, vms) -> dict:
-        """POST one signal. Returns {"ok", "status", "attempts", "detail"}; never raises for URL/HTTP/network failures."""
+        """POST one block/unblock signal. Returns {"ok", "status", "attempts", "detail"}; never raises for URL/HTTP/network failures."""
         body = json.dumps(payload(action, vms)).encode("utf-8")
+        return self.post(body, f"signal {action} for {len(vms)} VM(s)")
+
+    def post(self, body: bytes, what: str) -> dict:
+        """POST a JSON body, retrying transient failures. `what` only labels the log lines."""
         try:
             url = self.url()
         except cr.CredentialError as e:
@@ -93,14 +99,14 @@ class LogicApp:
             except (cr.CredentialError, OSError) as e:  # network trouble or a timeout while reading the answer
                 detail = f"network error: {e}"
             except Exception as e:  # e.g. a malformed URL; such messages can contain the URL, so keep only the type
-                log.error("signal %s could not be sent: %s", action, type(e).__name__)
+                log.error("%s could not be sent: %s", what, type(e).__name__)
                 return {"ok": False, "status": None, "attempts": n,
                         "detail": f"the request could not be made ({type(e).__name__}) - check the Logic App URL"}
             ok = status is not None and 200 <= status < 300
             if ok or (status is not None and status not in RETRY_STATUS) or n == attempts:
-                log.info("signal %s for %d VM(s) to %s: %s (attempt %d)", action, len(vms), safe_target(url), detail, n)
+                log.info("%s to %s: %s (attempt %d)", what, safe_target(url), detail, n)
                 return {"ok": ok, "status": status, "attempts": n, "detail": detail}
-            log.warning("signal %s to %s failed (%s), retrying", action, safe_target(url), detail)
+            log.warning("%s to %s failed (%s), retrying", what, safe_target(url), detail)
             self.sleep(BACKOFF_SECONDS[min(n - 1, len(BACKOFF_SECONDS) - 1)])
         raise AssertionError("unreachable")  # the loop always returns
 

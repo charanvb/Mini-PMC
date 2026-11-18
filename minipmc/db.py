@@ -6,7 +6,19 @@ from contextlib import contextmanager
 
 from .logs import utcnow_iso, write_audit
 
-SCHEMA_VERSION = 4
+SCHEMA_VERSION = 5
+
+# v5: last known power state per VM, cloud start/stop operations, and cached subscription names
+_STATUS = """CREATE TABLE IF NOT EXISTS vm_status (
+        vm_name TEXT PRIMARY KEY COLLATE NOCASE REFERENCES vms(name) ON DELETE CASCADE,
+        state TEXT NOT NULL, raw TEXT NOT NULL DEFAULT '', checked_at TEXT NOT NULL,
+        error TEXT NOT NULL DEFAULT '', fails INTEGER NOT NULL DEFAULT 0)"""
+_OPS = """CREATE TABLE IF NOT EXISTS ops (
+        id INTEGER PRIMARY KEY AUTOINCREMENT, vm_name TEXT NOT NULL COLLATE NOCASE, action TEXT NOT NULL,
+        started_at TEXT NOT NULL, sent_at TEXT, finished_at TEXT, outcome TEXT NOT NULL, detail TEXT NOT NULL DEFAULT '')"""
+_OPS_INDEX = "CREATE INDEX IF NOT EXISTS ops_vm ON ops(vm_name)"
+_SUB_NAMES = """CREATE TABLE IF NOT EXISTS sub_names (
+        scope TEXT PRIMARY KEY, name TEXT NOT NULL DEFAULT '', fetched_at TEXT NOT NULL)"""
 
 _USERS = """CREATE TABLE users (
         username TEXT PRIMARY KEY COLLATE NOCASE, pw_hash TEXT NOT NULL, role TEXT NOT NULL,
@@ -28,7 +40,7 @@ def _rename_holds(con) -> None:
 
 
 # version N -> steps that bring it to N+1 (SQL text, or a function taking the connection)
-_MIGRATIONS = {1: [_USERS], 2: [_rename_holds], 3: [_two_roles]}
+_MIGRATIONS = {1: [_USERS], 2: [_rename_holds], 3: [_two_roles], 4: [_STATUS, _OPS, _OPS_INDEX, _SUB_NAMES]}
 
 _SCHEMA = [
     _USERS,
@@ -50,6 +62,7 @@ _SCHEMA = [
         action TEXT NOT NULL, target TEXT NOT NULL DEFAULT '', detail TEXT NOT NULL DEFAULT '')""",
     """CREATE INDEX events_ts ON events(ts)""",
     """CREATE INDEX events_target ON events(target)""",
+    _STATUS, _OPS, _OPS_INDEX, _SUB_NAMES,
 ]
 
 

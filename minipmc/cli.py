@@ -79,9 +79,14 @@ def build_parser() -> argparse.ArgumentParser:
     x.add_argument("--vms", required=True); x.add_argument("--out")
 
     sub.add_parser("validate", help="check the setup for problems")
-    x = sub.add_parser("serve", help="run the dashboard (and, in later steps, the scheduler)")
+    x = sub.add_parser("serve", help="run the dashboard and the scheduler (the background loops that start/stop VMs)")
     x.add_argument("--host", default="127.0.0.1", help="use 0.0.0.0 to let the team reach it")
     x.add_argument("--port", type=int, default=8080)
+    x.add_argument("--no-scheduler", action="store_true", help="dashboard only (no status reads, no start/stop)")
+    x = sub.add_parser("mode", help="show or set what the scheduler may do: readonly | dryrun | pilot | live")
+    x.add_argument("name", nargs="?", choices=["readonly", "dryrun", "pilot", "live"])
+    x.add_argument("--vms", help="pilot only: comma-separated VM names")
+    x = sub.add_parser("cycle", help="run one scheduler cycle now (reads statuses, plans, sends one wave); uses the current mode")
 
     up = sub.add_parser("user", help="dashboard users").add_subparsers(dest="sub", required=True)
     x = up.add_parser("add"); x.add_argument("username"); x.add_argument("--role", default="reader", choices=list(ROLES))
@@ -252,7 +257,32 @@ def run(args, store: Store) -> int:
     if c == "serve":
         from . import web
         out("dashboard on http://%s:%d  (Ctrl+C to stop)" % (args.host, args.port))
-        web.serve(store.home, args.host, args.port)
+        web.serve(store.home, args.host, args.port, run_scheduler=not args.no_scheduler)
+        return 0
+
+    if c == "mode":
+        if args.name:
+            if args.name == "pilot":
+                names = [n.strip() for n in (args.vms or "").split(",") if n.strip()]
+                if not names:
+                    raise UserError("pilot needs --vms vm1,vm2")
+                for n in names:
+                    store.get_vm(n)
+                store.set_setting("pilot_vms", ",".join(names))
+            if args.name == "live":
+                if input("Type LIVE to let the scheduler start and stop every managed VM: ").strip() != "LIVE":
+                    raise UserError("not confirmed; mode unchanged")
+            store.set_setting("mode", args.name)
+            store.set_setting_quiet("last_slot", "")
+        out("mode:", store.get_setting("mode", "readonly"),
+            ("  pilot VMs: " + store.get_setting("pilot_vms", "(none)")) if store.get_setting("mode") == "pilot" else "")
+        return 0
+
+    if c == "cycle":
+        from . import executor
+        eng = executor.Engine(store)
+        out("cycle:", eng.tick())
+        out("sent to the cloud:", eng.pump(force=True))
         return 0
 
     if c == "user":

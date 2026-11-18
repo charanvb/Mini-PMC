@@ -145,6 +145,41 @@ function fmtZone(date, zone) {
     return "";
   }
 }
+/* "GMT+5:30" for Asia/Kolkata, "GMT" for UTC; "" if the browser does not know the zone. */
+function gmtLabel(zone) {
+  try {
+    const p = new Intl.DateTimeFormat("en", {timeZone: zone, timeZoneName: "longOffset"}).formatToParts(new Date())
+      .find(x => x.type === "timeZoneName");
+    const m = p && /^GMT([+-])(\d{1,2})(?::(\d{2}))?$/.exec(p.value);
+    if (!m) return p && p.value === "GMT" ? "GMT" : "";
+    return `GMT${m[1]}${Number(m[2])}${m[3] && m[3] !== "00" ? ":" + m[3] : ""}`;
+  } catch (e) {
+    return "";
+  }
+}
+/* POST to an export endpoint and save the returned file. */
+async function downloadPost(path, body, fallbackName) {
+  let res;
+  try {
+    res = await fetch("/api/" + path, {method: "POST", credentials: "same-origin",
+      headers: {"Content-Type": "application/json", "X-Requested-With": "minipmc"}, body: JSON.stringify(body || {})});
+  } catch (e) {
+    throw new Error("Cannot reach the Mini PMC service. Is it running?");
+  }
+  if (!res.ok) {
+    let msg = `The service answered ${res.status}`;
+    try { msg = (await res.json()).error || msg; } catch (e) { /* keep default */ }
+    throw new Error(msg);
+  }
+  const cd = res.headers.get("Content-Disposition") || "";
+  const m = /filename="?([^";]+)"?/.exec(cd);
+  const url = URL.createObjectURL(await res.blob());
+  const a = h("a", {href: url, download: m ? m[1] : fallbackName});
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 5000);
+}
 function fmtNum(n) {
   return Number(n || 0).toLocaleString("en-GB");
 }

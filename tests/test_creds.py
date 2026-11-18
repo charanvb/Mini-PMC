@@ -137,3 +137,12 @@ def test_clear_errors(key):
         cr.Credentials(SETTINGS, http=FakeHttp("{}")).gcp_info()
     with pytest.raises(cr.CredentialError, match="uami_client_id"):
         cr.Credentials({}, http=FakeHttp("{}")).azure_token()
+
+
+def test_keyvault_secret_name_is_validated_before_calling_vault():
+    http = FakeHttp("{}")
+    c = cr.Credentials(SETTINGS, http=http)
+    for bad in ("logicapp_omnibus_url", "<name of the secret>", "https://x.test/hook?sig=1", ""):
+        with pytest.raises(cr.CredentialError, match="invalid"):
+            c.keyvault_secret(bad)
+    assert http.calls == []

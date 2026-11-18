@@ -114,6 +114,11 @@ class Store:
     def paused(self) -> bool:
         return self.get_setting("paused", "0") == "1"
 
+    def set_setting_quiet(self, key: str, value: str) -> None:
+        """Store a bookkeeping value (slot marker, heartbeat) without an audit event."""
+        with db.connect(self.home) as con:
+            con.execute("INSERT OR REPLACE INTO settings VALUES (?,?)", (key, value))
+
     # ------------------------------------------------------------ schedules
     def list_schedules(self) -> List[sqlite3.Row]:
         with db.connect(self.home) as con:
@@ -452,6 +457,12 @@ class Store:
                     out.append(("INFO", f"VM {o['vm_name']}: override expired {o['expires_at']} (schedule applies)"))
                 elif exp - now < timedelta(days=14):
                     out.append(("WARN", f"VM {o['vm_name']}: override ends {o['expires_at']} - then the schedule applies"))
+            for o in con.execute("SELECT vm_name, action, outcome, detail FROM ops WHERE outcome IN ('STUCK') "
+                                 "AND finished_at > ?", (iso(now - timedelta(hours=24)),)):
+                out.append(("ERROR", f"VM {o['vm_name']}: {o['action']} did not take effect ({o['detail']})"))
+            for o in con.execute("SELECT vm_name, action, detail FROM ops WHERE outcome='FAILED' AND finished_at > ?",
+                                 (iso(now - timedelta(hours=24)),)):
+                out.append(("ERROR", f"VM {o['vm_name']}: {o['action']} failed ({o['detail']})"))
             if self.paused:
                 out.append(("WARN", "the scheduler is PAUSED (python -m minipmc resume)"))
         order = {"ERROR": 0, "WARN": 1, "INFO": 2}
@@ -470,6 +481,11 @@ class Store:
         now = now or datetime.now(timezone.utc)
         scheds = {s["name"]: (s["grid"], s["tz"]) for s in self.list_schedules()}
         out = []
+        with db.connect(self.home) as con:
+            status = {r["vm_name"]: r for r in con.execute("SELECT * FROM vm_status")}
+            names = {r["scope"]: r["name"] for r in con.execute("SELECT scope, name FROM sub_names") if r["name"]}
+            busy = {r["vm_name"]: r["action"] for r in con.execute(
+                "SELECT vm_name, action FROM ops WHERE outcome IN ('QUEUED','PENDING')")}
         for v in self.list_vms():
             says, local = "", ""
             if v["schedule"] in scheds:
@@ -481,7 +497,12 @@ class Store:
                 except ValueError:
                     says, local = "", "tz unavailable"
             active = bool(v["overridden"]) and (v["override_until"] is None or parse_utc(v["override_until"]) > now)
-            out.append({"name": v["name"], "provider": v["provider"], "scope": v["scope"],
+            st = status.get(v["name"])
+            out.append({"status": st["state"] if st else "", "status_raw": st["raw"] if st else "",
+                        "status_checked": st["checked_at"] if st else None, "status_error": st["error"] if st else "",
+                        "pending_action": busy.get(v["name"], ""),
+                        "scope_name": names.get(v["scope"], v["scope"] if v["provider"] == "gcp" else ""),
+                        "name": v["name"], "provider": v["provider"], "scope": v["scope"],
                         "group": v["group_or_zone"], "schedule": v["schedule"], "enabled": bool(v["enabled"]),
                         "notes": v["notes"], "says": says, "local": local, "override": active,
                         "override_until": v["override_until"], "override_reason": v["override_reason"] if v["overridden"] else "",

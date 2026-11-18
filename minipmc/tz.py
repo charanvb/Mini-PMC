@@ -35,3 +35,17 @@ def get_tz(name: str) -> tzinfo:
         if _have_tzdata():
             raise ValueError(f"Unknown time zone '{name}'. Use a name such as Europe/London, Asia/Kolkata or UTC.")
         raise ValueError(f"Time zone data unavailable for '{name}'. Install tzdata.")
+
+
+def gmt_label(name: str, now=None) -> str:
+    """'GMT+5:30' for Asia/Kolkata, 'GMT+1' for London in summer, 'GMT' at zero. Empty if the zone is unknown."""
+    from datetime import datetime
+    try:
+        offset = (now or datetime.now(timezone.utc)).astimezone(get_tz(name)).utcoffset()
+    except ValueError:
+        return ""
+    minutes = int(offset.total_seconds() // 60)
+    if minutes == 0:
+        return "GMT"
+    sign, minutes = ("+" if minutes > 0 else "-"), abs(minutes)
+    return f"GMT{sign}{minutes // 60}" + (f":{minutes % 60:02d}" if minutes % 60 else "")

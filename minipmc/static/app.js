@@ -122,6 +122,12 @@ function drawStatus() {
     nodes.push(h("span", {class: "chip mode paused", title: "The scheduler is paused: nothing is started or stopped."}, icon("pause", 12), "Scheduler paused"));
   }
   nodes.push(h("span", {class: "chip mode" + (s.mode === "live" ? " live" : ""), title: tip}, label + " mode"));
+  if (s.scheduler && !s.scheduler.ok) {
+    nodes.push(h("span", {class: "chip mode paused", title: "The scheduler loop has not reported for " + (s.scheduler.seconds_ago === null ? "a long time" : Math.round(s.scheduler.seconds_ago / 60) + " minutes") + ". Check the MiniPMC scheduled task."}, icon("alert", 12), "Scheduler not running"));
+  } else if (s.scheduler && s.scheduler.open_ops) {
+    nodes.push(h("span", {class: "chip mode", title: "Start/stop actions queued or waiting to be confirmed"}, `${fmtNum(s.scheduler.open_ops)} actions in progress`));
+  }
+  if (can("admin")) nodes.push(btn("Change mode", {sm: true, icon: "sliders", onclick: modeDialog}));
   if (can("admin")) {
     nodes.push(btn(s.paused ? "Resume" : "Pause", {sm: true, icon: s.paused ? "play" : "pause", onclick: () => togglePause(s.paused),
       title: s.paused ? "Let the scheduler carry on" : "Stop the scheduler from starting or stopping anything"}));
