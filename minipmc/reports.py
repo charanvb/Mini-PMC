@@ -34,9 +34,9 @@ def build(store, now=None) -> dict:
     bad_ops = ops.get("FAILED", 0) + ops.get("STUCK", 0)
     health = "RED" if bad_ops else ("AMBER" if mismatch or unknown else "GREEN")
     body = ("Hi All,<br><br>"
-            "please find teh attacjed latest automated  parking schedules report.<br><br>"
-            "regards,<br>"
-            "Cloud BAU team")
+            "Please find attached the latest automated parking schedule report.<br><br>"
+            "Regards,<br>"
+            "Cloud BAU Team")
     return {"subject": "Cloud VM parking schedules report", "html": body, "health": health,
             "attachment": ("VMs parking schedules.xlsx", exports.daily_xlsx(store))}
 
