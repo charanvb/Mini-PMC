@@ -100,6 +100,8 @@ def azure_list(creds: Credentials, subscription: str) -> dict:
             if found and len(parts) > 8 and parts[3].lower() == "resourcegroups":
                 out[(parts[4].lower(), (item.get("name") or parts[-1]).lower())] = found
         url, pages = body.get("nextLink"), pages + 1
+    if url:
+        raise CredentialError("Azure list has more than 200 pages; refusing to use a partial answer")
     return out
 
 
@@ -122,6 +124,8 @@ def gcp_list(creds: Credentials, project: str) -> dict:
         token, pages = body.get("nextPageToken", ""), pages + 1
         if not token:
             break
+    else:
+        raise CredentialError("GCP list has more than 200 pages; refusing to use a partial answer")
     return out
 
 

@@ -198,27 +198,69 @@ async function schedulesPage(ctx) {
   let query = "";
   const tbody = h("tbody");
   const count = h("span", {class: "mute"});
+  const canDelete = can("admin");
+  const selected = new Set();
+  const deletable = s => s.kind === "grid" && !s.vms; // built-in schedules and schedules with VMs cannot be deleted
+  const delBtn = btn("Delete selected", {kind: "outline-danger", icon: "trash", disabled: true, onclick: () => deleteSchedules([...selected])});
+  const allBox = h("input", {type: "checkbox", "aria-label": "Select all deletable schedules"});
+
+  function syncSelection() {
+    delBtn.disabled = selected.size === 0;
+    delBtn.lastChild.textContent = selected.size ? `Delete selected (${selected.size})` : "Delete selected";
+  }
+  function deleteSchedules(names) {
+    if (!names.length) return;
+    confirmDialog({
+      title: names.length === 1 ? "Delete schedule" : `Delete ${names.length} schedules`, confirm: "Delete", kind: "danger",
+      message: names.length === 1 ? `Delete the schedule '${names[0]}'? This cannot be undone.`
+        : h("div", null, h("p", {class: "intro"}, "Delete these schedules? This cannot be undone."),
+            h("ul", {class: "list-plain"}, names.slice(0, 15).map(n => h("li", null, n)), names.length > 15 ? h("li", null, `\u2026and ${names.length - 15} more`) : null)),
+      run: async () => {
+        const r = await api("schedule/remove", {names});
+        if (r.errors && r.errors.length) showResults("Delete schedules", `${r.done || 0} deleted, ${r.errors.length} not deleted:`, r.errors);
+        else toast(names.length === 1 ? `Schedule '${names[0]}' deleted.` : `${r.done} schedules deleted.`);
+        route();
+      },
+    });
+  }
 
   function openRow(name) {
     location.hash = "#/schedules/edit/" + encodeURIComponent(name);
   }
   function row(s) {
-    const tr = h("tr", {class: "click", tabindex: 0},
+    const box = canDelete ? h("td", {class: "check"}, deletable(s) ? (() => {
+      const cb = h("input", {type: "checkbox", checked: selected.has(s.name), "aria-label": "Select " + s.name});
+      cb.addEventListener("click", e => e.stopPropagation());
+      cb.addEventListener("change", () => { cb.checked ? selected.add(s.name) : selected.delete(s.name); syncSelection(); });
+      return cb;
+    })() : null) : null;
+    const del = canDelete ? h("td", {class: "nowrap"}, (() => {
+      const b = h("button", {type: "button", class: "icon-btn", "aria-label": "Delete " + s.name, disabled: !deletable(s),
+        title: s.kind !== "grid" ? "Built-in schedules cannot be deleted" : s.vms ? `Move its ${s.vms} VM(s) to another schedule first` : "Delete this schedule"}, icon("trash"));
+      b.addEventListener("click", e => { e.stopPropagation(); deleteSchedules([s.name]); });
+      return b;
+    })()) : null;
+    const tr = h("tr", {class: "click", tabindex: 0}, box,
       h("td", null, h("b", null, s.name), s.kind !== "grid" ? h("span", {class: "sub"}, " built-in") : null),
       h("td", null, strip(s.grid)),
       h("td", null, s.description),
       h("td", {class: "nowrap"}, s.tz, " ", gmtLabel(s.tz) ? h("span", {class: "mute"}, `(${gmtLabel(s.tz)})`) : null),
-      h("td", {class: "num"}, s.vms ? h("a", {href: "#/resources?schedule=" + encodeURIComponent(s.name)}, fmtNum(s.vms)) : "0"));
+      h("td", {class: "num"}, s.vms ? h("a", {href: "#/resources?schedule=" + encodeURIComponent(s.name)}, fmtNum(s.vms)) : "0"), del);
     tr.addEventListener("click", e => { if (!e.target.closest("a")) openRow(s.name); });
-    tr.addEventListener("keydown", e => { if (e.key === "Enter") openRow(s.name); });
+    tr.addEventListener("keydown", e => { if (e.key === "Enter" && e.target === tr) openRow(s.name); });
     return tr;
   }
   function draw() {
     const terms = query.toLowerCase().split(/\s+/).filter(Boolean);
     const rows = list.filter(s => terms.every(t => `${s.name} ${s.description} ${s.tz}`.toLowerCase().includes(t)));
     count.textContent = `${rows.length} of ${list.length}`;
+    allBox.onchange = () => {
+      for (const s of rows.filter(deletable)) allBox.checked ? selected.add(s.name) : selected.delete(s.name);
+      syncSelection();
+      draw();
+    };
     tbody.replaceChildren(...(rows.length ? rows.map(row)
-      : [h("tr", null, h("td", {class: "empty-cell", colspan: 5}, "No schedules match your search."))]));
+      : [h("tr", null, h("td", {class: "empty-cell", colspan: 7}, "No schedules match your search."))]));
   }
 
   const search = h("input", {type: "text", placeholder: "Search schedules", "aria-label": "Search schedules"});
@@ -228,11 +270,12 @@ async function schedulesPage(ctx) {
   return h("div", null,
     pageHead("Schedules",
       btn("Export Excel", {icon: "file", onclick: () => downloadPost("export/schedules", {}, "minipmc-schedules.xlsx").catch(e => toast(e.message, "err"))}),
+      canDelete ? delBtn : null,
       can("cloudops") ? btn("From text\u2026", {onclick: scheduleFromTextDialog, title: "Build a schedule from text such as \u201cUp 5 days (Mon-Fri) 10 AM to 10 PM IST\u201d"}) : null,
       can("cloudops") ? btn("New schedule", {kind: "primary", icon: "plus", onclick: () => { location.hash = "#/schedules/new"; }}) : null),
     h("div", {class: "toolbar"}, h("div", {class: "search"}, icon("search", 16), search), count),
     h("div", {class: "panel"}, h("div", {class: "table-wrap"}, h("table", {class: "t"},
-      h("thead", null, h("tr", null, h("th", null, "Name"), h("th", null, "Week"), h("th", null, "Description"), h("th", null, "Time zone"), h("th", {class: "num"}, "VMs"))),
+      h("thead", null, h("tr", null, canDelete ? h("th", {class: "check"}, allBox) : null, h("th", null, "Name"), h("th", null, "Week"), h("th", null, "Description"), h("th", null, "Time zone"), h("th", {class: "num"}, "VMs"), canDelete ? h("th", null) : null)),
       tbody))));
 }
 

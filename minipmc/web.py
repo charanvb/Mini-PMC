@@ -119,8 +119,11 @@ class Handler(BaseHTTPRequestHandler):
         return c[COOKIE].value if COOKIE in c else None
 
     def _body(self) -> dict:
-        n = int(self.headers.get("Content-Length") or 0)
-        if n > 1_000_000:
+        try:
+            n = int(self.headers.get("Content-Length") or 0)
+        except ValueError:
+            raise UserError("bad request")
+        if n < 0 or n > 1_000_000:
             raise UserError("request too large")
         if not n:
             return {}
@@ -427,7 +430,9 @@ def api_vm_update(h, st, s, q):
         if "schedule" in b:
             st.set_schedule(name, b["schedule"] or None)
         if "enabled" in b:
-            st.set_enabled(name, bool(b["enabled"]))
+            st.set_enabled(name, b["enabled"])
+    if "enabled" in b and not isinstance(b["enabled"], bool):
+        raise UserError("enabled must be true or false")
     return _each(_names(b), apply)
 
 
@@ -451,8 +456,8 @@ def api_schedule_update(h, st, s, q):
 
 
 def api_schedule_remove(h, st, s, q):
-    st.remove_schedule(str(h._body().get("name", "")))
-    return {"ok": True}
+    # a schedule that any VM still uses is refused by remove_schedule; each name is judged on its own
+    return _each(_names(h._body()), st.remove_schedule)
 
 
 def api_schedule_preview(h, st, s, q):

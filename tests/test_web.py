@@ -319,3 +319,51 @@ def test_cloudops_role_limits(srv):
     for path, body in [("mode", {"mode": "live"}), ("pause", {}), ("users", None), ("user/save", {"username": "x"}),
                        ("vm/remove", {"names": ["vm1"]}), ("schedule/remove", {"name": "x"}), ("email", None)]:
         assert c.call(path, body)[0] == 403, path
+
+
+def test_schedule_delete_single_and_bulk(srv):
+    base, home = srv
+    adm = Client(base); adm.login("boss", "password-1")
+    for n in ("A1", "B1"):
+        assert adm.call("schedule/add", {"name": n, "tz": "UTC", "windows": "Mon-Fri 09:00-17:00"})[0] == 200
+    Store(home, "t").add_vm("vmx", "azure", "sub", "rg", "B1")
+    code, body = adm.call("schedule/remove", {"names": ["A1", "B1", "ALWAYS_UP", "nope"]})
+    assert code == 200 and body["done"] == 1
+    assert len(body["errors"]) == 3 and any("still use" in e for e in body["errors"])
+    assert adm.call("schedule/remove", {"name": "B1"})[0] == 400  # a single refusal is an error
+    ops = Client(base); ops.login("boss", "password-1")
+    reader = Client(base); assert reader.login("eye", "password-3")[0] == 200
+    assert reader.call("schedule/remove", {"name": "A1"})[0] == 403
+
+
+def test_retry_after_429_then_ok(monkeypatch):
+    import io
+    from minipmc import creds as cr
+    calls = []
+
+    class Resp:
+        status = 200
+        def __enter__(self): return self
+        def __exit__(self, *a): return False
+        def read(self): return b'{"ok": 1}'
+
+    class Op:
+        def open(self, req, timeout=0):
+            calls.append(1)
+            if len(calls) == 1:
+                raise urllib.error.HTTPError(req.full_url, 429, "slow", {"Retry-After": "0"}, io.BytesIO(b"{}"))
+            return Resp()
+
+    monkeypatch.setattr(cr.urllib.request, "build_opener", lambda *a: Op())
+    monkeypatch.setattr(cr.time, "sleep", lambda s: None)
+    assert cr.request("GET", "https://x.test/") == (200, {"ok": 1})
+    assert len(calls) == 2
+
+
+def test_status_save_skips_removed_vm(tmp_path):
+    from minipmc import status
+    st = Store(str(tmp_path), "t")
+    st.init()
+    st.add_vm("here", "azure", "sub", "rg", importer.ALWAYS_UP)
+    status.record_many(st, [("here", "RUNNING", "", ""), ("gone", "RUNNING", "", "")])
+    assert set(status.all_status(st)) == {"here"}

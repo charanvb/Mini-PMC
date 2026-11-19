@@ -31,6 +31,8 @@ def record(store, name: str, state: str, raw: str = "", error: str = "") -> None
     """Save one reading. A failed reading keeps the old `raw` out of it and counts up `fails`."""
     now = utcnow_iso()
     with db.connect(store.home) as con:
+        if not con.execute("SELECT 1 FROM vms WHERE name=?", (name,)).fetchone():
+            return  # the VM was removed meanwhile
         old = con.execute("SELECT fails FROM vm_status WHERE vm_name=?", (name,)).fetchone()
         fails = (old["fails"] + 1) if (old and error) else (1 if error else 0)
         con.execute("INSERT OR REPLACE INTO vm_status (vm_name, state, raw, checked_at, error, fails) VALUES (?,?,?,?,?,?)",
@@ -99,7 +101,10 @@ def record_many(store, rows) -> None:
     now = utcnow_iso()
     with db.connect(store.home) as con:
         fails = {r["vm_name"]: r["fails"] for r in con.execute("SELECT vm_name, fails FROM vm_status")}
+        present = {r[0] for r in con.execute("SELECT name FROM vms")}  # a VM may be removed while its status is being read
         for name, state, raw, error in rows:
+            if name not in present:
+                continue
             n = (fails.get(name, 0) + 1) if error else 0
             con.execute("INSERT OR REPLACE INTO vm_status (vm_name, state, raw, checked_at, error, fails) "
                         "VALUES (?,?,?,?,?,?)", (name, state, raw, now, error[:300], n))

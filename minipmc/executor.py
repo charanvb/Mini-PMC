@@ -191,23 +191,25 @@ class Engine:
                 reasons["NOT_IN_PILOT"] = reasons.get("NOT_IN_PILOT", 0) + 1
                 continue
             acts.append((vm, d.action.lower()))
-        self.store.set_setting_quiet("last_slot", key)
         summary = {"slot": key, "planned": len(acts), "reasons": reasons}
         if len(acts) > cfg["max_actions_per_slot"]:
+            self.store.set_setting_quiet("last_slot", key)
             self.store.log_event("ACTION_CAP_EXCEEDED", "", planned=len(acts), cap=cfg["max_actions_per_slot"])
             alerts.notify(self.store, creds, "cap", "Too many VM actions planned - nothing was sent",
                           [f"{len(acts)} actions planned in one slot, limit is {cfg['max_actions_per_slot']}.",
                            "Check the schedules or the time zone, then raise executor.max_actions_per_slot if intended."])
             return {**summary, "planned": 0, "capped": True}
         if mode == "dryrun":
+            self.store.set_setting_quiet("last_slot", key)
             for vm, action in acts[:200]:
                 self.store.log_event("DRYRUN_" + action.upper(), vm["name"], slot=key)
             self.store.log_event("DRYRUN_SUMMARY", "", **summary)
             return summary
         stamp = utcnow_iso()
-        with db.connect(self.store.home) as con:
+        with db.connect(self.store.home) as con:  # the queued ops and the slot marker are saved together or not at all
             con.executemany("INSERT INTO ops (vm_name, action, started_at, outcome, detail) VALUES (?,?,?,'QUEUED','')",
                             [(vm["name"], action, stamp) for vm, action in acts])
+            con.execute("INSERT OR REPLACE INTO settings VALUES (?,?)", ("last_slot", key))
         if acts:
             self.store.log_event("ACTIONS_QUEUED", "", **summary)
         return summary

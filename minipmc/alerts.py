@@ -5,6 +5,7 @@ fill the inbox. The send time is kept in the settings table without an audit eve
 """
 import html
 import logging
+import threading
 from datetime import datetime, timedelta, timezone
 
 from . import db
@@ -34,8 +35,16 @@ def wrap(title: str, lines) -> str:
             "</p></div>")
 
 
+_lock = threading.Lock()  # one alert decision at a time, so two workers cannot both pass the throttle check
+
+
 def notify(store, creds, key: str, subject: str, lines, throttle: timedelta = THROTTLE, mailer: Mailer = None,
            now=None) -> bool:
+    with _lock:
+        return _notify(store, creds, key, subject, lines, throttle, mailer, now)
+
+
+def _notify(store, creds, key: str, subject: str, lines, throttle, mailer, now) -> bool:
     """Send an alert unless the same key was sent within `throttle`. Returns True if an email went out."""
     now = now or datetime.now(timezone.utc)
     lines = list(lines)[:60]

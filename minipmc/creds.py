@@ -20,6 +20,7 @@ ARM = "https://management.azure.com/"
 VAULT = "https://vault.azure.net"
 GCP_SCOPE = "https://www.googleapis.com/auth/compute"
 SETTINGS_FILE = os.path.join("config", "settings.json")
+THROTTLE_RETRIES = 3  # extra attempts after an HTTP 429 (or a 503 on a read)
 SECRET_NAME = re.compile(r"[0-9A-Za-z-]{1,127}")  # Key Vault's rule for secret names
 
 # DER prefix of DigestInfo for SHA-256 (RFC 8017, EMSA-PKCS1-v1_5)
@@ -44,13 +45,23 @@ def request(method, url, headers=None, data=None, timeout=20, proxy=True):
     """Returns (status, parsed JSON or {}). HTTP errors are returned, not raised; network errors raise."""
     req = urllib.request.Request(url, data=data, method=method, headers=headers or {})
     opener = urllib.request.build_opener() if proxy else urllib.request.build_opener(urllib.request.ProxyHandler({}))
-    try:
-        with opener.open(req, timeout=timeout) as r:
-            status, raw = r.status, r.read()
-    except urllib.error.HTTPError as e:
-        status, raw = e.code, e.read()
-    except urllib.error.URLError as e:
-        raise CredentialError(f"cannot reach {urllib.parse.urlparse(url).netloc}: {e.reason}")
+    for attempt in range(THROTTLE_RETRIES + 1):
+        try:
+            with opener.open(req, timeout=timeout) as r:
+                status, raw = r.status, r.read()
+        except urllib.error.HTTPError as e:
+            status, raw = e.code, e.read()
+            # 429 means the call was not processed, so retrying is safe for any method; 503 only for reads
+            if attempt < THROTTLE_RETRIES and (status == 429 or (status == 503 and method == "GET")):
+                try:
+                    wait = float(e.headers.get("Retry-After", ""))
+                except (TypeError, ValueError):
+                    wait = 2.0 * (attempt + 1)
+                time.sleep(min(max(wait, 0.5), 30.0))
+                continue
+        except urllib.error.URLError as e:
+            raise CredentialError(f"cannot reach {urllib.parse.urlparse(url).netloc}: {e.reason}")
+        break
     try:
         return status, json.loads(raw or b"{}")
     except ValueError:

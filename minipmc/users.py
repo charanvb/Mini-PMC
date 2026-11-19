@@ -22,6 +22,8 @@ def hash_password(password: str, salt: Optional[bytes] = None, iterations: int =
 def check_password(password: str, stored: str) -> bool:
     try:
         _, it, salt, want = stored.split("$")
+        if not 1 <= int(it) <= 5_000_000:  # a damaged hash must not be able to burn CPU
+            return False
         got = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), bytes.fromhex(salt), int(it)).hex()
     except (ValueError, TypeError):
         return False

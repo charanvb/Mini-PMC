@@ -85,7 +85,7 @@ function durationWidget(label) {
   const node = h("div", {class: "fld"},
     h("span", {class: "fld-l"}, label || "How long?"),
     h("label", {class: "radio"}, rHours, "For", hours, "hours"),
-    h("label", {class: "radio"}, rUntil, "Until", when, h("span", {class: "mute"}, "IST (India time)")),
+    h("label", {class: "radio"}, rUntil, "Until", when, h("span", {class: "mute"}, "IST (India time) - enter the time in IST, not your local time")),
     h("label", {class: "radio"}, rForever, "Until someone clears it"));
   const read = () => {
     if (rForever.checked) return {forever: true};
@@ -700,7 +700,7 @@ function drawerButtons(d, ctl) {
         },
       });
     }}));
-    out.push(btn("Remove", {kind: "outline-danger", icon: "trash", onclick: () => confirmDialog({
+    if (can("admin")) out.push(btn("Remove", {kind: "outline-danger", icon: "trash", onclick: () => confirmDialog({
       title: "Remove VM", confirm: "Remove", kind: "danger",
       message: `Remove ${r.name} from Mini PMC? The VM itself is not touched in the cloud.`,
       run: async () => {
