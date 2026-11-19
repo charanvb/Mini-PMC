@@ -10,7 +10,7 @@ from typing import List, Optional
 
 from . import db, grid as g, importer, reconcile as rc
 from .logs import utcnow_iso, write_audit
-from .tz import get_tz
+from .tz import IST, get_tz
 
 log = logging.getLogger("minipmc.service")
 
@@ -44,6 +44,13 @@ def parse_until(text: str) -> datetime:
     except ValueError:
         raise UserError(f"cannot read date/time '{text}' (use 2026-12-31 or 2026-12-31T18:00:00Z)")
     return dt.replace(tzinfo=timezone.utc) if dt.tzinfo is None else dt.astimezone(timezone.utc)
+
+
+def _override_active(v, t: datetime) -> bool:
+    """True if the VM row's override is in force at moment t (started and not yet ended)."""
+    if v["override_from"] and parse_utc(v["override_from"]) > t:
+        return False
+    return v["override_until"] is None or parse_utc(v["override_until"]) > t
 
 
 class Store:
@@ -346,7 +353,7 @@ class Store:
             self.audit(con, "VM_SCHEDULE_CHANGED", vm["name"], old=vm["schedule"], new=schedule)
 
     def list_vms(self, text: str = "", unmanaged: bool = False) -> List[sqlite3.Row]:
-        q = """SELECT v.*, o.expires_at AS override_until, o.set_by AS override_by, o.reason AS override_reason,
+        q = """SELECT v.*, o.expires_at AS override_until, o.starts_at AS override_from, o.set_by AS override_by, o.reason AS override_reason,
                       (o.vm_name IS NOT NULL) AS overridden
                FROM vms v LEFT JOIN overrides o ON o.vm_name = v.name WHERE 1=1"""
         args: list = []
@@ -367,14 +374,21 @@ class Store:
         return vm, override, events
 
     # ------------------------------------------------------------ overrides
-    def set_override(self, name: str, until: Optional[datetime], reason: str) -> None:
+    def set_override(self, name: str, until: Optional[datetime], reason: str,
+                     start: Optional[datetime] = None) -> None:
         if until is not None and until <= datetime.now(timezone.utc):
             raise UserError("the override end time is already in the past")
+        if start is not None and until is not None and until <= start:
+            raise UserError("the override end time must be after its start time")
+        if start is not None and start <= datetime.now(timezone.utc):
+            start = None  # already begun: effective immediately
         with db.connect(self.home) as con:
             vm = self._vm(con, name)
-            con.execute("INSERT OR REPLACE INTO overrides VALUES (?,?,?,?,?)",
-                        (vm["name"], iso(until), reason, self.actor, utcnow_iso()))
-            self.audit(con, "OVERRIDE_SET", vm["name"], until=iso(until) or "until-cleared", reason=reason)
+            con.execute("INSERT OR REPLACE INTO overrides (vm_name, expires_at, reason, set_by, set_at, starts_at) "
+                        "VALUES (?,?,?,?,?,?)",
+                        (vm["name"], iso(until), reason, self.actor, utcnow_iso(), iso(start)))
+            self.audit(con, "OVERRIDE_SET", vm["name"], until=iso(until) or "until-cleared", reason=reason,
+                       **({"start": iso(start)} if start else {}))
 
     def clear_override(self, name: str) -> None:
         with db.connect(self.home) as con:
@@ -400,7 +414,7 @@ class Store:
         vm, ov, _ = self.get_vm(name)
         sched = self.get_schedule(vm["schedule"]) if vm["schedule"] else None
         tz = get_tz(sched["tz"]) if sched else None
-        override = rc.Override(parse_utc(ov["expires_at"]), ov["reason"], ov["set_by"]) if ov else None
+        override = rc.Override(parse_utc(ov["expires_at"]), ov["reason"], ov["set_by"], parse_utc(ov["starts_at"])) if ov else None
         d = rc.reconcile_vm(enabled=bool(vm["enabled"]), paused=self.paused,
                             schedule_grid=sched["grid"] if sched else None, tz=tz, actual=actual.upper(),
                             status_time=now, override=override, op_in_progress=False, now=now)
@@ -437,7 +451,7 @@ class Store:
                                 (v.vm_name, v.provider, v.scope, v.group_or_zone, v.schedule, v.source_text,
                                  "", now, now))
                     if v.override:
-                        con.execute("INSERT INTO overrides VALUES (?,?,?,?,?)",
+                        con.execute("INSERT INTO overrides (vm_name, expires_at, reason, set_by, set_at) VALUES (?,?,?,?,?)",
                                     (v.vm_name, iso(v.override_until), v.override_reason,
                                      v.override_set_by or self.actor, now))
             if apply:
@@ -509,7 +523,8 @@ class Store:
                     local = now.astimezone(tz).strftime("%a %H:%M")
                 except ValueError:
                     says, local = "", "tz unavailable"
-            active = bool(v["overridden"]) and (v["override_until"] is None or parse_utc(v["override_until"]) > now)
+            active = bool(v["overridden"]) and _override_active(v, now)
+            scheduled_from = v["override_from"] if v["overridden"] and not active and v["override_from"] and parse_utc(v["override_from"]) > now else None
             st = status.get(v["name"])
             out.append({"status": st["state"] if st else "", "status_raw": st["raw"] if st else "",
                         "status_checked": st["checked_at"] if st else None, "status_error": st["error"] if st else "",
@@ -518,7 +533,8 @@ class Store:
                         "name": v["name"], "provider": v["provider"], "scope": v["scope"],
                         "group": v["group_or_zone"], "schedule": v["schedule"], "enabled": bool(v["enabled"]),
                         "notes": v["notes"], "says": says, "local": local, "override": active,
-                        "override_until": v["override_until"], "override_reason": v["override_reason"] if v["overridden"] else "",
+                        "override_until": v["override_until"], "override_from": scheduled_from,
+                        "override_reason": v["override_reason"] if v["overridden"] else "",
                         "override_by": v["override_by"] if v["overridden"] else ""})
         return out
 
@@ -534,7 +550,8 @@ class Store:
             london = timezone.utc  # tz data missing (laptop only)
 
         def stamp(t):
-            return {"utc": t.strftime("%a %d %b %H:%M"), "london": t.astimezone(london).strftime("%a %d %b %H:%M %Z"),
+            return {"utc": t.strftime("%a %d %b %H:%M"), "ist": t.astimezone(IST).strftime("%a %d %b %H:%M"),
+                    "london": t.astimezone(london).strftime("%a %d %b %H:%M %Z"),
                     "schedule": t.astimezone(tz).strftime("%a %d %b %H:%M %Z")}
         cur = g.desired_at(grid, tz, now)
         switches, prev = [], cur
@@ -571,8 +588,7 @@ class Store:
                 t = now + timedelta(minutes=15 * i)
                 cur = g.desired_at(grid, tz, t)
                 if cur != prev:
-                    n = sum(1 for v in vms if not (v["overridden"] and (
-                        v["override_until"] is None or parse_utc(v["override_until"]) > t)))
+                    n = sum(1 for v in vms if not (v["overridden"] and _override_active(v, t)))
                     if n:
                         slot = slots.setdefault(t, {"start": 0, "stop": 0})
                         slot["start" if cur == "R" else "stop"] += n

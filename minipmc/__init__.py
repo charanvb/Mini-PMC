@@ -1,1 +1,1 @@
-"""Mini PMC - small VM start/stop scheduler."""
+"""CloudOps Scheduler - small VM start/stop scheduler."""

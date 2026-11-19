@@ -110,6 +110,23 @@ def test_mode_changes_need_the_right_input(srv):
     assert c.call("mode", {"mode": "live", "confirm": "LIVE"})[1]["mode"] == "live"
 
 
+def test_report_time_is_shown_and_saved_in_ist(srv):
+    c = Client(srv[0])
+    c.login("boss", "password-1")
+    assert c.call("email")[1]["report_time_ist"] == "13:30"  # the unchanged default, 08:00 UTC
+    saved = c.call("email/save", {"report_time": "09:15", "report_tz": "Asia/Kolkata"})[1]
+    assert saved["report_time"] == "09:15" and saved["report_time_ist"] == "09:15"
+
+
+def test_exports_write_times_in_ist():
+    assert exports.ist_text("2026-12-31T18:00:00Z") == "2026-12-31 23:30" and exports.ist_text(None) == ""
+    row = {"override": False, "override_from": "2026-12-01T00:00:00Z", "override_until": "2026-12-02T12:00:00Z",
+           "override_reason": "freeze"}
+    assert exports.override_text(row) == "From 2026-12-01 05:30 IST until 2026-12-02 17:30 IST - freeze"
+    assert exports.override_text({**row, "override": True, "override_from": None}) == "Until 2026-12-02 17:30 IST - freeze"
+    assert exports.override_text({**row, "override_from": None}) == ""
+
+
 def test_email_settings_validate_and_healthz(srv):
     base, _ = srv
     c = Client(base)

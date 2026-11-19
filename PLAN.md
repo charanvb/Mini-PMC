@@ -1,4 +1,4 @@
-# Mini PMC – Plan (v4)
+# CloudOps Scheduler – Plan (v4)
 
 Small, reliable start/stop scheduler for the 1,891 VMs in `vms_all.csv` (1,123 Azure / 768 GCP). One server (Windows Server 2016), no external database, everything logged. Built in small steps; each step is tested on the laptop and then on the VM ([docs/VM-GUIDE.md](docs/VM-GUIDE.md)).
 
@@ -7,11 +7,11 @@ Small, reliable start/stop scheduler for the 1,891 VMs in `vms_all.csv` (1,123 A
 ## 1. Decisions
 | Topic | Decision |
 |---|---|
-| Name | **Mini PMC** |
+| Name | **CloudOps Scheduler** (formerly Mini PMC / Kutty PMC). Code, CLI and scheduled-task names stay `minipmc` / `MiniPMC`. |
 | Schedule | One **7x24 grid of 15-minute cells** per named schedule, plus an IANA time zone. Each cell is Running or Stopped; outside the up windows a VM is Stopped. The 213 readable schedule texts became 184 schedules with readable names, e.g. `IST Mon-Fri 10:00-22:00` |
 | Scheduler output | START, STOP or SKIP with a reason. VMs already in the right state are not logged |
 | Reconcile | every **15 min** (aligned to the grid); status collection every **5 min** |
-| Override | While an override is active Mini PMC takes **no action**: no start, no stop, and no block/unblock signal. It has an optional end time and reason; no end = until a person clears it. When it ends the VM returns to its schedule. An override never starts a stopped VM. |
+| Override | While an override is active CloudOps Scheduler takes **no action**: no start, no stop, and no block/unblock signal. It has an optional start (a future date: the VM follows its schedule until then), an optional end time and reason; no end = until a person clears it. When it ends the VM returns to its schedule. An override never starts a stopped VM. |
 | Unmanaged | A text that cannot be turned into times (4 texts / 7 VMs, e.g. "IL QA backup 3") leaves the VM unmanaged: never touched, red on the Unmanaged tab now, flagged in the dashboard later |
 | Maintenance texts | "Always Parked (excl. 10hr maintenance)" = parked, up **Sunday 00:00-10:00** in the text's zone; **Thursday** only for the "Thursday/GMT" variant; with no zone it is unmanaged |
 | `Action` column | ignored |
@@ -19,11 +19,13 @@ Small, reliable start/stop scheduler for the 1,891 VMs in `vms_all.csv` (1,123 A
 | Storage | one **SQLite** file `data/minipmc.db`; Excel / CSV for bulk import and export (Step 2) |
 | Add / remove VMs | dashboard form or CSV import; a removed VM is disabled, never erased from the audit trail |
 | Login | local username + password (hashed); Global admin, CloudOps admin, and Reader roles. No Entra for now |
+| Network access | **Local-only.** The dashboard listens on 127.0.0.1 and `serve` refuses any other bind address; no firewall or NSG port is opened. People reach it over RDP to the server. HTTPS on the same machine is optional |
+| Display time | Every time in the dashboard, exports and report settings is shown in **IST (UTC+05:30)**; storage stays UTC. A schedule's weekly grid stays in the schedule's own zone |
 | Logic App | POST `{"vms":[{"name","project","zone"}],"action":"block"}` or `"unblock"`. Azure: project = subscription ID, zone = resource group. **No polling or settle delay: HTTP 2xx = accepted, then call the VM start/stop API immediately.** UNBLOCK before start, BLOCK before stop. Keep the signed HTTP POST URL in Key Vault and configure `logic_app.url_secret_name` in the git-ignored `config\settings.json`. |
 | Rollout | `readonly` -> `dryrun` -> `pilot` (allow-list) -> `live` |
 
 ### Confirmed on the seed data
-- 17 overrides from `config/initial_overrides.csv` (git-ignored): 16 until **31 Dec 2026 23:59:59 UTC** (= 05:30 IST on 1 Jan), 1 permanent. The permanent one is the Mini PMC host, which has an ALWAYS_UP schedule.
+- 17 overrides from `config/initial_overrides.csv` (git-ignored): 16 until **31 Dec 2026 23:59:59 UTC** (= 05:30 IST on 1 Jan), 1 permanent. The permanent one is the CloudOps Scheduler host, which has an ALWAYS_UP schedule.
 - All 16 dated overrides sit on parked schedules, so any of them still running are **stopped after the override expires**. The dashboard shows overrides ending soon.
 - Readings confirmed: Israel "(Sun-Fri)" = 6 days Sun-Fri; "5 days (Mon-Sat) 10 AM to 4:30 AM IST" = starts Mon-Fri, last stop Sat 04:30; EST / PST / AEST follow daylight saving; "Egypt(UTC+2)" = fixed UTC+2.
 
@@ -36,7 +38,7 @@ Browser -> [ Dashboard + API ]   --\
 ```
 - The loops are threads of one process; if the dashboard breaks, scheduling keeps running.
 - Jobs are stored in SQLite; after a restart, in-flight jobs are checked against real cloud state, never blindly retried.
-- Safety: no action on UNKNOWN, stale (> 15 min) or transitional status; one operation per VM; global pause; concurrency cap with 429 back-off; Mini PMC never stops its own host VM. Azure stop = deallocate; GCP stop = `instances.stop`.
+- Safety: no action on UNKNOWN, stale (> 15 min) or transitional status; one operation per VM; global pause; concurrency cap with 429 back-off; CloudOps Scheduler never stops its own host VM. Azure stop = deallocate; GCP stop = `instances.stop`.
 - Dashboard server: the **Python standard library (`http.server`) is recommended** - nothing to install, and testable on the laptop. FastAPI is the alternative. Decided at Step 3.
 
 ## 3. Logging
@@ -81,4 +83,4 @@ Later steps add `minipmc/` modules for storage, CLI, web, providers and the exec
 
 ## 7. Still open (asked when we reach the step)
 - One-click "Start now" / "Stop now" in the dashboard?
-- TLS termination and the appropriate network exposure before production use.
+- Optional HTTPS on the server itself (not required: the dashboard is local-only).

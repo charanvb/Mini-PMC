@@ -33,8 +33,11 @@ class Override:
     expires_at: Optional[datetime] = None  # UTC; None = until cleared by a person
     reason: str = ""
     set_by: str = ""
+    starts_at: Optional[datetime] = None  # UTC; None = effective immediately
 
     def active(self, now: datetime) -> bool:
+        if self.starts_at is not None and now < self.starts_at:
+            return False
         return self.expires_at is None or now < self.expires_at
 
 

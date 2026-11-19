@@ -1,5 +1,5 @@
 "use strict";
-/* Mini PMC - Resources: the VM table (search, filters, sort, paging, selection, bulk actions),
+/* CloudOps Scheduler - Resources: the VM table (search, filters, sort, paging, selection, bulk actions),
    the override dialog, the add-resources dialogs and the details drawer. */
 
 const collator = new Intl.Collator(undefined, {numeric: true, sensitivity: "base"});
@@ -28,7 +28,7 @@ const STATUS_STALE_MS = 20 * 60 * 1000;
 
 /* The VM's power state as last read from the cloud, with its age in the tooltip. */
 function statusChip(r) {
-  if (!r.status) return chip("Not checked", "", "Mini PMC has not read this VM's state yet. Use the refresh icon.");
+  if (!r.status) return chip("Not checked", "", "CloudOps Scheduler has not read this VM's state yet. Use the refresh icon.");
   const age = r.status_checked ? ` \u00b7 checked ${inWords(r.status_checked)}` : "";
   const stale = r.status_checked && Date.now() + state.skew - new Date(r.status_checked).getTime() > STATUS_STALE_MS;
   const label = r.status.charAt(0) + r.status.slice(1).toLowerCase();
@@ -110,23 +110,31 @@ function overrideDialog(o) {
   const fields = [];
   if (o.askNames) {
     fields.push({name: "names", label: "VM names", type: "textarea", rows: 3, required: true,
-      placeholder: "One per line, or separated by commas", hint: "Names must already be in Mini PMC."});
+      placeholder: "One per line, or separated by commas", hint: "Names must already be in CloudOps Scheduler."});
   }
   fields.push({name: "when", label: "How long?", node: duration, read: readDuration});
+  const startInput = h("input", {type: "datetime-local", "aria-label": "Start date and time in IST"});
+  fields.push({name: "starts", label: "Starts", read: () => {
+    if (!startInput.value) return {};
+    const iso = startInput.value + (startInput.value.length === 16 ? ":00" : "") + "+05:30";
+    if (!(new Date(iso).getTime() > serverNow().getTime())) throw new Error("The start time has already passed (IST). Leave it blank to start now.");
+    return {start: iso};
+  }, node: h("div", {class: "fld"}, h("span", {class: "fld-l"}, "Starts (optional)"), startInput,
+    h("span", {class: "mute"}, " IST - leave blank to start now. \"For N hours\" then counts from this time."))});
   fields.push({name: "reason", label: "Reason", required: true, maxlength: 200, placeholder: "e.g. UAT until the release is signed off",
     hint: "Everyone can see this reason, and it is written to the audit log."});
 
   const who = o.askNames ? "the VMs you name below" : names.length === 1 ? names[0] : plural(names.length, "VM");
   return formDialog({
     title: "Set override",
-    intro: `While an override is active, Mini PMC does not start or stop ${who}, and sends no block/unblock signal for it. ` +
+    intro: `While an override is active, CloudOps Scheduler does not start or stop ${who}, and sends no block/unblock signal for it. ` +
       "It carries on following the schedule after the override ends or is cleared.",
     fields,
     submit: "Set override",
     run: async v => {
       const list = o.askNames ? [...new Set(v.names.split(/[\s,;]+/).filter(Boolean))] : names;
       if (!list.length) throw new Error("Enter at least one VM name.");
-      const r = await api("override/set", Object.assign({names: list, reason: v.reason.trim()}, v.when));
+      const r = await api("override/set", Object.assign({names: list, reason: v.reason.trim()}, v.when, v.starts));
       const bad = r.errors || [];
       if (!r.done && bad.length) { // nothing was set: keep the dialog open so the mistake can be fixed
         throw new Error(bad.slice(0, 6).join("\n") + (bad.length > 6 ? `\n\u2026and ${bad.length - 6} more` : ""));
@@ -157,7 +165,7 @@ function actionDialog(o) {
   if (!clash.length) {
     return confirmDialog({
       title: `${verb} ${who}`, confirm: verb,
-      message: `${verb} ${who} now? Mini PMC sends the request within seconds; the status changes once the cloud finishes.`,
+      message: `${verb} ${who} now? CloudOps Scheduler sends the request within seconds; the status changes once the cloud finishes.`,
       run: () => send({}),
     });
   }
@@ -350,7 +358,12 @@ async function resourcesPage(ctx) {
   function overrideCell(r) {
     if (r.override) {
       return h("div", null, chip("Override", "ovr", r.override_reason ? `${r.override_reason} (set by ${r.override_by})` : ""),
-        h("div", {class: "sub nowrap"}, r.override_until ? "until " + fmtDay(r.override_until) : "until cleared"));
+        h("div", {class: "sub nowrap", title: r.override_until ? "Ends " + fmtDate(r.override_until) : ""},
+          r.override_until ? "until " + fmtDay(r.override_until) : "until cleared"));
+    }
+    if (r.override_from) {
+      return h("div", null, chip("Override scheduled", "ovr", r.override_reason || ""),
+        h("div", {class: "sub nowrap", title: "Starts " + fmtDate(r.override_from)}, "from " + fmtDay(r.override_from)));
     }
     if (r.override_by) return h("div", {class: "sub", title: "Ended " + fmtDate(r.override_until)}, "ended " + inWords(r.override_until));
     return null;
@@ -359,16 +372,15 @@ async function resourcesPage(ctx) {
     const cb = h("input", {type: "checkbox", checked: selected.has(r.name), "aria-label": "Select " + r.name});
     const tr = h("tr", {class: "click" + (r.override ? " ovr" : "") + (selected.has(r.name) ? " sel" : "")},
       h("td", {class: "cb"}, cb),
-      h("td", null, h("div", {class: "nowrap"}, h("b", null, r.name), " ", cloudChip(r.provider), r.enabled ? null : [" ", chip("Disabled", "stop", "Mini PMC is not managing this VM")])),
+      h("td", null, h("div", {class: "nowrap"}, h("b", null, r.name), " ", cloudChip(r.provider), r.enabled ? null : [" ", chip("Disabled", "stop", "CloudOps Scheduler is not managing this VM")])),
       h("td", null, h("div", null, r.group), h("div", {class: "sub", title: r.scope}, r.scope_name || r.scope)),
       h("td", null, r.schedule
         ? h("div", {class: "sched-cell"}, strip(schedGrid.get(r.schedule)), h("span", null, r.schedule))
-        : chip("Unmanaged", "unm", "No schedule: Mini PMC never starts or stops this VM")),
-      h("td", {class: "nowrap"}, statusChip(r), r.pending_action ? [" ", chip(r.pending_action.toLowerCase() === "start" ? "Starting\u2026" : "Stopping\u2026", "ovr", "Mini PMC has sent or queued this action")] : null,
+        : chip("Unmanaged", "unm", "No schedule: CloudOps Scheduler never starts or stops this VM")),
+      h("td", {class: "nowrap"}, statusChip(r), r.pending_action ? [" ", chip(r.pending_action.toLowerCase() === "start" ? "Starting\u2026" : "Stopping\u2026", "ovr", "CloudOps Scheduler has sent or queued this action")] : null,
         " ", refreshBtn(r.name), actionBtn(r),
         mismatch(r) ? h("div", {class: "sub"}, "differs from schedule") : null),
-      h("td", {class: "nowrap"}, stateChip(r.says),
-        r.local ? h("div", {class: "sub", title: "Time now in the schedule's time zone: " + (schedTz.get(r.schedule) || "")}, r.local + (gmtLabel(schedTz.get(r.schedule)) ? " " + gmtLabel(schedTz.get(r.schedule)) : "")) : null),
+      h("td", {class: "nowrap"}, stateChip(r.says)),
       h("td", null, overrideCell(r)));
     cb.addEventListener("change", () => {
       if (cb.checked) selected.add(r.name); else selected.delete(r.name);
@@ -517,7 +529,7 @@ async function resourcesPage(ctx) {
   }
   async function exportXlsx() {
     try {
-      await downloadPost("export/resources", selected.size ? {names: [...selected]} : {}, "minipmc-resources.xlsx");
+      await downloadPost("export/resources", selected.size ? {names: [...selected]} : {}, "cloudops-scheduler-resources.xlsx");
     } catch (e) {
       toast(e.message, "err");
     }
@@ -550,8 +562,8 @@ async function resourcesPage(ctx) {
     const names = [...selected];
     confirmDialog({
       title: on ? "Enable VMs" : "Disable VMs", confirm: on ? "Enable" : "Disable", kind: on ? "primary" : "danger",
-      message: on ? `Let Mini PMC manage ${plural(names.length, "VM")} again?`
-        : `Mini PMC will stop managing ${plural(names.length, "VM")}: no start, no stop and no signals. Continue?`,
+      message: on ? `Let CloudOps Scheduler manage ${plural(names.length, "VM")} again?`
+        : `CloudOps Scheduler will stop managing ${plural(names.length, "VM")}: no start, no stop and no signals. Continue?`,
       run: async () => {
         reportBulk(on ? "Enabled" : "Disabled", await api("vm/update", {names, enabled: on}));
         await afterChange();
@@ -562,7 +574,7 @@ async function resourcesPage(ctx) {
     const names = [...selected];
     confirmDialog({
       title: "Remove VMs", confirm: "Remove", kind: "danger",
-      message: `Remove ${plural(names.length, "VM")} from Mini PMC? The VMs themselves are not touched in the cloud. The removal is recorded in the audit log.`,
+      message: `Remove ${plural(names.length, "VM")} from CloudOps Scheduler? The VMs themselves are not touched in the cloud. The removal is recorded in the audit log.`,
       run: async () => {
         reportBulk("Removed", await api("vm/remove", {names}));
         selected.clear();
@@ -630,22 +642,24 @@ function drawerSections(d, ctl) {
     ["Schedule", r.schedule
       ? h("a", {href: "#/schedules/edit/" + encodeURIComponent(r.schedule), onclick: ctl.close}, r.schedule)
       : chip("Unmanaged", "unm")],
-    ["Managed by Mini PMC", r.enabled ? chip("Yes", "run") : chip("Disabled", "stop")],
+    ["Managed by CloudOps Scheduler", r.enabled ? chip("Yes", "run") : chip("Disabled", "stop")],
     r.notes ? ["Notes", r.notes] : null,
   ])));
 
   let ovr;
-  if (r.override) {
-    ovr = h("div", {class: "callout warn"}, icon("shield"), h("div", null,
-      h("b", null, "Override active"),
-      h("div", null, "Mini PMC will not start or stop this VM. ",
-        r.override_until ? `It ends ${fmtDate(r.override_until)} (${inWords(r.override_until)}).` : "It stays until someone clears it."),
+  if (r.override || r.override_from) {
+    const ends = r.override_until ? `It ends ${fmtDate(r.override_until)} (${inWords(r.override_until)}).` : "It stays until someone clears it.";
+    ovr = h("div", {class: "callout" + (r.override ? " warn" : "")}, icon("shield"), h("div", null,
+      h("b", null, r.override ? "Override active" : "Override scheduled"),
+      h("div", null, r.override ? "CloudOps Scheduler will not start or stop this VM. "
+        : `From ${fmtDate(r.override_from)} (${inWords(r.override_from)}) CloudOps Scheduler will not start or stop this VM. `, ends),
       h("div", null, `Set by ${r.override_by}. Reason: ${r.override_reason || "(none given)"}`),
       can("cloudops") ? h("div", {class: "btns"},
         btn("Change", {sm: true, onclick: () => overrideDialog({names: [r.name], onDone: ctl.refresh})}),
         btn("Clear override", {sm: true, onclick: () => confirmDialog({
           title: "Clear override", confirm: "Clear override",
-          message: `Clear the override on ${r.name}? The schedule takes control again.`,
+          message: r.override ? `Clear the override on ${r.name}? The schedule takes control again.`
+            : `Cancel the scheduled override on ${r.name}? It has not started, so nothing changes for the VM today.`,
           run: async () => { await api("override/clear", {name: r.name}); toast("Override cleared."); await ctl.refresh(); },
         })})) : null));
   } else {
@@ -658,7 +672,7 @@ function drawerSections(d, ctl) {
   if (d.grid) {
     out.push(h("div", {class: "dsec"}, h("h4", null, "Schedule"),
       strip(d.grid, true),
-      h("p", {class: "sub"}, `Time zone ${d.tz}. Local time now: ${r.local || "n/a"}.`),
+      h("p", {class: "sub"}, `The grid and windows are in the schedule's own time zone, ${d.tz}${gmtLabel(d.tz) ? " (" + gmtLabel(d.tz) + ")" : ""}.`),
       h("div", {class: "windows"}, d.windows.map(w => chip(w))),
       h("p", null, "The schedule says: ", stateChip(r.says), " right now.")));
     if (d.time_check) {
@@ -668,12 +682,12 @@ function drawerSections(d, ctl) {
     }
   } else {
     out.push(h("div", {class: "dsec"}, h("h4", null, "Schedule"),
-      h("div", {class: "callout"}, icon("info"), "This VM has no schedule, so Mini PMC never starts or stops it.")));
+      h("div", {class: "callout"}, icon("info"), "This VM has no schedule, so CloudOps Scheduler never starts or stops it.")));
   }
 
   out.push(h("div", {class: "dsec"}, h("h4", null, "Recent activity"),
     d.events.length ? h("ul", {class: "events"}, d.events.map(e => h("li", null,
-      h("div", null, actionChip(e.action), " ", h("span", {class: "mute"}, `${fmtStamp(e.ts)} UTC \u00b7 ${e.actor}`)),
+      h("div", null, actionChip(e.action), " ", h("span", {class: "mute"}, `${fmtStamp(e.ts)} IST \u00b7 ${e.actor}`)),
       e.detail ? h("div", {class: "sub"}, detailText(e.detail)) : null)))
       : h("p", {class: "mute"}, "Nothing has been recorded for this VM yet.")));
   return out;
@@ -691,7 +705,7 @@ function drawerButtons(d, ctl) {
         title: "Change schedule", submit: "Save", wide: true,
         fields: [
           {name: "schedule", label: "Schedule", type: "select", search: true, options: scheduleOptions(list), value: r.schedule || ""},
-          {name: "enabled", label: "Managed by Mini PMC (untick to switch it off)", type: "checkbox", value: r.enabled},
+          {name: "enabled", label: "Managed by CloudOps Scheduler (untick to switch it off)", type: "checkbox", value: r.enabled},
         ],
         run: async v => {
           await api("vm/update", {name: r.name, schedule: v.schedule || null, enabled: v.enabled});
@@ -702,7 +716,7 @@ function drawerButtons(d, ctl) {
     }}));
     if (can("admin")) out.push(btn("Remove", {kind: "outline-danger", icon: "trash", onclick: () => confirmDialog({
       title: "Remove VM", confirm: "Remove", kind: "danger",
-      message: `Remove ${r.name} from Mini PMC? The VM itself is not touched in the cloud.`,
+      message: `Remove ${r.name} from CloudOps Scheduler? The VM itself is not touched in the cloud.`,
       run: async () => {
         await api("vm/remove", {name: r.name});
         toast(`${r.name} removed.`);

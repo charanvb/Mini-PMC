@@ -1,10 +1,11 @@
 "use strict";
-/* Mini PMC - core helpers: DOM builder, icons, API client, dialogs and small widgets.
+/* CloudOps Scheduler - core helpers: DOM builder, icons, API client, dialogs and small widgets.
    The page is built only with DOM calls (never innerHTML), so nothing from the server can inject markup. */
 
 const SVGNS = "http://www.w3.org/2000/svg";
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const APP_NAME = "CloudOps Scheduler";
 
 /* ------------------------------------------------------------------ DOM */
 function append(parent, kids) {
@@ -89,6 +90,26 @@ function icon(name, size) {
   return svg;
 }
 
+/* The product mark (also the favicon). */
+function brandMark(size) {
+  return h("img", {class: "brand-mark", src: "/static/logo.svg", alt: "", width: size, height: size});
+}
+
+/* Microsoft Azure and Google Cloud marks (24x24 grid, filled), used only to say which clouds are managed.
+   The colour comes from CSS (currentColor), so they sit quietly inside chips and cards. */
+const CLOUDS = {
+  azure: {name: "Azure", full: "Microsoft Azure", cls: "az",
+    d: "M22.379 23.343a1.62 1.62 0 0 0 1.536-2.14v.002L17.35 1.76A1.62 1.62 0 0 0 15.816.657H8.184A1.62 1.62 0 0 0 6.65 1.76L.086 21.204a1.62 1.62 0 0 0 1.536 2.139h4.741a1.62 1.62 0 0 0 1.535-1.103l.977-2.892 4.947 3.675c.28.208.618.32.966.32m-3.084-12.531 3.624 10.739a.54.54 0 0 1-.51.713v-.001h-.03a.54.54 0 0 1-.322-.106l-9.287-6.9h4.853m6.313 7.006c.116-.326.13-.694.007-1.058L9.79 1.76a1.722 1.722 0 0 0-.007-.02h6.034a.54.54 0 0 1 .512.366l6.562 19.445a.54.54 0 0 1-.338.684"},
+  gcp: {name: "GCP", full: "Google Cloud", cls: "gcp",
+    d: "M12.19 2.38a9.344 9.344 0 0 0-9.234 6.893c.053-.02-.055.013 0 0-3.875 2.551-3.922 8.11-.247 10.941l.006-.007-.007.03a6.717 6.717 0 0 0 4.077 1.356h5.173l.03.03h5.192c6.687.053 9.376-8.605 3.835-12.35a9.365 9.365 0 0 0-2.821-4.552l-.043.043.006-.05A9.344 9.344 0 0 0 12.19 2.38zm-.358 4.146c1.244-.04 2.518.368 3.486 1.15a5.186 5.186 0 0 1 1.862 4.078v.518c3.53-.07 3.53 5.262 0 5.193h-5.193l-.008.009v-.04H6.785a2.59 2.59 0 0 1-1.067-.23h.001a2.597 2.597 0 1 1 3.437-3.437l3.013-3.012A6.747 6.747 0 0 0 8.11 8.24c.018-.01.04-.026.054-.023a5.186 5.186 0 0 1 3.67-1.69z"},
+};
+function cloudLogo(provider, size) {
+  const s = size || 16;
+  const svg = svgEl("svg", {viewBox: "0 0 24 24", width: s, height: s, fill: "currentColor", class: "cloud-logo " + CLOUDS[provider].cls, "aria-hidden": "true"});
+  svg.appendChild(svgEl("path", {d: CLOUDS[provider].d}));
+  return svg;
+}
+
 /* ------------------------------------------------------------------ shared state, formatting */
 const state = {me: null, status: null, skew: 0};
 const ROLE_RANK = {reader: 1, cloudops: 2, admin: 3};
@@ -106,23 +127,50 @@ function toDate(s) {
   const d = s ? new Date(s) : null;
   return d && !isNaN(d) ? d : null;
 }
-/* "31 Dec 2026 23:59 UTC" */
+/* The whole UI shows India Standard Time (UTC+05:30, no daylight saving), so a fixed offset is exact. */
+const IST_OFFSET_MS = 330 * 60000;
+/* A moment's IST clock fields: shift it by the offset, then read the shifted copy's UTC fields. */
+function istParts(d) {
+  const t = new Date(d.getTime() + IST_OFFSET_MS);
+  return {y: t.getUTCFullYear(), mo: t.getUTCMonth(), d: t.getUTCDate(), h: t.getUTCHours(), mi: t.getUTCMinutes(),
+    s: t.getUTCSeconds(), dow: DAYS[(t.getUTCDay() + 6) % 7]};
+}
+/* "31 Dec 2026 23:59 IST" */
 function fmtDate(s) {
   const d = toDate(s);
   if (!d) return s || "";
-  return `${d.getUTCDate()} ${MONTHS[d.getUTCMonth()]} ${d.getUTCFullYear()} ${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())} UTC`;
+  const p = istParts(d);
+  return `${p.d} ${MONTHS[p.mo]} ${p.y} ${pad(p.h)}:${pad(p.mi)} IST`;
 }
 /* "31 Dec 2026" */
 function fmtDay(s) {
   const d = toDate(s);
   if (!d) return s || "";
-  return `${d.getUTCDate()} ${MONTHS[d.getUTCMonth()]} ${d.getUTCFullYear()}`;
+  const p = istParts(d);
+  return `${p.d} ${MONTHS[p.mo]} ${p.y}`;
 }
-/* "2026-11-23 04:30:12" (UTC) - for the audit log */
+/* "2026-11-23 10:00:12" (IST) - for the audit log */
 function fmtStamp(s) {
   const d = toDate(s);
   if (!d) return s || "";
-  return `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())} ${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}:${pad(d.getUTCSeconds())}`;
+  const p = istParts(d);
+  return `${p.y}-${pad(p.mo + 1)}-${pad(p.d)} ${pad(p.h)}:${pad(p.mi)}:${pad(p.s)}`;
+}
+/* "Mon 14:35" (IST) */
+function fmtWhen(s) {
+  const d = toDate(s);
+  if (!d) return s || "";
+  const p = istParts(d);
+  return `${p.dow} ${pad(p.h)}:${pad(p.mi)}`;
+}
+/* "14:35" - the IST clock in the top bar */
+function fmtClock(d) {
+  const p = istParts(d);
+  return `${pad(p.h)}:${pad(p.mi)}`;
+}
+/* Server messages carry ISO UTC times ("2026-12-31T18:00:00Z"); show each one as an IST date and time. */
+function istText(text) {
+  return String(text == null ? "" : text).replace(/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2})?Z/g, fmtDate);
 }
 /* "in 3 days" / "2 hours ago" */
 function inWords(s) {
@@ -137,14 +185,6 @@ function inWords(s) {
   else { n = Math.round(abs / 86400); unit = "day"; }
   const t = plural(n, unit);
   return diff >= 0 ? "in " + t : t + " ago";
-}
-/* "14:35 BST" for a time zone (en-GB gives BST / GMT for London). */
-function fmtZone(date, zone) {
-  try {
-    return new Intl.DateTimeFormat("en-GB", {timeZone: zone, hour: "2-digit", minute: "2-digit", hourCycle: "h23", timeZoneName: "short"}).format(date);
-  } catch (e) {
-    return "";
-  }
 }
 /* "GMT+5:30" for Asia/Kolkata, "GMT" for UTC; "" if the browser does not know the zone. */
 function gmtLabel(zone) {
@@ -165,7 +205,7 @@ async function downloadPost(path, body, fallbackName) {
     res = await fetch("/api/" + path, {method: "POST", credentials: "same-origin",
       headers: {"Content-Type": "application/json", "X-Requested-With": "minipmc"}, body: JSON.stringify(body || {})});
   } catch (e) {
-    throw new Error("Cannot reach the Mini PMC service. Is it running?");
+    throw new Error("Cannot reach the CloudOps Scheduler service. Is it running?");
   }
   if (!res.ok) {
     let msg = `The service answered ${res.status}`;
@@ -218,7 +258,7 @@ async function api(path, body) {
   try {
     res = await fetch("/api/" + path, opts);
   } catch (e) {
-    throw Object.assign(new Error("Cannot reach the Mini PMC service. Is it running?"), {status: 0});
+    throw Object.assign(new Error("Cannot reach the CloudOps Scheduler service. Is it running?"), {status: 0});
   }
   let data = null;
   try { data = await res.json(); } catch (e) { data = null; }
@@ -246,7 +286,8 @@ function chip(text, kind, title) {
   return h("span", {class: "chip" + (kind ? " " + kind : ""), title}, text);
 }
 function cloudChip(provider) {
-  return provider === "azure" ? chip("Azure", "az") : provider === "gcp" ? chip("GCP", "gcp") : chip(provider || "?");
+  const c = CLOUDS[provider];
+  return c ? h("span", {class: "chip " + c.cls, title: c.full}, cloudLogo(provider, 12), c.name) : chip(provider || "?");
 }
 /* What the schedule says right now: R run, S stop, "" not managed. */
 function stateChip(says) {
@@ -259,10 +300,10 @@ function detailText(detail) {
   if (!detail) return "";
   let o = detail;
   if (typeof detail === "string") {
-    try { o = JSON.parse(detail); } catch (e) { return detail; }
+    try { o = JSON.parse(detail); } catch (e) { return istText(detail); }
   }
-  if (o === null || typeof o !== "object") return String(o);
-  return Object.entries(o).map(([k, v]) => `${k}: ${v !== null && typeof v === "object" ? JSON.stringify(v) : v}`).join(" \u00b7 ");
+  if (o === null || typeof o !== "object") return istText(o);
+  return Object.entries(o).map(([k, v]) => istText(`${k}: ${v !== null && typeof v === "object" ? JSON.stringify(v) : v}`)).join(" \u00b7 ");
 }
 function actionChip(action) {
   const a = String(action || "");

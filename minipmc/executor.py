@@ -53,7 +53,7 @@ def check_manual(store, vm_name: str, action: str, guard: set = frozenset()) -> 
     if mode == "pilot" and vm_name.lower() not in pilot_vms(store):
         raise UserError("pilot mode: this VM is not in the pilot list")
     if action == "stop" and vm_name.lower() in guard:
-        raise UserError("this is the machine running Mini PMC; it is never stopped from here")
+        raise UserError("this is the machine running CloudOps Scheduler; it is never stopped from here")
     with db.connect(store.home) as con:
         if con.execute("SELECT 1 FROM ops WHERE vm_name=? AND outcome IN ('QUEUED','PENDING')", (vm_name,)).fetchone():
             raise UserError("an action is already in progress for this VM")
@@ -173,7 +173,7 @@ class Engine:
             st = cur.get(vm["name"].lower())
             override = None
             if vm["overridden"]:
-                override = rc.Override(parse_utc(vm["override_until"]), vm["override_reason"] or "", vm["override_by"] or "")
+                override = rc.Override(parse_utc(vm["override_until"]), vm["override_reason"] or "", vm["override_by"] or "", parse_utc(vm["override_from"]))
             sched = scheds.get(vm["schedule"])
             try:
                 d = self._decide(vm, sched, st["state"] if st else "", parse_utc(st["checked_at"]) if st else None,
@@ -185,7 +185,7 @@ class Engine:
             if d.action == rc.SKIP:
                 continue
             if d.action == rc.STOP and vm["name"].lower() in guard:
-                self.store.log_event("HOST_GUARD", vm["name"], reason="this is the machine running Mini PMC; not stopped")
+                self.store.log_event("HOST_GUARD", vm["name"], reason="this is the machine running CloudOps Scheduler; not stopped")
                 continue
             if pilot is not None and vm["name"].lower() not in pilot:
                 reasons["NOT_IN_PILOT"] = reasons.get("NOT_IN_PILOT", 0) + 1
@@ -268,7 +268,7 @@ class Engine:
                 return vm, ""
             override = None
             if vm["overridden"]:
-                override = rc.Override(parse_utc(vm["override_until"]), vm["override_reason"] or "", vm["override_by"] or "")
+                override = rc.Override(parse_utc(vm["override_until"]), vm["override_reason"] or "", vm["override_by"] or "", parse_utc(vm["override_from"]))
             d = self._decide(vm, scheds.get(vm["schedule"]), state, now, override, False, now, paused)
             if d.action.lower() != op["action"]:
                 return None, f"no longer needed ({d.reason}, VM is {state})"

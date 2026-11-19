@@ -1,6 +1,8 @@
-# Mini PMC Operations Guide
+# CloudOps Scheduler Operations Guide
 
 This guide covers the Windows Server installation, dashboard operations, important CLI commands, updates, and troubleshooting. Examples use the production install folder `E:\Charan\Mini-PMC`; replace it if your installation is elsewhere.
+
+> **Name.** The product is called **CloudOps Scheduler** (earlier: Mini PMC). Technical names are deliberately unchanged so existing installs keep working: the `minipmc` Python package and CLI, the `MiniPMC` and `MiniPMC-Watchdog` scheduled tasks, the `MINIPMC_HOME` variable, the `data\minipmc.db` database and the `minipmc.crt` / `minipmc.key` certificate files.
 
 ## 1. Quick command reference
 
@@ -18,7 +20,7 @@ Run `pmc --help` or `pmc <command> --help` for the installed version's options. 
 .\.venv\Scripts\python.exe -m minipmc --home E:\Charan\Mini-PMC <command>
 ```
 
-The global `--home` option goes **before** the subcommand. If it is omitted, Mini PMC uses the current directory and may open a different database.
+The global `--home` option goes **before** the subcommand. If it is omitted, CloudOps Scheduler uses the current directory and may open a different database.
 
 ### Windows task and health
 
@@ -77,6 +79,7 @@ pmc override list
 pmc override set VM-NAME --days 1 --reason "maintenance"
 pmc override set VM-NAME --until 2026-12-31T18:00:00Z --reason "approved exception"
 pmc override set VM-NAME --forever --reason "manual control"
+pmc override set VM-NAME --start 2026-12-01T00:00:00Z --days 7 --reason "freeze window"
 pmc override clear VM-NAME
 
 pmc import --vms inventory.csv                 # preview only
@@ -84,7 +87,7 @@ pmc import --vms inventory.csv --apply
 pmc export --out resources.csv                 # VM list as CSV
 ```
 
-CLI override timestamps are UTC; append `Z` to an ISO timestamp. `--days` is a duration from now. The dashboard's manual-action override dialog labels its date/time as IST. In the dashboard, the "Until someone clears it" option is offered to Global admins only; CloudOps admins can set an override for a number of hours or until an IST date/time. An active override makes the scheduler skip that VM until the override expires or is cleared.
+CLI override timestamps are UTC; append `Z` to an ISO timestamp. `--days` is a duration from now, or from `--start` when that is given. `--start` schedules the override for a future date: until then the VM follows its normal schedule. A VM has one override at a time, so setting another one (including the override a manual start/stop can require) replaces a pending one. The dashboard's override dialog has an optional "Starts" field for the same thing, entered in IST. The dashboard's manual-action override dialog labels its date/time as IST. In the dashboard, the "Until someone clears it" option is offered to Global admins only; CloudOps admins can set an override for a number of hours or until an IST date/time. An active override makes the scheduler skip that VM until the override expires or is cleared.
 
 Schedule deletion is restricted to Global admins in the dashboard. Built-in schedules cannot be deleted; schedules with attached VMs cannot be deleted until those VMs are moved to another schedule. CLI deletion accepts one schedule name at a time.
 
@@ -109,11 +112,13 @@ Avoid `--password` on the command line: it can be exposed in process listings or
 ### Certificates and manual dashboard
 
 ```powershell
-pmc make-cert --names "server-hostname,server-fqdn,server-ip"
+pmc make-cert --names "localhost,127.0.0.1"
 pmc pfx-to-pem C:\path\server.pfx --out E:\Charan\Mini-PMC\certs
 pmc serve --host 127.0.0.1 --port 8080
-pmc serve --host 0.0.0.0 --port 443 --cert certs\minipmc.crt --key certs\minipmc.key
+pmc serve --port 443 --cert certs\minipmc.crt --key certs\minipmc.key
 ```
+
+The dashboard is local-only: `serve` refuses any `--host` other than `127.0.0.1`, `::1` or `localhost`, and the installer binds to `127.0.0.1` and opens no firewall port. To use it from another PC, use RDP to the server and browse to `localhost`.
 
 The normal production deployment is the `MiniPMC` Scheduled Task, not a manually run `serve` process. Do not start a second server on the same port.
 
@@ -139,24 +144,29 @@ The normal production deployment is the `MiniPMC` Scheduled Task, not a manually
    ```
 
    Resolve all `ERROR` results before proceeding. `creds-check --vm VM-NAME` can additionally test reading one onboarded VM; it does not start or stop it.
-4. Choose the access mode. For team access over HTTPS on port 443, use a certificate whose names match the hostname/IP people will use. A self-signed certificate is acceptable for initial use, but each user's device must trust it to avoid browser warnings. Run the installer from an Administrator PowerShell:
+4. Install the service. The dashboard is local-only, so the default install serves plain HTTP on `http://localhost:8080`, which never leaves the machine. To use HTTPS on the same machine instead (port 443), first create a certificate for `localhost` with `pmc make-cert --names "localhost,127.0.0.1"` and trust it on the server, or use a corporate CA certificate. Run the installer from an Administrator PowerShell:
 
    ```powershell
-   .\scripts\install-service.ps1 -CertFile "E:\Charan\Mini-PMC\certs\minipmc.crt" -KeyFile "E:\Charan\Mini-PMC\certs\minipmc.key" -OpenFirewall
+   # HTTP on http://localhost:8080
+   .\scripts\install-service.ps1
+
+   # or HTTPS on https://localhost (port 443)
+   .\scripts\install-service.ps1 -CertFile "E:\Charan\Mini-PMC\certs\minipmc.crt" -KeyFile "E:\Charan\Mini-PMC\certs\minipmc.key"
    ```
 
-   The installer creates the `MiniPMC` startup task and the `MiniPMC-Watchdog` five-minute task. Limit inbound TCP 443 in the Windows Firewall and Azure NSG to approved office/VPN sources. The installer does not configure the Azure NSG.
+   The installer creates the `MiniPMC` startup task and the `MiniPMC-Watchdog` five-minute task. The service listens on `127.0.0.1` only. The installer opens no Windows Firewall port (`-OpenFirewall` is ignored, and a rule left by an older install is removed), and no Azure NSG change is needed.
 
 ## 3. Daily dashboard operation
 
-- Open `https://<server-name>/` and log in. A server restart logs users out because web sessions are held in memory; the default session expires after 12 hours. Five failed logins from the same IP trigger a one-minute lockout.
+- On the server (over RDP if you are not at its console), open `http://localhost:8080/`, or `https://localhost/` when installed with a certificate, and log in. A server restart logs users out because web sessions are held in memory; the default session expires after 12 hours. Five failed logins from the same IP trigger a one-minute lockout.
+- Every date and time in the dashboard, Excel/CSV exports and report settings is shown in **IST (UTC+05:30)**, including the top-bar clock. Times are stored in UTC and converted for display. The weekly grid in a schedule and its editor stay in the schedule's own time zone, because that grid follows the zone's daylight-saving changes.
 - **Reader** can view resources, schedules, overrides, and audit events, and export resource/schedule spreadsheets.
 - **CloudOps admin** can manage VMs and schedules, start/stop VMs, manage timed overrides (hours or until an IST date/time), send reports, export, and view the audit log. They cannot set an override that lasts until someone clears it, change modes, pause the scheduler, manage users/connections/email settings, or delete VMs/schedules.
 - **Global admin** can perform all actions, including "until someone clears it" overrides, configuration, user management, and deletion.
 - Onboard VMs with the columns `VM name, provider, project/subscription ID, zone/resource group, schedule`. Paste one VM per line or upload a CSV. Blank or `none` schedule means unmanaged; ensure the schedule is in column five. Large one-time imports can take time.
 - Refresh status to read current cloud power states. Scheduled actions reconcile desired state against the most recent status. For manual Start/Stop, use the action dialog and review any override prompt before confirming.
 - In **Schedules**, use schedule time checks to confirm the selected time zone and expected state. Export resources/schedules to Excel from their respective tabs. Use the Audit Log to investigate actions and download its CSV.
-- Configure **Settings > Email & alerts** with recipients and test email before relying on alerts or reports. Automatic reports run at the configured daily time and time zone; operational alerts are sent for selected failures and are throttled to at most one email per alert key per hour.
+- Configure **Settings > Email & alerts** with recipients and test email before relying on alerts or reports. Automatic reports run once a day at the report time, which is entered in IST; operational alerts are sent for selected failures and are throttled to at most one email per alert key per hour.
 
 ### Schedule modes
 
@@ -183,7 +193,7 @@ Start-ScheduledTask MiniPMC
 
 Use the project's approved deployment process instead of `git pull` if production updates are staged or packaged separately. If `requirements.txt` changed, install the updated dependencies into the task's virtual environment before restarting. After deployment, use **Ctrl+F5** in the browser to reload changed JavaScript/CSS.
 
-Restarting the task will log out all users. Wait for the task to be Running, then verify `https://localhost/healthz` on the server and open the dashboard. If changing HTTPS certificate, port, or bind host, rerun `scripts\install-service.ps1` with the new options so both the service task and watchdog use the updated settings.
+Restarting the task will log out all users. Wait for the task to be Running, then verify `http://localhost:8080/healthz` (`https://localhost/healthz` when installed with a certificate) on the server and open the dashboard. If changing HTTPS certificate, port, or bind host, rerun `scripts\install-service.ps1` with the new options so both the service task and watchdog use the updated settings.
 
 Back up the SQLite database using SQLite's online backup API (safe while the app is running). From the repository root:
 
@@ -199,9 +209,9 @@ Keep the backup in an approved protected location. `config\settings.json`, certi
 - The background scheduler ticks every five minutes. It refreshes cloud state, finalizes pending operations, and plans eligible actions.
 - A slot is planned once per 15-minute UTC interval. The `last_slot` marker and queued scheduled actions are committed together.
 - The pump sends queued actions in waves (defaults: 100 VMs per minute, 10 workers). Manual actions are prioritized and can bypass the wait for the next scheduled wave.
-- Before stopping, Mini PMC sends the configured block signal; before starting, it sends unblock. Signal sending is fire-and-forget and does not hold up the cloud operation. A successful Logic App HTTP response means accepted, not that its downstream email/workflow completed.
+- Before stopping, CloudOps Scheduler sends the configured block signal; before starting, it sends unblock. Signal sending is fire-and-forget and does not hold up the cloud operation. A successful Logic App HTTP response means accepted, not that its downstream email/workflow completed.
 - `max_actions_per_slot` is a safety cap (default 2500). If exceeded, the slot is capped and no scheduled actions are queued; inspect schedules before increasing it.
-- The host guard prevents Mini PMC from stopping the machine it runs on. Do not remove this protection.
+- The host guard prevents CloudOps Scheduler from stopping the machine it runs on. Do not remove this protection.
 - `/healthz` reports scheduler heartbeat health, not the health of every cloud API, VM, or email workflow. The watchdog checks this endpoint every five minutes and logs only unhealthy/probe/restart events; no new watchdog log line usually means the probe succeeded.
 
 ## 6. Logs and audit events
@@ -235,14 +245,14 @@ Get-ChildItem logs\audit | Sort-Object LastWriteTime -Descending | Select-Object
 | `desired` says `STATUS_UNKNOWN_OR_STALE` | Refresh status in Resources; run `pmc creds-check --vm VM-NAME`; inspect `logs\error.log` and the VM's provider permissions/network. The scheduler skips stale or unknown state rather than risking an incorrect action. |
 | `validate` reports time zones cannot be loaded | Install the project's declared dependencies in its virtual environment: `.\.venv\Scripts\python.exe -m pip install -r requirements.txt`, then rerun `pmc validate`. |
 | Signed out after an update/restart | Expected: sessions are in memory. Log in again; there is no need to recreate the account. |
-| Watchdog says unhealthy/restarting | Check `Get-ScheduledTaskInfo MiniPMC` and `MiniPMC-Watchdog`, `logs\watchdog.log`, `logs\error.log`, and `Invoke-WebRequest https://localhost/healthz -UseBasicParsing`. If the task has been up for less than 10 minutes, the watchdog waits before restarting it. The local watchdog deliberately ignores certificate validation for its loopback probe; a browser's certificate-name/trust warning is a separate certificate issue. |
+| Watchdog says unhealthy/restarting | Check `Get-ScheduledTaskInfo MiniPMC` and `MiniPMC-Watchdog`, `logs\watchdog.log`, `logs\error.log`, and `Invoke-WebRequest http://localhost:8080/healthz -UseBasicParsing` (`https://localhost/healthz` when installed with a certificate). If the task has been up for less than 10 minutes, the watchdog waits before restarting it. The local watchdog deliberately ignores certificate validation for its loopback probe; a browser's certificate-name/trust warning is a separate certificate issue. |
 | Watchdog log has no recent lines | Usually healthy: it records unhealthy probes and restarts, not successful probes. Check `/healthz` and task state if uncertain. |
 | `sqlite3.IntegrityError: FOREIGN KEY constraint failed` while saving VM status | Update to the latest code and restart. Status saving now skips VMs removed during a refresh. If it recurs, capture the complete traceback, time, and matching `logs\app.log`/`logs\error.log`; do not delete the database. |
 | Bulk onboarding seems slow | Large onboarding is a one-time database operation and may take time. Keep the page open, avoid submitting the same batch repeatedly, then check Resources for the VM count and errors. |
-| Cloud API returns 429 / throttling | Mini PMC retries HTTP 429 using `Retry-After` when supplied. Check cloud/provider quotas and permissions; waves and worker count control action throughput. Persistent throttling needs provider-side quota or pacing review. |
+| Cloud API returns 429 / throttling | CloudOps Scheduler retries HTTP 429 using `Retry-After` when supplied. Check cloud/provider quotas and permissions; waves and worker count control action throughput. Persistent throttling needs provider-side quota or pacing review. |
 | Provider list seems incomplete | The application stops pagination at its configured page limit and reports if more pages remain. Check the error log and provider account scope/permissions before assuming the inventory is complete. |
 | Report email or alert not received | Verify **Settings > Email & alerts** recipients and run **Send test email**. Check `creds-check`, `ALERT_NOT_SENT`, `ALERT_FAILED`, `REPORT_FAILED`, and `logs\error.log`. Confirm the email Logic App accepts `ToEmail`, `Subject`, `Message`, and optional base64 `Attachments`; check its run history and Office 365 connection. Alerts are throttled by key for one hour. |
-| HTTPS fails or browser warns about certificate | Verify the certificate/key files are PEM, include the hostname users enter, and the task is configured with those paths. Check the listener using `Get-NetTCPConnection -LocalPort 443 -State Listen`. Trust the self-signed certificate on client machines or use a corporate CA certificate. Check Windows Firewall and Azure NSG rules. |
+| HTTPS fails or browser warns about certificate | Verify the certificate/key files are PEM, include `localhost`, and the task is configured with those paths. Check the listener using `Get-NetTCPConnection -LocalPort 443 -State Listen`. Trust the self-signed certificate on the server or use a corporate CA certificate. No firewall or NSG rule is involved: the listener is loopback-only. |
 | Failed logins or one-minute lockout | Check `logs\error.log` for the username and source IP. Five failed attempts from one IP lock that IP out for 60 seconds. Confirm the user is enabled and has the correct password; an admin can reset it using **Users** or `pmc user passwd USERNAME`. |
 | First login cannot open other pages | A one-time password requires the user to set a new password first. Complete the password-change prompt. |
 | Action is `STUCK` or `FAILED` | Check the action's audit details, `logs\error.log`, provider permissions/quota, and current VM state. `STUCK` means the requested state was not confirmed within the configured timeout; inspect the cloud provider before retrying manually. |
@@ -253,7 +263,7 @@ Get-ChildItem logs\audit | Sort-Object LastWriteTime -Descending | Select-Object
 On the server, use:
 
 ```powershell
-Invoke-WebRequest https://localhost/healthz -UseBasicParsing
+Invoke-WebRequest http://localhost:8080/healthz -UseBasicParsing
 ```
 
-Expected response: HTTP 200 and JSON with `"ok": true`. If PowerShell reports a certificate name/trust error, test using the hostname present in the certificate. Do not disable certificate validation globally as a workaround.
+Use `https://localhost/healthz` when the service was installed with a certificate. Expected response: HTTP 200 and JSON with `"ok": true`. If PowerShell reports a certificate name/trust error, the certificate does not include `localhost`; create one with `pmc make-cert --names "localhost,127.0.0.1"`. Do not disable certificate validation globally as a workaround.

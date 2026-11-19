@@ -1,5 +1,5 @@
 <#
-  Safety net for Mini PMC. Runs every 5 minutes (installed by install-service.ps1) and asks the program
+  Safety net for CloudOps Scheduler. Runs every 5 minutes (installed by install-service.ps1) and asks the program
   "are you alive and doing your cycles?" via http://127.0.0.1:<port>/healthz.
     - task not running       -> start it
     - running but unhealthy  -> restart it (only if it has been up for 10+ minutes, so a slow start is left alone)

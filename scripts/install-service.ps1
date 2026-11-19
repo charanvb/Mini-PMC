@@ -1,12 +1,13 @@
 <#
-  Installs Mini PMC as a Windows Scheduled Task that starts at boot (before anyone logs in), runs as SYSTEM,
+  Installs CloudOps Scheduler as a Windows Scheduled Task (named MiniPMC) that starts at boot (before anyone logs in), runs as SYSTEM,
   and restarts itself if it ever stops. Uses only what Windows already has - nothing to download.
-  Run from an ADMINISTRATOR PowerShell:   .\scripts\install-service.ps1 [-Port 8080] [-OpenFirewall]
-  HTTPS on 443 (PEM files, see docs):     .\scripts\install-service.ps1 -CertFile C:\mpmc\certs\minipmc.crt -KeyFile C:\mpmc\certs\minipmc.key -OpenFirewall
+  Run from an ADMINISTRATOR PowerShell:   .\scripts\install-service.ps1 [-Port 8080]
+  HTTPS on 443 (PEM files, see docs):     .\scripts\install-service.ps1 -CertFile C:\mpmc\certs\minipmc.crt -KeyFile C:\mpmc\certs\minipmc.key
+  Local-only: the service listens on 127.0.0.1 and no firewall port is opened (-OpenFirewall is accepted but ignored).
 #>
 param(
     [int]$Port = 0,
-    [string]$BindHost = '0.0.0.0',
+    [string]$BindHost = '127.0.0.1',
     [string]$CertFile = '',
     [string]$KeyFile = '',
     [switch]$OpenFirewall
@@ -40,12 +41,11 @@ if (Get-ScheduledTask -TaskName $name -ErrorAction SilentlyContinue) {
     Unregister-ScheduledTask -TaskName $name -Confirm:$false
 }
 Register-ScheduledTask -TaskName $name -Action $action -Trigger $trigger -Principal $principal -Settings $settings `
-    -Description 'Mini PMC VM schedule manager' | Out-Null
+    -Description 'CloudOps Scheduler VM schedule manager' | Out-Null
 
 if ($OpenFirewall) {
-    Remove-NetFirewallRule -DisplayName 'Mini PMC' -ErrorAction SilentlyContinue
-    New-NetFirewallRule -DisplayName 'Mini PMC' -Direction Inbound -Protocol TCP -LocalPort $Port -Action Allow | Out-Null
-    Write-Host "Firewall: inbound TCP $Port allowed (Windows firewall only - also check the Azure NSG)."
+    Write-Host 'Note: -OpenFirewall ignored. CloudOps Scheduler is local-only (127.0.0.1); no inbound firewall rule is created.'
+    Remove-NetFirewallRule -DisplayName 'Mini PMC' -ErrorAction SilentlyContinue  # rule name used by earlier installs
 }
 Start-ScheduledTask -TaskName $name
 
@@ -59,7 +59,7 @@ $wdSettings = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfG
     -MultipleInstances IgnoreNew -ExecutionTimeLimit (New-TimeSpan -Minutes 3)
 if (Get-ScheduledTask -TaskName $wdName -ErrorAction SilentlyContinue) { Unregister-ScheduledTask -TaskName $wdName -Confirm:$false }
 Register-ScheduledTask -TaskName $wdName -Action $wdAction -Trigger $wdTrigger -Principal $principal -Settings $wdSettings `
-    -Description 'Restarts Mini PMC if it is not running or not doing its cycles' | Out-Null
+    -Description 'Restarts CloudOps Scheduler if it is not running or not doing its cycles' | Out-Null
 Start-Sleep -Seconds 4
 Get-ScheduledTask -TaskName $name | Select-Object TaskName, State | Format-Table -AutoSize
 Write-Host "Installed. Dashboard: $(if ($https) { 'https' } else { 'http' })://localhost:$Port   Logs: $root\logs\app.log"

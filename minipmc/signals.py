@@ -4,7 +4,7 @@ Contract (matches the Logic App's request schema):
     POST <Logic App URL>   {"vms": [{"name": ..., "project": ..., "zone": ...}], "action": "block" | "unblock"}
 For Azure VMs `project` carries the subscription id and `zone` the resource group.
 
-Mini PMC only checks that the Logic App ACCEPTED the call (any 2xx, normally 202). It does not wait for the
+CloudOps Scheduler only checks that the Logic App ACCEPTED the call (any 2xx, normally 202). It does not wait for the
 workflow to finish and never polls it. The URL contains a secret (sig=...), so it is never written to a log or
 shown in the dashboard - only scheme, host and path are.
 

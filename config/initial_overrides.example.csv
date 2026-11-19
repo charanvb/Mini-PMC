@@ -2,4 +2,4 @@
 # override_until_utc: blank = override until a person clears it. force_schedule: optional schedule name from the Schedules tab.
 vm_name,override_until_utc,reason,force_schedule
 example-vm-01,2026-12-31T23:59:59Z,Override until 31 Dec - no scheduler action,
-example-vm-02,,Hosts Mini PMC - must stay up 24x7,ALWAYS_UP
+example-vm-02,,Hosts CloudOps Scheduler - must stay up 24x7,ALWAYS_UP

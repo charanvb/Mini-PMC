@@ -1,5 +1,5 @@
 "use strict";
-/* Mini PMC - schedules: the weekly strip, the 15-minute grid editor, and the Schedules pages.
+/* CloudOps Scheduler - schedules: the weekly strip, the 15-minute grid editor, and the Schedules pages.
    A schedule is a week of 672 quarter-hour cells (Monday 00:00 first), each R (run) or S (stop), in its own time zone. */
 
 const CELLS = 96; // quarter-hours in a day
@@ -174,20 +174,21 @@ function tzDatalist(id, inUse) {
   return h("datalist", {id}, [...new Set(COMMON_TZ.concat(inUse || []))].sort().map(z => h("option", {value: z, label: `${z}  (${gmtLabel(z) || "?"})`}, gmtLabel(z))));
 }
 
-/* The "Time check": what the schedule says now, and the next switches in UTC, London and the schedule's own zone. */
+/* The "Time check": what the schedule says now, and its next switches in IST (plus the schedule's own zone when that is not IST). */
 function timeCheckView(tc) {
   const now = tc.now || {};
   const sw = tc.switches || [];
+  const own = tc.tz !== "Asia/Kolkata";
   return h("div", null,
     h("div", {class: "callout"}, icon("clock"), h("div", null,
-      h("div", null, "Right now it is ", h("b", null, now.schedule || "?"), " in ", h("b", null, tc.tz),
-        ` (UTC ${now.utc || "?"}, London ${now.london || "?"}).`),
+      h("div", null, "Right now it is ", h("b", null, `${now.ist || "?"} IST`),
+        own ? [" (", now.schedule || "?", " in ", tc.tz, ")"] : null, "."),
       h("div", null, "The schedule says this should be ", stateChip(tc.now_state), " now."))),
     sw.length ? h("div", {class: "table-wrap", style: {marginTop: "12px"}}, h("table", {class: "t"},
-      h("thead", null, h("tr", null, h("th", null, "Next change"), h("th", null, "UTC"), h("th", null, "London"), h("th", null, tc.tz))),
+      h("thead", null, h("tr", null, h("th", null, "Next change"), h("th", null, "IST"), own ? h("th", null, tc.tz) : null)),
       h("tbody", null, sw.map(s => h("tr", null,
         h("td", null, s.to === "R" ? chip("Start", "run") : chip("Stop", "stop")),
-        h("td", {class: "nowrap"}, s.utc), h("td", {class: "nowrap"}, s.london), h("td", {class: "nowrap"}, s.schedule))))))
+        h("td", {class: "nowrap"}, s.ist), own ? h("td", {class: "nowrap"}, s.schedule) : null)))))
       : h("p", {class: "mute"}, "This schedule never changes state."));
 }
 
@@ -269,7 +270,7 @@ async function schedulesPage(ctx) {
 
   return h("div", null,
     pageHead("Schedules",
-      btn("Export Excel", {icon: "file", onclick: () => downloadPost("export/schedules", {}, "minipmc-schedules.xlsx").catch(e => toast(e.message, "err"))}),
+      btn("Export Excel", {icon: "file", onclick: () => downloadPost("export/schedules", {}, "cloudops-scheduler-schedules.xlsx").catch(e => toast(e.message, "err"))}),
       canDelete ? delBtn : null,
       can("cloudops") ? btn("From text\u2026", {onclick: scheduleFromTextDialog, title: "Build a schedule from text such as \u201cUp 5 days (Mon-Fri) 10 AM to 10 PM IST\u201d"}) : null,
       can("cloudops") ? btn("New schedule", {kind: "primary", icon: "plus", onclick: () => { location.hash = "#/schedules/new"; }}) : null),
@@ -282,7 +283,7 @@ async function schedulesPage(ctx) {
 function scheduleFromTextDialog() {
   formDialog({
     title: "Create a schedule from text",
-    intro: "Paste the schedule the way it is written in your inventory. Mini PMC works out the days, the hours and the time zone.",
+    intro: "Paste the schedule the way it is written in your inventory. CloudOps Scheduler works out the days, the hours and the time zone.",
     fields: [
       {name: "text", label: "Schedule text", type: "textarea", rows: 3, required: true, placeholder: "Up 5 days (Mon-Fri) 10 AM to 10 PM IST"},
       {name: "name", label: "Name (optional)", hint: "Leave it empty to get an automatic name."},

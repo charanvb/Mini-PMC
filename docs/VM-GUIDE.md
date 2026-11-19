@@ -1,4 +1,4 @@
-# Mini PMC – VM guide
+# CloudOps Scheduler – VM guide
 
 Run everything on the Windows Server 2016 VM, in PowerShell. Each part says what to send back. This guide grows with every build step.
 
@@ -25,7 +25,7 @@ try { Invoke-RestMethod -Headers @{Metadata='true'} -Uri 'http://169.254.169.254
 catch { "Metadata service not reachable: $($_.Exception.Message)" }
 ```
 
-**Send back:** the whole output. It decides how we install packages (pip or offline) and how Mini PMC will reach Azure and GCP.
+**Send back:** the whole output. It decides how we install packages (pip or offline) and how CloudOps Scheduler will reach Azure and GCP.
 
 ## Step 1 - Get the code onto the VM
 
@@ -36,7 +36,7 @@ cd "<your project folder>"
 git init -b main
 git add .
 git status --short      # vms_all.csv, config\initial_overrides.csv and review\ must NOT be listed
-git commit -m "Mini PMC step 1"
+git commit -m "CloudOps Scheduler step 1"
 git remote add origin https://github.com/<owner>/<repo>.git
 git push -u origin main
 ```
@@ -181,10 +181,10 @@ The attached `CloudBAU-Automation` user-assigned managed identity needs **Key Va
 For a quick, non-production test, `logic_app.url` can hold the URL directly in `config\settings.json` instead;
 the secret-name setting is preferred.
 
-Mini PMC sends `{"vms":[{"name":"...","project":"...","zone":"..."}],"action":"block"}` before a stop and
+CloudOps Scheduler sends `{"vms":[{"name":"...","project":"...","zone":"..."}],"action":"block"}` before a stop and
 `"unblock"` before a start. For Azure, `project` is the subscription ID and `zone` is the resource group; for GCP
 they are the project ID and zone. It does not poll the Logic App or wait after acceptance: on a 2xx response,
-Mini PMC immediately calls the corresponding VM start/stop API.
+CloudOps Scheduler immediately calls the corresponding VM start/stop API.
 Use **Settings > Connections** to check configuration and send a manually confirmed test signal. Do not send
 test signals to production Omnibus unless you intend to change the VM's alert state.
 

@@ -3,6 +3,7 @@ import threading
 import urllib.error
 import urllib.parse
 import urllib.request
+from datetime import datetime, timedelta, timezone
 
 import pytest
 
@@ -58,7 +59,7 @@ class Client:
 
 def test_page_served_and_api_requires_login(srv):
     base, _ = srv
-    assert b"Mini PMC" in urllib.request.urlopen(base + "/").read()
+    assert b"CloudOps Scheduler" in urllib.request.urlopen(base + "/").read()
     assert Client(base).call("vms")[0] == 401
 
 
@@ -121,6 +122,21 @@ def test_override_flow_shows_in_overview_and_audit(srv):
     assert c.call("override/clear", {"name": "vm1"})[0] == 400  # nothing to clear
     actions = [e["action"] for e in c.call("events")[1]["events"]]
     assert "OVERRIDE_SET" in actions and "OVERRIDE_CLEARED" in actions and "LOGIN_OK" in actions
+
+
+def test_override_list_tells_scheduled_from_active_and_ended(srv):
+    base, home = srv
+    c = Client(base)
+    c.login("ops", "password-2")
+    start = (datetime.now(timezone.utc) + timedelta(days=2)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    assert c.call("override/set", {"name": "vm1", "start": start, "days": 1, "reason": "later"})[1]["done"] == 1
+    o = c.call("overrides")[1]["overrides"][0]
+    assert (o["scheduled"], o["active"], o["starts_at"]) == (True, False, start)
+    assert not c.call("vms")[1]["vms"][0]["override"]
+    with db.connect(home) as con:
+        con.execute("UPDATE overrides SET starts_at=NULL, expires_at='2020-01-01T00:00:00Z'")
+    o = c.call("overrides")[1]["overrides"][0]
+    assert (o["scheduled"], o["active"]) == (False, False)
 
 
 def test_bulk_calls_report_each_failure_and_do_the_rest(srv):

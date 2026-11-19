@@ -1,5 +1,5 @@
 "use strict";
-/* Mini PMC - the Dashboard, Overrides, Audit log and Settings pages. */
+/* CloudOps Scheduler - the Dashboard, Overrides, Audit log and Settings pages. */
 
 const AUDIT_LIMITS = [100, 200, 500, 1000];
 const ROLE_OPTIONS = [["admin", "Global admin"], ["cloudops", "CloudOps admin"], ["reader", "Reader"]];
@@ -9,9 +9,9 @@ const ROLE_HELP = {
   reader: "Look only: view resources, schedules, overrides and the audit log.",
 };
 const MODE_NOTES = {
-  readonly: "Read-only mode: Mini PMC watches and records, but does not start or stop any VM yet.",
-  dryrun: "Dry-run mode: Mini PMC logs what it would do, but does not start or stop any VM.",
-  pilot: "Pilot mode: Mini PMC acts only on the VMs chosen for the pilot.",
+  readonly: "Read-only mode: CloudOps Scheduler watches and records, but does not start or stop any VM yet.",
+  dryrun: "Dry-run mode: CloudOps Scheduler logs what it would do, but does not start or stop any VM.",
+  pilot: "Pilot mode: CloudOps Scheduler acts only on the VMs chosen for the pilot.",
 };
 
 function statCard(value, label, href, kind) {
@@ -33,21 +33,6 @@ function clip(text, n) {
 function vmLink(name, onChange) {
   return h("button", {type: "button", class: "linkbtn", onclick: () => openDrawer(name, onChange)}, name);
 }
-/* "Tue 23:30 BST": a moment shown in a named time zone. */
-function zoneStamp(date, zone) {
-  try {
-    const p = {};
-    for (const x of new Intl.DateTimeFormat("en-GB", {timeZone: zone, weekday: "short", hour: "2-digit", minute: "2-digit",
-      hourCycle: "h23", timeZoneName: "short"}).formatToParts(date)) p[x.type] = x.value;
-    return `${p.weekday} ${p.hour}:${p.minute} ${p.timeZoneName}`;
-  } catch (e) {
-    return "";
-  }
-}
-function browserTime(s) {
-  const d = toDate(s);
-  return d ? "Your browser's time: " + d.toLocaleString() : "";
-}
 function toastError(e) {
   toast((e && e.message) || String(e), "err");
 }
@@ -59,7 +44,7 @@ async function dashboardPage(ctx) {
 
   if (!s.vms) {
     return h("div", null, pageHead("Dashboard"), h("div", {class: "panel"}, emptyState("No VMs yet",
-      "Add the VMs that Mini PMC should start and stop. You can add them one at a time or paste a list.",
+      "Add the VMs that CloudOps Scheduler should start and stop. You can add them one at a time or paste a list.",
       can("cloudops") ? btn("Add resources", {kind: "primary", icon: "plus", onclick: async () => {
         try { addResourcesDialog((await api("schedules")).schedules, refreshPage); } catch (e) { toastError(e); }
       }}) : h("p", null, "Ask an administrator to add them."))));
@@ -74,8 +59,8 @@ async function dashboardPage(ctx) {
 
   const cards = h("div", {class: "stats"},
     statCard(s.vms, "Total VMs", "#/resources"),
-    statCard(s.azure, "Azure", "#/resources?cloud=azure", "az"),
-    statCard(s.gcp, "Google Cloud", "#/resources?cloud=gcp", "gcp"),
+    statCard(s.azure, h("span", {class: "cloud-label"}, cloudLogo("azure", 14), "Azure"), "#/resources?cloud=azure", "az"),
+    statCard(s.gcp, h("span", {class: "cloud-label"}, cloudLogo("gcp", 14), "Google Cloud"), "#/resources?cloud=gcp", "gcp"),
     statCard(s.should_run, "Should be running now", "#/resources?state=run", "run"),
     statCard(s.should_stop, "Should be stopped now", "#/resources?state=stop"),
     statCard(s.overrides, "With an override", "#/resources?state=override", "ovr"),
@@ -93,23 +78,19 @@ async function dashboardPage(ctx) {
   if (MODE_NOTES[s.mode]) attention.push(noteBox("", "info", MODE_NOTES[s.mode]));
   if (s.unmanaged) {
     attention.push(noteBox("unm", "info", h("b", null, `${plural(s.unmanaged, "VM")} ${s.unmanaged === 1 ? "has" : "have"} no schedule.`),
-      ` Mini PMC never starts or stops ${s.unmanaged === 1 ? "it" : "them"}. `,
+      ` CloudOps Scheduler never starts or stops ${s.unmanaged === 1 ? "it" : "them"}. `,
       h("a", {href: "#/resources?state=unmanaged"}, "Show")));
   }
-  for (const p of problems) attention.push(noteBox(p.level === "ERROR" ? "bad" : "warn", "alert", p.message));
+  for (const p of problems) attention.push(noteBox(p.level === "ERROR" ? "bad" : "warn", "alert", istText(p.message)));
   if (!attention.length) attention.push(noteBox("ok", "check", "No problems found."));
 
   const upcoming = s.upcoming.length
     ? h("div", {class: "table-wrap"}, h("table", {class: "t"},
-      h("thead", null, h("tr", null, h("th", null, "When (UTC)"), h("th", null, "London"), h("th", {class: "num"}, "Starts"), h("th", {class: "num"}, "Stops"))),
-      h("tbody", null, s.upcoming.map(u => {
-        const d = toDate(u.at);
-        return h("tr", null,
-          h("td", {class: "nowrap"}, zoneStamp(d, "UTC"), h("div", {class: "sub"}, inWords(u.at))),
-          h("td", {class: "nowrap"}, zoneStamp(d, "Europe/London")),
-          h("td", {class: "num"}, u.start ? chip(fmtNum(u.start), "run") : ""),
-          h("td", {class: "num"}, u.stop ? chip(fmtNum(u.stop), "stop") : ""));
-      }))))
+      h("thead", null, h("tr", null, h("th", null, "When (IST)"), h("th", {class: "num"}, "Starts"), h("th", {class: "num"}, "Stops"))),
+      h("tbody", null, s.upcoming.map(u => h("tr", null,
+        h("td", {class: "nowrap"}, fmtWhen(u.at), h("div", {class: "sub"}, inWords(u.at))),
+        h("td", {class: "num"}, u.start ? chip(fmtNum(u.start), "run") : ""),
+        h("td", {class: "num"}, u.stop ? chip(fmtNum(u.stop), "stop") : ""))))))
     : emptyNote("No starts or stops are due in the next 24 hours.");
 
   const ending = s.overrides_ending_soon.length
@@ -117,7 +98,7 @@ async function dashboardPage(ctx) {
       h("thead", null, h("tr", null, h("th", null, "VM"), h("th", null, "Ends"), h("th", null, "Reason"))),
       h("tbody", null, s.overrides_ending_soon.map(o => h("tr", null,
         h("td", null, vmLink(o.name, refreshPage)),
-        h("td", {class: "nowrap", title: browserTime(o.until)}, fmtDay(o.until), h("div", {class: "sub"}, inWords(o.until))),
+        h("td", {class: "nowrap"}, fmtDate(o.until), h("div", {class: "sub"}, inWords(o.until))),
         h("td", null, o.reason || ""))))))
     : emptyNote(s.overrides ? "No override ends within the next 14 days." : "There are no overrides.");
 
@@ -125,7 +106,7 @@ async function dashboardPage(ctx) {
     ? h("div", {class: "table-wrap"}, h("table", {class: "t"}, h("tbody", null, ev.events.map(e => {
       const detail = detailText(e.detail);
       return h("tr", null,
-        h("td", {class: "nowrap", title: fmtStamp(e.ts) + " UTC"}, inWords(e.ts)),
+        h("td", {class: "nowrap", title: fmtStamp(e.ts) + " IST"}, inWords(e.ts)),
         h("td", null, actionChip(e.action)),
         h("td", null, e.target || "", detail ? h("div", {class: "sub", title: detail}, clip(detail, 300)) : null),
         h("td", {class: "sub nowrap"}, e.actor));
@@ -146,17 +127,23 @@ async function dashboardPage(ctx) {
 async function overridesPage(ctx) {
   ctx.setTitle("Overrides");
   let rows = [];
-  let show = ["active", "ended", "all"].includes(ctx.params.show) ? ctx.params.show : "active";
+  let show = ["active", "scheduled", "ended", "all"].includes(ctx.params.show) ? ctx.params.show : "active";
   let query = "";
   const tbody = h("tbody");
   const count = h("span", {class: "mute"});
   const seg = h("div", {class: "seg"});
+  // active: in force now; scheduled: set to start later; ended: past its end time
+  const stateOf = r => r.active ? "active" : r.scheduled ? "scheduled" : "ended";
+  const ended = () => rows.filter(r => stateOf(r) === "ended");
 
   async function load() {
     rows = (await api("overrides")).overrides;
-    // active ones first (soonest end first, "until cleared" last), then the ended ones (latest first)
-    rows.sort((a, b) => (!a.active - !b.active)
-      || (a.active ? String(a.expires_at || "~").localeCompare(String(b.expires_at || "~")) : String(b.expires_at).localeCompare(String(a.expires_at)))
+    // active first (soonest end first, "until cleared" last), then scheduled (soonest start first), then ended (latest first)
+    const rank = {active: 0, scheduled: 1, ended: 2};
+    rows.sort((a, b) => (rank[stateOf(a)] - rank[stateOf(b)])
+      || (a.active ? String(a.expires_at || "~").localeCompare(String(b.expires_at || "~"))
+        : a.scheduled ? String(a.starts_at).localeCompare(String(b.starts_at))
+        : String(b.expires_at).localeCompare(String(a.expires_at)))
       || collator.compare(a.vm_name, b.vm_name));
   }
   async function reload() {
@@ -165,20 +152,23 @@ async function overridesPage(ctx) {
   }
   function visible() {
     const terms = query.toLowerCase().split(/\s+/).filter(Boolean);
-    return rows.filter(r => (show === "all" || (show === "active") === r.active)
+    return rows.filter(r => (show === "all" || show === stateOf(r))
       && terms.every(t => `${r.vm_name} ${r.reason} ${r.set_by} ${r.schedule || ""}`.toLowerCase().includes(t)));
   }
 
   function clearOne(r) {
+    const message = {
+      active: `Clear the override on ${r.vm_name}? The schedule takes control of it again.`,
+      scheduled: `Cancel the scheduled override on ${r.vm_name}? It has not started, so nothing changes for the VM today.`,
+      ended: `Remove the record of the ended override on ${r.vm_name}?`,
+    }[stateOf(r)];
     confirmDialog({
-      title: "Clear override", confirm: "Clear override",
-      message: r.active ? `Clear the override on ${r.vm_name}? The schedule takes control of it again.`
-        : `Remove the record of the ended override on ${r.vm_name}?`,
+      title: "Clear override", confirm: "Clear override", message,
       run: async () => { await api("override/clear", {name: r.vm_name}); toast("Override cleared."); await reload(); },
     });
   }
   const endedBtn = btn("Clear all ended", {title: "Tidy up: remove the records of overrides that have already ended", onclick: () => {
-    const names = rows.filter(r => !r.active).map(r => r.vm_name);
+    const names = ended().map(r => r.vm_name);
     confirmDialog({
       title: "Clear ended overrides", confirm: "Clear",
       message: `Remove the records of ${plural(names.length, "ended override")}? This only tidies the list; those VMs are already back on their schedules.`,
@@ -186,21 +176,29 @@ async function overridesPage(ctx) {
     });
   }});
 
+  /* When it applies, in IST: "Until ..." while active, "From ..." (then its end) before it starts, "Ended ..." afterwards. */
+  function whenCell(r) {
+    const end = r.expires_at ? "until " + fmtDate(r.expires_at) : "until cleared";
+    if (r.scheduled) return [`From ${fmtDate(r.starts_at)}`, h("div", {class: "sub"}, `${inWords(r.starts_at)}, ${end}`)];
+    if (!r.expires_at) return "Until cleared";
+    return r.active ? ["Until " + fmtDate(r.expires_at), h("div", {class: "sub"}, inWords(r.expires_at))]
+      : ["Ended " + fmtDate(r.expires_at), h("div", {class: "sub"}, inWords(r.expires_at))];
+  }
   function row(r) {
     return h("tr", {class: r.active ? "ovr" : ""},
-      h("td", null, r.active ? chip("Active", "ovr") : chip("Ended")),
+      h("td", null, r.active ? chip("Active", "ovr") : r.scheduled ? chip("Scheduled", "ovr", "Starts " + fmtDate(r.starts_at)) : chip("Ended")),
       h("td", null, h("div", {class: "nowrap"}, vmLink(r.vm_name, reload), " ", cloudChip(r.provider)),
         h("div", {class: "sub"}, r.schedule || "no schedule")),
-      h("td", {class: "nowrap", title: browserTime(r.expires_at)},
-        r.expires_at ? [fmtDate(r.expires_at), h("div", {class: "sub"}, r.active ? inWords(r.expires_at) : "ended " + inWords(r.expires_at))] : "Until cleared"),
+      h("td", {class: "nowrap"}, whenCell(r)),
       h("td", null, r.reason || h("span", {class: "mute"}, "(none given)")),
       h("td", {class: "nowrap"}, r.set_by, h("div", {class: "sub"}, fmtDate(r.set_at))),
       h("td", {class: "nowrap"}, can("cloudops") ? btn("Clear", {sm: true, onclick: () => clearOne(r)}) : null));
   }
   function draw() {
     const list = visible();
-    const n = {active: rows.filter(r => r.active).length, ended: rows.filter(r => !r.active).length, all: rows.length};
-    seg.replaceChildren(...[["active", "Active"], ["ended", "Ended"], ["all", "All"]].map(([k, l]) =>
+    const n = {active: 0, scheduled: 0, ended: 0, all: rows.length};
+    for (const r of rows) n[stateOf(r)]++;
+    seg.replaceChildren(...[["active", "Active"], ["scheduled", "Scheduled"], ["ended", "Ended"], ["all", "All"]].map(([k, l]) =>
       h("button", {type: "button", class: show === k ? "on" : "", onclick: () => { show = k; draw(); }}, `${l} (${fmtNum(n[k])})`)));
     count.textContent = `${fmtNum(list.length)} shown`;
     endedBtn.disabled = !n.ended;
@@ -217,10 +215,10 @@ async function overridesPage(ctx) {
     pageHead("Overrides",
       can("cloudops") ? endedBtn : null,
       can("cloudops") ? btn("Set override\u2026", {kind: "primary", icon: "shield", onclick: () => overrideDialog({askNames: true, onDone: reload})}) : null),
-    h("div", {class: "intro"}, "While an override is active, Mini PMC does not start or stop that VM and sends no block/unblock signal for it."),
+    h("div", {class: "intro"}, "While an override is active, CloudOps Scheduler does not start or stop that VM and sends no block/unblock signal for it."),
     h("div", {class: "toolbar"}, seg, h("div", {class: "search"}, icon("search", 16), search), count),
     h("div", {class: "panel"}, h("div", {class: "table-wrap"}, h("table", {class: "t"},
-      h("thead", null, h("tr", null, h("th", null, "Status"), h("th", null, "VM"), h("th", null, "Ends (UTC)"), h("th", null, "Reason"), h("th", null, "Set by"), h("th", null, ""))),
+      h("thead", null, h("tr", null, h("th", null, "Status"), h("th", null, "VM"), h("th", null, "When (IST)"), h("th", null, "Reason"), h("th", null, "Set by"), h("th", null, ""))),
       tbody))));
 }
 
@@ -236,7 +234,7 @@ async function auditPage(ctx) {
   const limitSel = h("select", {"aria-label": "How many events", value: limit}, AUDIT_LIMITS.map(n => h("option", {value: n}, `Latest ${n}`)));
 
   function draw() {
-    count.textContent = `${fmtNum(events.length)} events (times are UTC)`;
+    count.textContent = `${fmtNum(events.length)} events (times are IST)`;
     tbody.replaceChildren(...(events.length ? events.map(e => h("tr", null,
       h("td", {class: "nowrap"}, fmtStamp(e.ts)),
       h("td", null, actionChip(e.action)),
@@ -260,10 +258,10 @@ async function auditPage(ctx) {
       if (/^[=+\-@\t\r]/.test(t)) t = "'" + t;
       return `"${t.replace(/"/g, '""')}"`;
     };
-    const lines = [["time_utc", "action", "target", "actor", "detail"].map(cell).join(",")]
-      .concat(events.map(e => [e.ts, e.action, e.target, e.actor, detailText(e.detail)].map(cell).join(",")));
+    const lines = [["time_ist", "action", "target", "actor", "detail"].map(cell).join(",")]
+      .concat(events.map(e => [fmtStamp(e.ts), e.action, e.target, e.actor, detailText(e.detail)].map(cell).join(",")));
     const url = URL.createObjectURL(new Blob([lines.join("\r\n")], {type: "text/csv"}));
-    const a = h("a", {href: url, download: `minipmc-audit-${fmtStamp(serverNow().toISOString()).slice(0, 10)}.csv`});
+    const a = h("a", {href: url, download: `cloudops-scheduler-audit-${fmtStamp(serverNow().toISOString()).slice(0, 10)}.csv`});
     document.body.appendChild(a);
     a.click();
     a.remove();
@@ -278,10 +276,10 @@ async function auditPage(ctx) {
     pageHead("Audit log",
       btn("Download CSV", {onclick: download}),
       btn("Refresh", {icon: "refresh", onclick: () => load().then(() => toast("Refreshed."), toastError)})),
-    h("div", {class: "intro"}, "Every action Mini PMC takes, and every change anyone makes, is recorded here. The same events are also written to daily files under logs\\audit."),
+    h("div", {class: "intro"}, "Every action CloudOps Scheduler takes, and every change anyone makes, is recorded here. The same events are also written to daily files under logs\\audit."),
     h("div", {class: "toolbar"}, h("div", {class: "search"}, icon("search", 16), search), limitSel, count),
     h("div", {class: "panel"}, h("div", {class: "table-wrap"}, h("table", {class: "t"},
-      h("thead", null, h("tr", null, h("th", null, "Time (UTC)"), h("th", null, "Action"), h("th", null, "Target"), h("th", null, "By"), h("th", null, "Details"))),
+      h("thead", null, h("tr", null, h("th", null, "Time (IST)"), h("th", null, "Action"), h("th", null, "Target"), h("th", null, "By"), h("th", null, "Details"))),
       tbody))));
 }
 
@@ -314,7 +312,7 @@ function modeDialog() {
     intro: "Current mode: " + (MODE_LABEL[cur] ? MODE_LABEL[cur][0] : cur) + ". Roll out in this order: Read-only, Dry run, Pilot, Live.",
     fields: [
       {name: "mode", label: "Mode", type: "select", value: cur, options: Object.keys(text).map(k => [k, text[k]])},
-      {name: "pilot_vms", label: "Pilot VMs (Pilot mode only)", type: "textarea", rows: 3, placeholder: "vm-one, vm-two", hint: "Names must already be in Mini PMC."},
+      {name: "pilot_vms", label: "Pilot VMs (Pilot mode only)", type: "textarea", rows: 3, placeholder: "vm-one, vm-two", hint: "Names must already be in CloudOps Scheduler."},
       {name: "confirm", label: "Type LIVE to confirm (Live mode only)", placeholder: "LIVE", autocomplete: "off"},
     ],
     run: async v => {
@@ -332,12 +330,7 @@ async function emailTab() {
   const reportTo = h("input", {type: "text", value: e.report_to, placeholder: "name@company.com; other@company.com"});
   const alertTo = h("input", {type: "text", value: e.alert_to, placeholder: "name@company.com; other@company.com"});
   const auto = h("input", {type: "checkbox", checked: e.report_auto});
-  const time = h("input", {type: "time", value: e.report_time});
-  const tz = h("input", {type: "text", value: e.report_tz, list: "report-tz"});
-  const tzGmt = h("span", {class: "chip"});
-  const showGmt = () => { tzGmt.textContent = gmtLabel(tz.value.trim()); tzGmt.style.display = tzGmt.textContent ? "" : "none"; };
-  tz.addEventListener("input", showGmt);
-  showGmt();
+  const time = h("input", {type: "time", value: e.report_time_ist, "aria-label": "Report time in IST"});
   const out = h("div");
   const show = (ok, text) => out.replaceChildren(noteBox(ok ? "ok" : "bad", ok ? "check" : "alert", text));
   const guard = fn => async () => {
@@ -345,7 +338,7 @@ async function emailTab() {
   };
   const save = guard(async () => {
     await api("email/save", {report_to: reportTo.value, alert_to: alertTo.value, report_auto: auto.checked,
-      report_time: time.value, report_tz: tz.value.trim()});
+      report_time: time.value, report_tz: "Asia/Kolkata"});
     show(true, "Saved.");
   });
   const test = guard(async () => {
@@ -357,16 +350,14 @@ async function emailTab() {
     const r = await api("report/send", {});
     show(r.ok, r.ok ? "Report sent. Check the inbox (attachment: Excel)." : "Report not sent: " + r.detail);
   });
-  const zones = [...new Set(["UTC", "Europe/London", "Europe/Amsterdam", "Asia/Kolkata", "Asia/Dubai", "Asia/Singapore", "America/New_York", e.report_tz])];
   return h("div", {class: "panel"}, h("div", {class: "panel-body"},
     e.configured ? null : noteBox("bad", "alert", h("b", null, "The email Logic App is not configured."),
       h("div", null, "Add an \"email_logic_app\" section (url or url_secret_name) to config\\settings.json and restart the service.")),
-    h("datalist", {id: "report-tz"}, zones.map(z => h("option", {value: z, label: `${z} (${gmtLabel(z)})`}, gmtLabel(z)))),
     field("Report recipients", reportTo, "Separate several addresses with ; , or a space. The daily report has an Excel attachment (VMs and schedules)."),
     field("Alert recipients", alertTo, "Gets an email when a start/stop fails, gets stuck, or the scheduler stops responding."),
     h("label", {class: "radio"}, auto, "Send the report automatically every day"),
-    field("Report time", h("div", {class: "nowrap"}, time, " ", tz, " ", tzGmt)),
-    e.report_last ? h("p", {class: "mute"}, "Last report sent: " + fmtDate(e.report_last)) : null,
+    field("Report time (IST)", h("div", {class: "nowrap"}, time, " ", h("span", {class: "mute"}, "India Standard Time, GMT+5:30"))),
+    e.report_last ? h("p", {class: "mute"}, "Last report sent: " + fmtDay(e.report_last)) : null,
     h("div", {class: "row"}, btn("Save", {kind: "primary", icon: "check", onclick: save}),
       btn("Send test email", {onclick: test}), btn("Send report now", {onclick: sendNow})),
     out));

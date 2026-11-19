@@ -86,6 +86,25 @@ def test_override_in_the_past_rejected_and_expired_override_ignored(store):
     assert store.explain("vm1", at, "running")["action"] == "STOP"
 
 
+def test_future_start_override_only_applies_inside_its_window(store):
+    store.add_vm("vm1", "azure", "s", "g", importer.ALWAYS_PARKED)
+    now = datetime.now(timezone.utc)
+    store.set_override("vm1", now + timedelta(days=3), "later", start=now + timedelta(days=1))
+    assert store.explain("vm1", now, "running")["action"] == "STOP"
+    assert store.explain("vm1", now + timedelta(days=2), "running")["reason"] == "OVERRIDE_ACTIVE"
+    assert store.explain("vm1", now + timedelta(days=4), "running")["action"] == "STOP"
+    row = [r for r in store.overview() if r["name"] == "vm1"][0]
+    assert not row["override"] and row["override_from"]
+    with pytest.raises(UserError):
+        store.set_override("vm1", now + timedelta(days=1), "bad", start=now + timedelta(days=2))
+
+
+def test_server_refuses_non_local_host(tmp_path):
+    from minipmc import web
+    with pytest.raises(UserError):
+        web.make_server(str(tmp_path), host="0.0.0.0")
+
+
 def test_explain_disabled_unmanaged_paused(store):
     store.add_vm("vm1", "gcp", "p", "z")
     assert store.explain("vm1")["reason"] == "UNMANAGED_NO_SCHEDULE"
@@ -116,6 +135,7 @@ def test_time_check_lists_switches_in_utc_and_schedule_zone(store):
     first = r["switches"][0]
     assert first["to"] == "R" and first["utc"] == "Mon 23 Nov 04:30" and "10:00" in first["schedule"]
     assert r["switches"][1]["to"] == "S" and r["switches"][1]["utc"] == "Mon 23 Nov 12:30"  # 18:00 IST
+    assert first["ist"] == "Mon 23 Nov 10:00" and r["now"]["ist"] == "Mon 23 Nov 09:30"
 
 
 def test_time_check_handles_uk_clock_change(store):
@@ -129,6 +149,7 @@ def test_time_check_handles_uk_clock_change(store):
     r = store.time_check(name, datetime(2026, 3, 27, 18, 0, tzinfo=timezone.utc), days=4)
     starts = [w for w in r["switches"] if w["to"] == "R"]
     assert starts[0]["utc"] == "Mon 30 Mar 08:00" and "09:00 BST" in starts[0]["london"]
+    assert starts[0]["ist"] == "Mon 30 Mar 13:30"  # India has no clock change
 
 
 def test_custom_schedule_and_bulk_vms(store):

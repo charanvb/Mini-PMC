@@ -14,7 +14,7 @@ from urllib.parse import parse_qs, urlparse
 from . import alerts, creds as cr, db, exports, executor, grid as g, health, mailer, reports, scheduler, signals, users
 from . import status as vmstatus
 from .service import Store, UserError, iso, parse_until, parse_utc
-from .tz import get_tz, gmt_label
+from .tz import IST, get_tz, gmt_label
 
 log = logging.getLogger("minipmc.web")
 REFRESH_MAX = 200  # VMs per refresh call; the page sends bigger selections in several calls
@@ -323,8 +323,9 @@ def api_events(h, st, s, q):
     return {"events": [dict(r) for r in st.recent_events(n, (q.get("q") or [""])[0])]}
 
 
-def _until(b: dict, role: str = "admin"):
-    """When an override ends, from the request: 'forever', a date/time ('until'), or a number of 'days'."""
+def _until(b: dict, role: str = "admin", base: datetime = None):
+    """When an override ends, from the request: 'forever', a date/time ('until'), or a number of hours/'days' (from base, default now)."""
+    base = base or datetime.now(timezone.utc)
     if b.get("forever"):
         if role != "admin":
             raise UserError("only a Global admin can set an override that lasts until cleared")
@@ -338,14 +339,19 @@ def _until(b: dict, role: str = "admin"):
             raise UserError("hours must be a number")
         if not 0 < hours <= 24 * 365:
             raise UserError("hours must be between 0 and 8760")
-        return datetime.now(timezone.utc) + timedelta(hours=hours)
+        return base + timedelta(hours=hours)
     try:
         days = float(b.get("days"))
     except (TypeError, ValueError):
         raise UserError("give hours, days, until, or forever")
     if not 0 < days <= 3650:
         raise UserError("days must be between 0 and 3650")
-    return datetime.now(timezone.utc) + timedelta(days=days)
+    return base + timedelta(days=days)
+
+
+def _start(b: dict):
+    """Optional future start of an override ('start': a date/time); None means effective now."""
+    return parse_until(str(b["start"])) if b.get("start") else None
 
 
 def api_overrides(h, st, s, q):
@@ -353,7 +359,10 @@ def api_overrides(h, st, s, q):
     rows = []
     for o in st.list_overrides():
         row = dict(o)
-        row["active"] = row["expires_at"] is None or parse_utc(row["expires_at"]) > now
+        ended = row["expires_at"] is not None and parse_utc(row["expires_at"]) <= now
+        waiting = not ended and row["starts_at"] is not None and parse_utc(row["starts_at"]) > now
+        row["scheduled"] = waiting
+        row["active"] = not ended and not waiting
         rows.append(row)
     return {"overrides": rows}
 
@@ -363,8 +372,9 @@ def api_override_set(h, st, s, q):
     reason = str(b.get("reason", "")).strip()
     if not reason:
         raise UserError("a reason is required")
-    until = _until(b, s["role"])
-    return _each(_names(b), lambda n: st.set_override(n, until, reason))
+    start = _start(b)
+    until = _until(b, s["role"], start)
+    return _each(_names(b), lambda n: st.set_override(n, until, reason, start))
 
 
 def api_override_clear(h, st, s, q):
@@ -396,7 +406,7 @@ def api_vm_action(h, st, s, q):
         if r is None:
             raise UserError("VM not found")
         if not r["enabled"]:
-            raise UserError("this VM is disabled (Mini PMC is not managing it)")
+            raise UserError("this VM is disabled (CloudOps Scheduler is not managing it)")
         wrong = r["schedule"] and not r["override"] and r["says"] == ("S" if action == "start" else "R")
         if wrong and not ov:
             raise UserError(f"the schedule says {'stop' if action == 'start' else 'run'}; an override is required")
@@ -598,12 +608,12 @@ def api_export_resources(h, st, s, q):
     names = _name_list(h._body())
     data = exports.resources_xlsx(st, names)
     st.log_event("EXPORT", "", what="resources", vms=len(names) if names is not None else "all")
-    return Download(data, f"MiniPMC-resources-{exports.stamp()}.xlsx")
+    return Download(data, f"CloudOps-Scheduler-resources-{exports.stamp()}.xlsx")
 
 
 def api_export_schedules(h, st, s, q):
     st.log_event("EXPORT", "", what="schedules")
-    return Download(exports.schedules_xlsx(st), f"MiniPMC-schedules-{exports.stamp()}.xlsx")
+    return Download(exports.schedules_xlsx(st), f"CloudOps-Scheduler-schedules-{exports.stamp()}.xlsx")
 
 
 def api_mode(h, st, s, q):
@@ -632,10 +642,21 @@ def api_mode(h, st, s, q):
         if not signals.LogicApp(cr.Credentials(cfg)).configured:
             warnings.append("The block/unblock Logic App is not configured; VMs will still be started/stopped but no signals go out.")
         if not scheduler.healthy(st):
-            warnings.append("The scheduler loop is not running (start the Mini PMC task / `serve`); nothing happens until it runs.")
+            warnings.append("The scheduler loop is not running (start the MiniPMC scheduled task / `serve`); nothing happens until it runs.")
     st.set_setting("mode", mode)
     st.set_setting_quiet("last_slot", "")  # plan again right away under the new mode
     return {"ok": True, "mode": mode, "warnings": warnings}
+
+
+def _report_time_ist(st) -> str:
+    """The daily report's time as an IST clock time; it may have been saved in another zone (the old default was UTC)."""
+    hhmm = st.get_setting("report_time", "08:00") or "08:00"
+    try:
+        hh, mm = (int(x) for x in hhmm.split(":"))
+        local = datetime.now(timezone.utc).astimezone(get_tz(st.get_setting("report_tz", "UTC") or "UTC"))
+        return local.replace(hour=hh, minute=mm).astimezone(IST).strftime("%H:%M")
+    except ValueError:
+        return hhmm
 
 
 def _email_state(st) -> dict:
@@ -650,7 +671,7 @@ def _email_state(st) -> dict:
             "report_to": st.get_setting("report_to", "") or section.get("to", ""),
             "alert_to": st.get_setting("alert_to", "") or section.get("alert_to", "") or section.get("to", ""),
             "report_auto": st.get_setting("report_auto", "0") == "1",
-            "report_time": st.get_setting("report_time", "08:00") or "08:00",
+            "report_time": st.get_setting("report_time", "08:00") or "08:00", "report_time_ist": _report_time_ist(st),
             "report_tz": tz, "report_tz_label": gmt_label(tz), "report_last": st.get_setting("report_last", "")}
 
 
@@ -709,7 +730,7 @@ def api_email_test(h, st, s, q):
         return {"ok": False, "detail": "the email Logic App is not configured (email_logic_app in config\\settings.json)"}
     if not to:
         return {"ok": False, "detail": "no alert recipient is set"}
-    r = app.send(to, "[Mini PMC] test email", alerts.wrap("Test email from Mini PMC",
+    r = app.send(to, "[CloudOps Scheduler] test email", alerts.wrap("Test email from CloudOps Scheduler",
                                                          ["If you can read this, alert emails will arrive."]))
     st.log_event("EMAIL_TEST", "", ok=r["ok"], to=len(to))
     return {"ok": r["ok"], "detail": r["detail"], "to": to}
@@ -739,7 +760,19 @@ ROUTES = {
 }
 
 
+def _require_loopback(host: str) -> None:
+    """CloudOps Scheduler is local-only: refuse to listen on anything but this machine's loopback address."""
+    import ipaddress
+    try:
+        ok = host.lower() == "localhost" or ipaddress.ip_address(host).is_loopback
+    except ValueError:
+        ok = False
+    if not ok:
+        raise UserError(f"refusing to listen on '{host}': CloudOps Scheduler only serves on localhost (127.0.0.1 or ::1)")
+
+
 def make_server(home: str, host: str = "127.0.0.1", port: int = 8080, cert: str = "", key: str = "") -> ThreadingHTTPServer:
+    _require_loopback(host)
     app = App(home)
     handler = type("BoundHandler", (Handler,), {"app": app})
     srv = ThreadingHTTPServer((host, port), handler)

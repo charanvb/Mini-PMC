@@ -1,5 +1,5 @@
 "use strict";
-/* Mini PMC - the shell: login, side navigation, top bar and the hash router. Loaded last. */
+/* CloudOps Scheduler - the shell: login, side navigation, top bar and the hash router. Loaded last. */
 
 const root = document.getElementById("root");
 const NAV_KEY = "minipmc.nav";
@@ -16,10 +16,10 @@ const PAGES = {
   overrides: overridesPage, audit: auditPage, settings: settingsPage,
 };
 const MODE_LABEL = {
-  readonly: ["Read-only", "Mini PMC only watches and records. It does not start or stop any VM yet."],
-  dryrun: ["Dry run", "Mini PMC logs what it would do, but does not start or stop any VM."],
-  pilot: ["Pilot", "Mini PMC acts only on the VMs chosen for the pilot."],
-  live: ["Live", "Mini PMC starts and stops VMs on their schedules."],
+  readonly: ["Read-only", "CloudOps Scheduler only watches and records. It does not start or stop any VM yet."],
+  dryrun: ["Dry run", "CloudOps Scheduler logs what it would do, but does not start or stop any VM."],
+  pilot: ["Pilot", "CloudOps Scheduler acts only on the VMs chosen for the pilot."],
+  live: ["Live", "CloudOps Scheduler starts and stops VMs on their schedules."],
 };
 
 let shell = null; // the pieces of the logged-in layout
@@ -66,13 +66,13 @@ async function route() {
   refreshStatus();
   const content = shell.content;
   if (!hit) {
-    document.title = "Not found \u00b7 Kutty PMC";
+    document.title = "Not found \u00b7 " + APP_NAME;
     content.replaceChildren(h("div", {class: "panel"},
       emptyState("Page not found", "There is nothing at this address.", h("a", {href: "#/dashboard"}, "Go to the dashboard"))));
     return;
   }
   content.replaceChildren(spinner());
-  const ctx = {parts, params, setTitle: t => { if (seq === routeSeq) document.title = t + " \u00b7 Kutty PMC"; }};
+  const ctx = {parts, params, setTitle: t => { if (seq === routeSeq) document.title = t + " \u00b7 " + APP_NAME; }};
   try {
     const node = await hit.page(ctx);
     if (seq !== routeSeq) return;
@@ -105,8 +105,8 @@ async function refreshStatus() {
 function tickClock() {
   if (!shell) return;
   const now = serverNow();
-  shell.clock.textContent = `UTC ${pad(now.getUTCHours())}:${pad(now.getUTCMinutes())}  \u00b7  London ${fmtZone(now, "Europe/London")}`;
-  shell.clock.title = "The server's clock. Each schedule runs in its own time zone; see the Schedules page.";
+  shell.clock.textContent = `IST ${fmtClock(now)}`;
+  shell.clock.title = "India Standard Time (UTC+05:30). Every time in CloudOps Scheduler is shown in IST.";
 }
 
 function drawStatus() {
@@ -139,7 +139,7 @@ function togglePause(paused) {
   confirmDialog({
     title: paused ? "Resume the scheduler?" : "Pause the scheduler?",
     message: paused
-      ? "Mini PMC will carry on following the schedules."
+      ? "CloudOps Scheduler will carry on following the schedules."
       : "Nothing will be started or stopped, and no block/unblock signals will be sent, until someone resumes the scheduler. Schedules and overrides are not changed.",
     confirm: paused ? "Resume" : "Pause", kind: paused ? "primary" : "danger",
     run: async () => {
@@ -203,9 +203,9 @@ function buildShell() {
 
   const el = h("div", {class: "shell" + (collapsed ? " collapsed" : "")},
     h("aside", {class: "side"},
-      h("div", {class: "brand"}, h("span", {class: "logo"}, icon("power", 18)), h("span", {class: "lbl"}, "Kutty PMC \ud83d\ude3c")),
+      h("div", {class: "brand", title: APP_NAME}, brandMark(30), h("span", {class: "lbl"}, h("b", null, "CloudOps"), " Scheduler")),
       h("nav", {"aria-label": "Main"}, links),
-      h("div", {class: "foot"}, "Server times are UTC")),
+      h("div", {class: "foot"}, "All times are IST (UTC+05:30)")),
     h("div", {class: "main"},
       h("header", {class: "top"},
         iconBtn("menu", "Show or hide the menu", () => {
@@ -239,14 +239,14 @@ function showSetPassword() {
   stopTimers();
   shell = null;
   closeMenu = () => {};
-  document.title = "Set a new password \u00b7 Kutty PMC";
+  document.title = "Set a new password \u00b7 " + APP_NAME;
   const old = h("input", {type: "password", autocomplete: "current-password", "aria-label": "One-time password"});
   const fresh = h("input", {type: "password", autocomplete: "new-password", "aria-label": "New password"});
   const again = h("input", {type: "password", autocomplete: "new-password", "aria-label": "Repeat the new password"});
   const err = h("div", {class: "form-err", role: "alert"});
   const go = h("button", {type: "submit", class: "btn primary"}, "Set password and continue");
   const form = h("form", {class: "login-card"},
-    h("div", {class: "logo"}, icon("lock", 24)),
+    brandMark(52),
     h("h1", null, "Set a new password"),
     h("p", {class: "mute"}, `Hello ${state.me.username}. You signed in with a one-time password, so choose your own before continuing.`),
     field("One-time password", old), field("New password", fresh, "At least 8 characters, different from the one-time password."),
@@ -277,17 +277,19 @@ function showLogin(message, problem) {
   shell = null;
   closeMenu = () => {};
   closeDrawer();
-  document.title = "Log in \u00b7 Kutty PMC";
+  document.title = "Log in \u00b7 " + APP_NAME;
   const user = h("input", {type: "text", name: "username", autocomplete: "username", autocapitalize: "off", spellcheck: "false", "aria-label": "Username"});
   const pass = h("input", {type: "password", name: "password", autocomplete: "current-password", "aria-label": "Password"});
   const err = h("div", {class: "form-err", role: "alert"}, problem || "");
   const go = h("button", {type: "submit", class: "btn primary"}, "Log in");
   const form = h("form", {class: "login-card"},
-    h("div", {class: "logo"}, icon("power", 24)),
-    h("h1", null, "Kutty PMC \ud83d\ude3c"),
+    brandMark(52),
+    h("h1", null, APP_NAME),
     h("p", {class: "mute"}, "Sign in to manage VM schedules."),
     message ? h("div", {class: "notice"}, message) : null,
-    field("Username", user), field("Password", pass), err, go);
+    field("Username", user), field("Password", pass), err, go,
+    h("div", {class: "clouds"}, h("div", {class: "cap"}, "Schedules VMs on"),
+      h("div", {class: "row"}, ["azure", "gcp"].map(p => h("span", {class: "cloud"}, cloudLogo(p, 20), CLOUDS[p].full)))));
   form.addEventListener("submit", async e => {
     e.preventDefault();
     err.textContent = "";

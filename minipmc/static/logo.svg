@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="CloudOps Scheduler">
+  <title>CloudOps Scheduler</title>
+  <defs>
+    <linearGradient id="tile" x1="6" y1="2" x2="58" y2="62" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#3d9cff"/>
+      <stop offset="1" stop-color="#1b5fc4"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="15" fill="url(#tile)"/>
+  <g transform="translate(32 32.5) scale(1.16) translate(-32.5 -33)">
+    <g fill="#fff">
+      <circle cx="21" cy="38" r="8"/>
+      <circle cx="31" cy="31" r="11"/>
+      <circle cx="43" cy="37" r="9"/>
+      <rect x="21" y="37" width="22" height="9"/>
+    </g>
+    <g fill="none" stroke="#1f6fd0" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="32.5" cy="35" r="7"/>
+      <path d="M32.5 31v4.5l3.2 2"/>
+    </g>
+  </g>
+</svg>

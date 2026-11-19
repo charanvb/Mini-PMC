@@ -18,7 +18,7 @@ DRY_RUN = False  # True = only print what would happen
 HOME = os.environ.get("MINIPMC_HOME") or next(
     (p for p in (r"E:\Charan\Mini-PMC", os.path.dirname(os.path.dirname(os.path.abspath(__file__)))) if os.path.isdir(os.path.join(p, "minipmc"))), "")
 if not HOME:
-    sys.exit("Cannot find the Mini PMC folder. Set MINIPMC_HOME first.")
+    sys.exit("Cannot find the CloudOps Scheduler folder. Set MINIPMC_HOME first.")
 sys.path.insert(0, HOME)
 
 from minipmc import db, grid as g, importer  # noqa: E402

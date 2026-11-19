@@ -31,7 +31,7 @@ def wrap(title: str, lines) -> str:
     return ("<div style='font-family:Segoe UI,Arial,sans-serif;font-size:14px'>"
             "<div style='background:#b00020;color:#fff;padding:10px 14px;font-weight:600'>"
             f"{html.escape(title)}</div><ul>{items}</ul>"
-            "<p style='color:#666;font-size:12px'>Mini PMC alert. Open the dashboard (Events and Resources) for details."
+            "<p style='color:#666;font-size:12px'>CloudOps Scheduler alert. Open the dashboard (Events and Resources) for details."
             "</p></div>")
 
 
@@ -58,7 +58,7 @@ def _notify(store, creds, key: str, subject: str, lines, throttle, mailer, now) 
         log.warning("alert '%s' not sent: no recipient or email Logic App is not configured", key)
         store.log_event("ALERT_NOT_SENT", key, reason="alerting is not configured", subject=subject)
         return False
-    result = mailer.send(to, "[Mini PMC ALERT] " + subject, wrap(subject, lines))
+    result = mailer.send(to, "[CloudOps Scheduler ALERT] " + subject, wrap(subject, lines))
     if result["ok"]:
         with db.connect(store.home) as con:  # only a delivered alert starts the quiet period
             con.execute("INSERT OR REPLACE INTO settings VALUES (?,?)", ("alert:" + key, utcnow_iso()))

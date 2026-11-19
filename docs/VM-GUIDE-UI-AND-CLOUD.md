@@ -1,4 +1,4 @@
-# Mini PMC - dashboard, keep-running, Azure identity and GCP key
+# CloudOps Scheduler - dashboard, keep-running, Azure identity and GCP key
 
 Run everything from the repo folder on the VM (`E:\Charan\Mini-PMC`) in PowerShell, venv active.
 
@@ -16,17 +16,17 @@ python -m minipmc user add admin --role admin      # prompts for password (min 8
 python -m minipmc user add team --role reader      # or --role cloudops for day-to-day operations
 python -m minipmc serve --port 8080                # test run, Ctrl+C to stop
 ```
-Open http://localhost:8080 for a local smoke test. Roles are Reader (look only), CloudOps admin (day-to-day VM and schedule operations), and Global admin (configuration and user management). See the [Operations Guide](./OPERATIONS-GUIDE.md) for the full permission matrix and command reference. This test command uses HTTP; use the HTTPS deployment steps in section 10 for team access.
+Open http://localhost:8080 for a local smoke test. Roles are Reader (look only), CloudOps admin (day-to-day VM and schedule operations), and Global admin (configuration and user management). See the [Operations Guide](./OPERATIONS-GUIDE.md) for the full permission matrix and command reference. The dashboard is local-only: it listens on 127.0.0.1 and cannot be reached from the network. To use it from another PC, connect to this VM by RDP and open localhost there.
 
 ## 3. Keep it running (survives reboot and crashes)
 Elevated PowerShell:
 ```
-.\scripts\install-service.ps1 -Port 8080 -OpenFirewall
+.\scripts\install-service.ps1 -Port 8080
 Get-ScheduledTask MiniPMC
 ```
 It runs as SYSTEM at boot using the repo's `.venv`, restarts every minute if it dies. Logs: `logs\app.log`.
 After `git pull`: `Stop-ScheduledTask MiniPMC; Start-ScheduledTask MiniPMC`.
-Remove: `.\scripts\uninstall-service.ps1`. Also open the port in the Azure NSG if browsing from another machine.
+Remove: `.\scripts\uninstall-service.ps1`. No firewall or Azure NSG rule is needed: the service listens on 127.0.0.1 only.
 Do not keep a `serve` running in a terminal at the same time (port clash).
 
 ## 4. Azure: user-assigned managed identity (UAMI)
@@ -70,9 +70,9 @@ the git-ignored `config\settings.json`:
 `CloudBAU-Automation` must have **Key Vault Secrets User** on the vault. For a temporary test only, you can set
 `"url": "<full HTTP POST URL>"` instead of `url_secret_name`; the Key Vault option is preferred.
 
-Mini PMC sends the Logic App `{"vms":[{"name":"...","project":"...","zone":"..."}],"action":"block"}` before
+CloudOps Scheduler sends the Logic App `{"vms":[{"name":"...","project":"...","zone":"..."}],"action":"block"}` before
 stopping, or `"unblock"` before starting. `project` is the Azure subscription ID or GCP project ID; `zone` is
-the Azure resource group or GCP zone. Mini PMC does not poll the workflow: a 2xx response means the Logic App
+the Azure resource group or GCP zone. CloudOps Scheduler does not poll the workflow: a 2xx response means the Logic App
 accepted the request. **Settings > Connections** can check the URL configuration and send a manually confirmed
 test signal; that sends a real Omnibus signal, so use it only when appropriate.
 
@@ -89,22 +89,22 @@ python -m minipmc schedule test "<schedule name>"
 python -m minipmc schedule test "<schedule name>" --at 2026-03-29T00:30:00Z
 ```
 Shows the same instant in UTC, London (BST/GMT) and the schedule's own zone, what state is expected, and the next
-switches. The Schedules tab in the dashboard shows the same under "Time check".
+switches. The Schedules tab in the dashboard shows it under "Time check" in IST, plus the schedule's own zone when that is different.
 
 ## 9. Data
 VMs, overrides and users live in `data\minipmc.db` (git-ignored). `git pull`, restarts and reboots never touch it.
 Only deleting `data\` (or `vm remove`) removes data. Back it up by copying `data\minipmc.db`; `python -m minipmc export --out vms.csv` writes the VM list.
 
-## 10. Team access over HTTPS (port 443), Start/Stop buttons, bulk onboarding
+## 10. Optional local HTTPS (port 443), Start/Stop buttons, bulk onboarding
 
-**HTTPS on 443** (certificate must be PEM: a `.crt` with the chain and a `.key`):
-1. Get a certificate for the name people will type (corporate CA preferred). Have a `.pfx`? `python -m minipmc pfx-to-pem C:\path\cert.pfx --password xxx` writes `certs\minipmc.crt` and `certs\minipmc.key`. No certificate? `pip install cryptography`, then `python -m minipmc make-cert --names "bnlwefspap20560,bnlwefspap20560.yourdomain,10.x.x.x"` (self-signed: browsers warn until the .crt is trusted on each PC).
+**HTTPS on 443** (optional: the dashboard is local-only, so this only encrypts the connection between the browser and the service on the same machine; certificate must be PEM: a `.crt` with the chain and a `.key`):
+1. Get a certificate for `localhost` (corporate CA preferred). Have a `.pfx`? `python -m minipmc pfx-to-pem C:\path\cert.pfx --password xxx` writes `certs\minipmc.crt` and `certs\minipmc.key`. No certificate? `pip install cryptography`, then `python -m minipmc make-cert --names "localhost,127.0.0.1"` (self-signed: the browser warns until the .crt is trusted on this machine).
 2. Make sure nothing else uses 443 (`netstat -ano | findstr :443`; IIS/other web servers must be stopped or moved).
-3. Re-run once from an Administrator PowerShell: `.\scripts\install-service.ps1 -CertFile "<root>\certs\minipmc.crt" -KeyFile "<root>\certs\minipmc.key" -OpenFirewall` (port defaults to 443 with a certificate; this also opens the Windows firewall and points the watchdog at https).
-4. Azure: allow inbound TCP 443 in the VM's NSG, from your office/VPN ranges only.
+3. Re-run once from an Administrator PowerShell: `.\scripts\install-service.ps1 -CertFile "<root>\certs\minipmc.crt" -KeyFile "<root>\certs\minipmc.key"` (port defaults to 443 with a certificate; the service still listens on 127.0.0.1 only, no firewall rule is created, and the watchdog is pointed at https).
+4. Open `https://localhost/` on this VM (over RDP if needed). No Azure NSG rule is needed.
 5. After that, code updates still only need `Stop-ScheduledTask MiniPMC; Start-ScheduledTask MiniPMC`. Renew a certificate by replacing the two files and restarting the task.
 
-**Team members:** Users tab > Add user. A one-time password is generated; send it to the person. At first login they must choose their own password before anything else works. An admin-set password for someone else is one-time as well. Roles: Reader (view), CloudOps admin (daily resource/schedule operations without configuration or deletion), and Global admin (full control). See the [Operations Guide](./OPERATIONS-GUIDE.md) for details.
+**Team members** (they sign in on the server itself, over RDP): Users tab > Add user. A one-time password is generated; send it to the person. At first login they must choose their own password before anything else works. An admin-set password for someone else is one-time as well. Roles: Reader (view), CloudOps admin (daily resource/schedule operations without configuration or deletion), and Global admin (full control). See the [Operations Guide](./OPERATIONS-GUIDE.md) for details.
 
 **Start/Stop buttons** (Resources tab; CloudOps admin or Global admin; Pilot or Live mode): per-row icon, or select rows then Start.../Stop.... If the schedule disagrees (e.g. VM parked by schedule and you start it) a dialog asks for an override: for N hours, until a date/time in IST, or (Global admin only) until cleared, plus a reason. Manual actions go to the front of the queue and send the block/unblock signal like scheduled ones. The separate Override... button is unchanged.
 

@@ -1,9 +1,10 @@
-"""Excel files for the dashboard's Export buttons and the emailed report."""
+"""Excel files for the dashboard's Export buttons and the emailed report. Times in them are IST, like the dashboard."""
 import io
-from datetime import datetime, timezone
+from datetime import datetime
 
 from . import grid as g
-from .tz import gmt_label
+from .service import parse_utc
+from .tz import IST, gmt_label
 
 STATE_LABEL = {"RUNNING": "Running", "STOPPED": "Stopped", "DEALLOCATED": "Stopped (deallocated)",
                "STARTING": "Starting", "STOPPING": "Stopping", "UNKNOWN": "Unknown", "": "Not checked yet"}
@@ -13,6 +14,21 @@ SAYS_LABEL = {"R": "Running", "S": "Stopped", "N": "Do nothing", "": ""}
 def tz_text(name: str) -> str:
     label = gmt_label(name) if name else ""
     return f"{name} ({label})" if label else (name or "")
+
+
+def ist_text(iso_text) -> str:
+    """'2026-12-31T18:00:00Z' -> '2026-12-31 23:30' (India time); blank stays blank."""
+    t = parse_utc(iso_text) if iso_text else None
+    return t.astimezone(IST).strftime("%Y-%m-%d %H:%M") if t else ""
+
+
+def override_text(r) -> str:
+    """The Override cell: an active override says when it ends, a waiting one when it starts."""
+    if not (r["override"] or r["override_from"]):
+        return ""
+    until = ist_text(r["override_until"]) + " IST" if r["override_until"] else "cleared by a person"
+    text = f"Until {until}" if r["override"] else f"From {ist_text(r['override_from'])} IST until {until}"
+    return text + (f" - {r['override_reason']}" if r["override_reason"] else "")
 
 
 def resources_table(store, names=None):
@@ -26,14 +42,13 @@ def resources_table(store, names=None):
         rows.append([
             r["name"], r["provider"].upper(), r["scope_name"] or r["scope"], r["scope"], r["group"],
             r["schedule"] or "(none)", tz_text(tz.get(r["schedule"], "")),
-            STATE_LABEL.get(r["status"], r["status"]), r["status_checked"] or "", r["status_error"],
+            STATE_LABEL.get(r["status"], r["status"]), ist_text(r["status_checked"]), r["status_error"],
             SAYS_LABEL.get(r["says"], r["says"]),
             "Yes" if r["enabled"] else "No",
-            ("Until " + (r["override_until"] or "cleared by a person") + (f" - {r['override_reason']}" if r["override_reason"] else ""))
-            if r["override"] else "",
+            override_text(r),
             r["notes"] or ""])
     headers = ["VM", "Cloud", "Subscription / project", "Subscription / project ID", "Resource group / zone",
-               "Schedule", "Schedule time zone", "Current status", "Status checked (UTC)", "Status problem",
+               "Schedule", "Schedule time zone", "Current status", "Status checked (IST)", "Status problem",
                "Schedule says now", "Enabled", "Override", "Notes"]
     return headers, rows
 
@@ -78,7 +93,7 @@ def workbook(sheets) -> bytes:
 
 
 def stamp() -> str:
-    return datetime.now(timezone.utc).strftime("%Y%m%d-%H%M")
+    return datetime.now(IST).strftime("%Y%m%d-%H%M")
 
 
 def resources_xlsx(store, names=None) -> bytes:

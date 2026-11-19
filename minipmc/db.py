@@ -6,7 +6,7 @@ from contextlib import contextmanager
 
 from .logs import utcnow_iso, write_audit
 
-SCHEMA_VERSION = 6
+SCHEMA_VERSION = 7
 
 # v5: last known power state per VM, cloud start/stop operations, and cached subscription names
 _STATUS = """CREATE TABLE IF NOT EXISTS vm_status (
@@ -50,8 +50,14 @@ def _add_columns(con) -> None:
         con.execute("ALTER TABLE ops ADD COLUMN manual INTEGER NOT NULL DEFAULT 0")
 
 
+def _override_start(con) -> None:
+    """v7: an override can begin in the future (starts_at; NULL = effective immediately)."""
+    if not any(r[1] == "starts_at" for r in con.execute("PRAGMA table_info(overrides)")):
+        con.execute("ALTER TABLE overrides ADD COLUMN starts_at TEXT")
+
+
 _MIGRATIONS = {1: [_USERS], 2: [_rename_holds], 3: [_two_roles], 4: [_STATUS, _OPS, _OPS_INDEX, _SUB_NAMES],
-               5: [_add_columns]}
+               5: [_add_columns], 6: [_override_start]}
 
 _SCHEMA = [
     _USERS,
@@ -134,6 +140,7 @@ def init(home: str) -> bool:
         for stmt in _SCHEMA:
             con.execute(stmt)
         _add_columns(con)
+        _override_start(con)
         con.execute("INSERT INTO meta VALUES ('schema_version', ?)", (str(SCHEMA_VERSION),))
         con.commit()
     finally:

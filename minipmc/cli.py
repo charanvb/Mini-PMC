@@ -27,7 +27,7 @@ def table(rows, headers) -> None:
 
 
 def build_parser() -> argparse.ArgumentParser:
-    p = argparse.ArgumentParser(prog="minipmc", description="Mini PMC - VM schedule manager")
+    p = argparse.ArgumentParser(prog="minipmc", description="CloudOps Scheduler - VM schedule manager")
     p.add_argument("--home", default=os.environ.get("MINIPMC_HOME", os.getcwd()),
                    help="folder holding data\\ and logs\\ (default: current folder)")
     sub = p.add_subparsers(dest="cmd", required=True)
@@ -64,6 +64,7 @@ def build_parser() -> argparse.ArgumentParser:
     g1.add_argument("--until", help="2026-12-31 (end of day UTC) or 2026-12-31T18:00:00Z")
     g1.add_argument("--days", type=float, help="override for this many days from now")
     g1.add_argument("--forever", action="store_true", help="until someone clears it")
+    x.add_argument("--start", help="begin in the future: 2026-12-01 (00:00 UTC) or 2026-12-01T18:00:00Z; --days then counts from here")
     x.add_argument("--reason", required=True)
     x = op.add_parser("clear"); x.add_argument("name")
     op.add_parser("list")
@@ -80,7 +81,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     sub.add_parser("validate", help="check the setup for problems")
     x = sub.add_parser("serve", help="run the dashboard and the scheduler (the background loops that start/stop VMs)")
-    x.add_argument("--host", default="127.0.0.1", help="use 0.0.0.0 to let the team reach it")
+    x.add_argument("--host", default="127.0.0.1", help="local only: 127.0.0.1 (default), ::1 or localhost; other addresses are refused")
     x.add_argument("--port", type=int, default=8080)
     x.add_argument("--cert", default="", help="PEM certificate (chain) file: serve HTTPS instead of HTTP")
     x.add_argument("--key", default="", help="PEM private key file for --cert")
@@ -213,10 +214,16 @@ def run(args, store: Store) -> int:
 
     if c == "override":
         if s == "set":
+            start = None
+            if args.start:
+                start = parse_until(args.start)
+                if len(args.start.strip()) == 10:
+                    start = start.replace(hour=0, minute=0, second=0)
             until = None if args.forever else (parse_until(args.until) if args.until else
-                                               datetime.now(timezone.utc) + timedelta(days=args.days))
-            store.set_override(args.name, until, args.reason)
-            out("override set on", args.name, "until", iso(until) or "cleared by a person")
+                                               (start or datetime.now(timezone.utc)) + timedelta(days=args.days))
+            store.set_override(args.name, until, args.reason, start)
+            out("override set on", args.name, ("from " + iso(start) + " ") if start else "", "until",
+                iso(until) or "cleared by a person")
         elif s == "clear":
             store.clear_override(args.name); out("override cleared on", args.name)
         elif s == "list":

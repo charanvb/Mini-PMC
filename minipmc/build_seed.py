@@ -19,7 +19,7 @@ from .importer import ALWAYS_PARKED, ALWAYS_UP, Catalog, apply_overrides, build_
 IST = timezone(timedelta(hours=5, minutes=30))
 HEADER_FILL = PatternFill("solid", fgColor="1F3864")
 HEADER_FONT = Font(bold=True, color="FFFFFF")
-RED = PatternFill("solid", fgColor="F8CBAD")  # unmanaged: Mini PMC will not touch it
+RED = PatternFill("solid", fgColor="F8CBAD")  # unmanaged: CloudOps Scheduler will not touch it
 YELLOW = PatternFill("solid", fgColor="FFF2CC")  # reading is a judgement call: please confirm
 BLUE = PatternFill("solid", fgColor="DDEBF7")  # override active
 WRAP = Alignment(wrap_text=True, vertical="top")
@@ -125,7 +125,7 @@ def build(vms_csv: str, overrides_csv: str, out_path: str) -> Catalog:
         ("VMs with a schedule (managed)", len(managed)),
         ("   always up", by_schedule.get(ALWAYS_UP, 0)),
         ("   always parked", by_schedule.get(ALWAYS_PARKED, 0)),
-        ("VMs UNMANAGED - Mini PMC will not touch them (see Unmanaged tab)", len(cat.unmanaged)),
+        ("VMs UNMANAGED - CloudOps Scheduler will not touch them (see Unmanaged tab)", len(cat.unmanaged)),
         ("Source texts to confirm (yellow in Conversions)", f"{len(flagged)} texts / {sum(c.vms for c in flagged)} VMs"),
         ("VMs with an override (no start, no stop while active)", len(overridden)),
         ("   override until a date", sum(1 for v in overridden if v.override_until)),
@@ -159,7 +159,7 @@ def build(vms_csv: str, overrides_csv: str, out_path: str) -> Catalog:
         conv_rows.append(([c.text, c.vms, c.schedule, sched.description, _zone(p.tz), p.tz_token,
                            "YES" if p.check else "", "; ".join(p.notes)], YELLOW if p.check else None))
     _table(wb.create_sheet("Conversions"),
-           ["Source schedule text", "VMs", "Mini PMC schedule", "Up windows (schedule time zone)", "Time zone",
+           ["Source schedule text", "VMs", "CloudOps Scheduler schedule", "Up windows (schedule time zone)", "Time zone",
             "Zone as written", "Needs check", "Notes"],
            conv_rows, [62, 6, 34, 44, 20, 14, 11, 70], wrap=(1, 8))
 
@@ -186,7 +186,7 @@ def build(vms_csv: str, overrides_csv: str, out_path: str) -> Catalog:
                          "YES" if v.schedule else "NO", "YES" if v.override else "",
                          _utc(v.override_until) if v.override else "", v.override_reason, v.source_text], fill))
     _table(wb.create_sheet("VMs"),
-           ["VM name", "Provider", "Subscription / Project", "Resource group / Zone", "Mini PMC schedule", "Managed",
+           ["VM name", "Provider", "Subscription / Project", "Resource group / Zone", "CloudOps Scheduler schedule", "Managed",
             "Override", "Override until (UTC)", "Override reason", "Source schedule text"],
            vm_rows, [24, 10, 40, 34, 34, 9, 8, 20, 40, 62])
 
@@ -202,7 +202,7 @@ def build(vms_csv: str, overrides_csv: str, out_path: str) -> Catalog:
                          _ist(r.override_until), r.reason, r.force_schedule or "",
                          "applied (schedule forced)" if v.schedule_forced else "applied"], BLUE))
     _table(wb.create_sheet("Overrides"),
-           ["VM name", "Provider", "Original source schedule", "Mini PMC schedule", "Override until (UTC)",
+           ["VM name", "Provider", "Original source schedule", "CloudOps Scheduler schedule", "Override until (UTC)",
             "Override until (IST)", "Reason", "Forced schedule", "Status"],
            ov_rows, [24, 10, 56, 34, 20, 20, 40, 18, 26], wrap=(3,))
 
@@ -221,7 +221,7 @@ def build(vms_csv: str, overrides_csv: str, out_path: str) -> Catalog:
 
 
 def main(argv=None) -> int:
-    ap = argparse.ArgumentParser(description="Build the Mini PMC review workbook from the VM inventory.")
+    ap = argparse.ArgumentParser(description="Build the CloudOps Scheduler review workbook from the VM inventory.")
     ap.add_argument("--vms", default="vms_all.csv")
     ap.add_argument("--overrides", default=os.path.join("config", "initial_overrides.csv"))
     ap.add_argument("--out", default=os.path.join("review", "minipmc_seed.xlsx"))

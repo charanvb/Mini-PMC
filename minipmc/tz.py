@@ -11,6 +11,9 @@ _FIXED_MINUTES = {
 }
 _ETC_GMT = re.compile(r"^Etc/GMT([+-])(\d{1,2})$")
 
+# The one zone the dashboard shows times in. A fixed offset (India has no DST), so it needs no tz database.
+IST = timezone(timedelta(hours=5, minutes=30), "IST")
+
 
 def _have_tzdata() -> bool:
     try:

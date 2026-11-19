@@ -56,7 +56,7 @@ class Scheduler:
             self.store.log_event("SCHEDULER_RESTARTED", "", down_minutes=minutes)
             try:
                 alerts.notify(self.store, cr.Credentials(cr.load_settings(self.store.home)), "restarted",
-                              "Mini PMC restarted after downtime",
+                              "CloudOps Scheduler restarted after downtime",
                               [f"No scheduler activity for about {minutes} minutes before this start.",
                                "It now catches up: the current schedule state is applied on the first cycle."],
                               throttle=timedelta(minutes=30))
@@ -76,7 +76,7 @@ class Scheduler:
                 log.exception("cycle failed")
                 try:
                     alerts.notify(self.store, cr.Credentials(cr.load_settings(self.store.home)), "cycle-error",
-                                  "Mini PMC cycle failed", [f"{type(e).__name__}: {str(e)[:200]}"])
+                                  "CloudOps Scheduler cycle failed", [f"{type(e).__name__}: {str(e)[:200]}"])
                 except Exception:
                     pass
             finally:
@@ -105,7 +105,7 @@ class Scheduler:
                 log.error("cycle has been running for over %d minutes; restarting", HUNG_SECONDS // 60)
                 try:
                     alerts.notify(self.store, cr.Credentials(cr.load_settings(self.store.home)), "hung",
-                                  "Mini PMC cycle is hung - restarting",
+                                  "CloudOps Scheduler cycle is hung - restarting",
                                   [f"A cycle ran for over {HUNG_SECONDS // 60} minutes. The program is being restarted."],
                                   throttle=timedelta(minutes=30))
                 except Exception:
