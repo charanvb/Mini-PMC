@@ -91,7 +91,7 @@ function icon(name, size) {
 
 /* ------------------------------------------------------------------ shared state, formatting */
 const state = {me: null, status: null, skew: 0};
-const ROLE_RANK = {reader: 1, admin: 2};
+const ROLE_RANK = {reader: 1, cloudops: 2, admin: 3};
 function can(role) {
   return !!state.me && ROLE_RANK[state.me.role] >= ROLE_RANK[role];
 }

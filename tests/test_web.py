@@ -307,3 +307,15 @@ def test_https_with_generated_certificate(tmp_path):
     finally:
         server.shutdown()
         server.server_close()
+
+
+def test_cloudops_role_limits(srv):
+    base, home = srv
+    adm = Client(base); adm.login("boss", "password-1")
+    adm.call("user/save", {"create": True, "must_change": False, "username": "co", "password": "cloudops-1", "role": "cloudops"})
+    c = Client(base); assert c.login("co", "cloudops-1")[0] == 200
+    assert c.call("vms")[0] == 200 and c.call("events")[0] == 200
+    assert c.call("override/set", {"name": "vm1", "forever": True, "reason": "x"})[0] == 200
+    for path, body in [("mode", {"mode": "live"}), ("pause", {}), ("users", None), ("user/save", {"username": "x"}),
+                       ("vm/remove", {"names": ["vm1"]}), ("schedule/remove", {"name": "x"}), ("email", None)]:
+        assert c.call(path, body)[0] == 403, path

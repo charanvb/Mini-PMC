@@ -8,7 +8,7 @@ from . import db
 from .logs import utcnow_iso
 from .service import Store, UserError
 
-ROLES = ("admin", "reader")  # admin: everything; reader: look only
+ROLES = ("admin", "cloudops", "reader")  # admin: global admin, everything; cloudops: operations, nothing disruptive; reader: look only
 ITERATIONS = 200_000
 MIN_PASSWORD = 8
 

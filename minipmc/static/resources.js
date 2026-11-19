@@ -427,14 +427,14 @@ async function resourcesPage(ctx) {
     bulkBox.appendChild(h("div", {class: "bulk"},
       h("b", null, `${fmtNum(selected.size)} selected`),
       btn("Refresh status", {sm: true, icon: "refresh", onclick: () => refreshStatus([...selected])}),
-      can("admin") ? btn("Start\u2026", {sm: true, onclick: () => actionDialog({rows, action: "start", onDone: afterChange})}) : null,
-      can("admin") ? btn("Stop\u2026", {sm: true, onclick: () => actionDialog({rows, action: "stop", onDone: afterChange})}) : null,
-      can("admin") ? btn("Override\u2026", {sm: true, icon: "shield", onclick: () => overrideDialog({names: [...selected], onDone: afterChange})}) : null,
-      can("admin") ? btn("Clear override", {sm: true, disabled: !withOverride.length,
+      can("cloudops") ? btn("Start\u2026", {sm: true, onclick: () => actionDialog({rows, action: "start", onDone: afterChange})}) : null,
+      can("cloudops") ? btn("Stop\u2026", {sm: true, onclick: () => actionDialog({rows, action: "stop", onDone: afterChange})}) : null,
+      can("cloudops") ? btn("Override\u2026", {sm: true, icon: "shield", onclick: () => overrideDialog({names: [...selected], onDone: afterChange})}) : null,
+      can("cloudops") ? btn("Clear override", {sm: true, disabled: !withOverride.length,
         title: withOverride.length ? "" : "None of the selected VMs has an override", onclick: () => clearOverrides(withOverride)}) : null,
-      can("admin") ? btn("Attach schedule\u2026", {sm: true, icon: "calendar", onclick: attachSchedule}) : null,
-      can("admin") ? btn("Enable", {sm: true, onclick: () => setEnabled(true)}) : null,
-      can("admin") ? btn("Disable", {sm: true, onclick: () => setEnabled(false)}) : null,
+      can("cloudops") ? btn("Attach schedule\u2026", {sm: true, icon: "calendar", onclick: attachSchedule}) : null,
+      can("cloudops") ? btn("Enable", {sm: true, onclick: () => setEnabled(true)}) : null,
+      can("cloudops") ? btn("Disable", {sm: true, onclick: () => setEnabled(false)}) : null,
       can("admin") ? btn("Remove", {sm: true, kind: "outline-danger", icon: "trash", onclick: removeVms}) : null,
       h("div", {class: "sp"}),
       btn("Clear selection", {sm: true, onclick: () => { selected.clear(); draw(); }})));
@@ -486,7 +486,7 @@ async function resourcesPage(ctx) {
       onclick: e => { e.stopPropagation(); refreshStatus([name]); }}, icon("refresh", 14));
   }
   function actionBtn(r) {
-    if (!can("admin") || r.pending_action) return null;
+    if (!can("cloudops") || r.pending_action) return null;
     const down = r.status === "STOPPED" || r.status === "DEALLOCATED";
     if (!down && r.status !== "RUNNING") return null;
     const action = down ? "start" : "stop";
@@ -589,7 +589,7 @@ async function resourcesPage(ctx) {
       btn("Refresh status", {icon: "refresh", title: "Read the live power state from the cloud for the VMs in the current view (or the selected ones)",
         onclick: () => refreshStatus(selected.size ? [...selected] : view.map(r => r.name))}),
       btn("Export Excel", {icon: "file", title: "Selected VMs, or everything if none are selected", onclick: exportXlsx}),
-      can("admin") ? btn("Add resources", {kind: "primary", icon: "plus", onclick: () => addResourcesDialog(schedules, afterChange)}) : null),
+      can("cloudops") ? btn("Add resources", {kind: "primary", icon: "plus", onclick: () => addResourcesDialog(schedules, afterChange)}) : null),
     h("div", {class: "toolbar"},
       h("div", {class: "search"}, icon("search", 16), search), cloudSel, schedSel, stateSel, count, clearFilters),
     missingNote,
@@ -641,7 +641,7 @@ function drawerSections(d, ctl) {
       h("div", null, "Mini PMC will not start or stop this VM. ",
         r.override_until ? `It ends ${fmtDate(r.override_until)} (${inWords(r.override_until)}).` : "It stays until someone clears it."),
       h("div", null, `Set by ${r.override_by}. Reason: ${r.override_reason || "(none given)"}`),
-      can("admin") ? h("div", {class: "btns"},
+      can("cloudops") ? h("div", {class: "btns"},
         btn("Change", {sm: true, onclick: () => overrideDialog({names: [r.name], onDone: ctl.refresh})}),
         btn("Clear override", {sm: true, onclick: () => confirmDialog({
           title: "Clear override", confirm: "Clear override",
@@ -651,7 +651,7 @@ function drawerSections(d, ctl) {
   } else {
     ovr = h("div", {class: "callout"}, icon("info"), h("div", null,
       r.override_by ? `An earlier override by ${r.override_by} ended ${inWords(r.override_until)}.` : "No override. The schedule is in control.",
-      can("admin") ? h("div", {class: "btns"}, btn("Set override\u2026", {sm: true, kind: "primary", onclick: () => overrideDialog({names: [r.name], onDone: ctl.refresh})})) : null));
+      can("cloudops") ? h("div", {class: "btns"}, btn("Set override\u2026", {sm: true, kind: "primary", onclick: () => overrideDialog({names: [r.name], onDone: ctl.refresh})})) : null));
   }
   out.push(h("div", {class: "dsec"}, h("h4", null, "Override"), ovr));
 
@@ -683,7 +683,7 @@ function drawerButtons(d, ctl) {
   const r = d.vm;
   const out = [];
   if (can("admin")) out.push(btn("Test connection", {icon: "zap", onclick: () => testConnection(r.name)}));
-  if (can("admin")) {
+  if (can("cloudops")) {
     out.push(btn("Change schedule\u2026", {icon: "calendar", onclick: async () => {
       let list;
       try { list = (await api("schedules")).schedules; } catch (e) { toast(e.message, "err"); return; }

@@ -26,7 +26,7 @@ CSP = ("default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inlin
        "frame-ancestors 'none'; form-action 'self'; base-uri 'none'")
 SESSION_HOURS = 12
 COOKIE = "minipmc_session"
-RANK = {"reader": 0, "admin": 1}
+RANK = {"reader": 0, "cloudops": 1, "admin": 2}  # admin = global admin
 MAX_FAILS, LOCK_SECONDS = 5, 60
 
 
@@ -712,19 +712,19 @@ ROUTES = {
     ("POST", "vm/refresh"): (api_vm_refresh, "reader"),
     ("POST", "export/resources"): (api_export_resources, "reader"), ("POST", "export/schedules"): (api_export_schedules, "reader"),
     ("POST", "mode"): (api_mode, "admin"), ("GET", "email"): (api_email, "admin"), ("POST", "email/save"): (api_email_save, "admin"),
-    ("POST", "report/send"): (api_report_send, "admin"), ("POST", "email/test"): (api_email_test, "admin"),
+    ("POST", "report/send"): (api_report_send, "cloudops"), ("POST", "email/test"): (api_email_test, "admin"),
     ("GET", "me"): (api_me, "reader"), ("GET", "status"): (api_status, "reader"), ("POST", "logout"): (api_logout, "reader"),
     ("GET", "summary"): (api_summary, "reader"), ("GET", "vms"): (api_vms, "reader"), ("GET", "vm"): (api_vm, "reader"),
     ("GET", "schedules"): (api_schedules, "reader"), ("GET", "schedule"): (api_schedule, "reader"),
     ("GET", "schedule/test"): (api_schedule_test, "reader"), ("POST", "schedule/preview"): (api_schedule_preview, "reader"),
     ("GET", "events"): (api_events, "reader"), ("POST", "change-password"): (api_change_password, "reader"),
     ("GET", "overrides"): (api_overrides, "reader"),
-    ("POST", "override/set"): (api_override_set, "admin"), ("POST", "override/clear"): (api_override_clear, "admin"),
-    ("POST", "vm/action"): (api_vm_action, "admin"),
+    ("POST", "override/set"): (api_override_set, "cloudops"), ("POST", "override/clear"): (api_override_clear, "cloudops"),
+    ("POST", "vm/action"): (api_vm_action, "cloudops"),
     ("POST", "pause"): (api_pause, "admin"), ("POST", "connections/test"): (api_connections_test, "admin"),
-    ("POST", "vm/add"): (api_vm_add, "admin"), ("POST", "vm/bulk"): (api_vm_bulk, "admin"),
-    ("POST", "vm/update"): (api_vm_update, "admin"), ("POST", "vm/remove"): (api_vm_remove, "admin"),
-    ("POST", "schedule/add"): (api_schedule_add, "admin"), ("POST", "schedule/update"): (api_schedule_update, "admin"),
+    ("POST", "vm/add"): (api_vm_add, "cloudops"), ("POST", "vm/bulk"): (api_vm_bulk, "cloudops"),
+    ("POST", "vm/update"): (api_vm_update, "cloudops"), ("POST", "vm/remove"): (api_vm_remove, "admin"),
+    ("POST", "schedule/add"): (api_schedule_add, "cloudops"), ("POST", "schedule/update"): (api_schedule_update, "cloudops"),
     ("POST", "schedule/remove"): (api_schedule_remove, "admin"),
     ("GET", "connections"): (api_connections, "admin"), ("POST", "signal/test"): (api_signal_test, "admin"),
     ("GET", "users"): (api_users, "admin"), ("POST", "user/save"): (api_user_save, "admin"),

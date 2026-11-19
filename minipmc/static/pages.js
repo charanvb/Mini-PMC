@@ -2,9 +2,10 @@
 /* Mini PMC - the Dashboard, Overrides, Audit log and Settings pages. */
 
 const AUDIT_LIMITS = [100, 200, 500, 1000];
-const ROLE_OPTIONS = [["admin", "Admin"], ["reader", "Reader"]];
+const ROLE_OPTIONS = [["admin", "Global admin"], ["cloudops", "CloudOps admin"], ["reader", "Reader"]];
 const ROLE_HELP = {
-  admin: "Everything: VMs, schedules, overrides, pause, users and connections.",
+  admin: "Everything: also mode, pause, users, connections, email settings, and removing VMs or schedules.",
+  cloudops: "Day-to-day operations: start/stop VMs, overrides, add or edit VMs and schedules, reports, exports and the audit log. No mode, pause, users, connections, email settings or deletions.",
   reader: "Look only: view resources, schedules, overrides and the audit log.",
 };
 const MODE_NOTES = {
@@ -59,7 +60,7 @@ async function dashboardPage(ctx) {
   if (!s.vms) {
     return h("div", null, pageHead("Dashboard"), h("div", {class: "panel"}, emptyState("No VMs yet",
       "Add the VMs that Mini PMC should start and stop. You can add them one at a time or paste a list.",
-      can("admin") ? btn("Add resources", {kind: "primary", icon: "plus", onclick: async () => {
+      can("cloudops") ? btn("Add resources", {kind: "primary", icon: "plus", onclick: async () => {
         try { addResourcesDialog((await api("schedules")).schedules, refreshPage); } catch (e) { toastError(e); }
       }}) : h("p", null, "Ask an administrator to add them."))));
   }
@@ -194,7 +195,7 @@ async function overridesPage(ctx) {
         r.expires_at ? [fmtDate(r.expires_at), h("div", {class: "sub"}, r.active ? inWords(r.expires_at) : "ended " + inWords(r.expires_at))] : "Until cleared"),
       h("td", null, r.reason || h("span", {class: "mute"}, "(none given)")),
       h("td", {class: "nowrap"}, r.set_by, h("div", {class: "sub"}, fmtDate(r.set_at))),
-      h("td", {class: "nowrap"}, can("admin") ? btn("Clear", {sm: true, onclick: () => clearOne(r)}) : null));
+      h("td", {class: "nowrap"}, can("cloudops") ? btn("Clear", {sm: true, onclick: () => clearOne(r)}) : null));
   }
   function draw() {
     const list = visible();
@@ -214,8 +215,8 @@ async function overridesPage(ctx) {
   draw();
   return h("div", null,
     pageHead("Overrides",
-      can("admin") ? endedBtn : null,
-      can("admin") ? btn("Set override\u2026", {kind: "primary", icon: "shield", onclick: () => overrideDialog({askNames: true, onDone: reload})}) : null),
+      can("cloudops") ? endedBtn : null,
+      can("cloudops") ? btn("Set override\u2026", {kind: "primary", icon: "shield", onclick: () => overrideDialog({askNames: true, onDone: reload})}) : null),
     h("div", {class: "intro"}, "While an override is active, Mini PMC does not start or stop that VM and sends no block/unblock signal for it."),
     h("div", {class: "toolbar"}, seg, h("div", {class: "search"}, icon("search", 16), search), count),
     h("div", {class: "panel"}, h("div", {class: "table-wrap"}, h("table", {class: "t"},

@@ -228,8 +228,8 @@ async function schedulesPage(ctx) {
   return h("div", null,
     pageHead("Schedules",
       btn("Export Excel", {icon: "file", onclick: () => downloadPost("export/schedules", {}, "minipmc-schedules.xlsx").catch(e => toast(e.message, "err"))}),
-      can("admin") ? btn("From text\u2026", {onclick: scheduleFromTextDialog, title: "Build a schedule from text such as \u201cUp 5 days (Mon-Fri) 10 AM to 10 PM IST\u201d"}) : null,
-      can("admin") ? btn("New schedule", {kind: "primary", icon: "plus", onclick: () => { location.hash = "#/schedules/new"; }}) : null),
+      can("cloudops") ? btn("From text\u2026", {onclick: scheduleFromTextDialog, title: "Build a schedule from text such as \u201cUp 5 days (Mon-Fri) 10 AM to 10 PM IST\u201d"}) : null,
+      can("cloudops") ? btn("New schedule", {kind: "primary", icon: "plus", onclick: () => { location.hash = "#/schedules/new"; }}) : null),
     h("div", {class: "toolbar"}, h("div", {class: "search"}, icon("search", 16), search), count),
     h("div", {class: "panel"}, h("div", {class: "table-wrap"}, h("table", {class: "t"},
       h("thead", null, h("tr", null, h("th", null, "Name"), h("th", null, "Week"), h("th", null, "Description"), h("th", null, "Time zone"), h("th", {class: "num"}, "VMs"))),
@@ -263,7 +263,7 @@ async function scheduleEditorPage(ctx) {
   const meta = editing ? all.find(s => s.name === origName) : null;
   if (editing && !meta) throw new Error(`Schedule '${origName}' was not found.`);
   const builtin = !!meta && meta.kind !== "grid";
-  const editable = can("admin") && !builtin;
+  const editable = can("cloudops") && !builtin;
   const vmCount = meta ? meta.vms : 0;
 
   const nameIn = h("input", {type: "text", value: origName, disabled: editing || !editable, maxlength: 60, placeholder: "e.g. IST_Mon-Fri_10-22"});
@@ -344,7 +344,7 @@ async function scheduleEditorPage(ctx) {
     btn("All stopped", {sm: true, onclick: () => ed.setAll("S")}),
     btn("Fill from windows\u2026", {sm: true, onclick: fillFromWindows})) : null;
 
-  const deleteBtn = editing && editable ? btn("Delete schedule", {kind: "outline-danger", icon: "trash", disabled: vmCount > 0,
+  const deleteBtn = editing && editable && can("admin") ? btn("Delete schedule", {kind: "outline-danger", icon: "trash", disabled: vmCount > 0,
     title: vmCount > 0 ? "Move its VMs to another schedule first" : "",
     onclick: () => confirmDialog({title: "Delete schedule", confirm: "Delete", kind: "danger",
       message: `Delete '${origName}'? This cannot be undone.`,
@@ -356,7 +356,7 @@ async function scheduleEditorPage(ctx) {
 
   const notices = [];
   if (builtin) notices.push(h("div", {class: "callout", style: {marginBottom: "12px"}}, icon("info"), "This is a built-in schedule. It cannot be changed or removed."));
-  else if (!can("admin")) notices.push(h("div", {class: "callout", style: {marginBottom: "12px"}}, icon("info"), "Only admins can change schedules. You can look at this one."));
+  else if (!can("cloudops")) notices.push(h("div", {class: "callout", style: {marginBottom: "12px"}}, icon("info"), "Only admins can change schedules. You can look at this one."));
   if (editing && vmCount > 0 && editable) notices.push(h("div", {class: "callout warn", style: {marginBottom: "12px"}}, icon("alert"),
     `${plural(vmCount, "VM")} use this schedule. Changing it changes when all of them start and stop.`));
 
