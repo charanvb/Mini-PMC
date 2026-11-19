@@ -66,13 +66,13 @@ async function route() {
   refreshStatus();
   const content = shell.content;
   if (!hit) {
-    document.title = "Not found \u00b7 Mini PMC";
+    document.title = "Not found \u00b7 Kutty PMC";
     content.replaceChildren(h("div", {class: "panel"},
       emptyState("Page not found", "There is nothing at this address.", h("a", {href: "#/dashboard"}, "Go to the dashboard"))));
     return;
   }
   content.replaceChildren(spinner());
-  const ctx = {parts, params, setTitle: t => { if (seq === routeSeq) document.title = t + " \u00b7 Mini PMC"; }};
+  const ctx = {parts, params, setTitle: t => { if (seq === routeSeq) document.title = t + " \u00b7 Kutty PMC"; }};
   try {
     const node = await hit.page(ctx);
     if (seq !== routeSeq) return;
@@ -203,7 +203,7 @@ function buildShell() {
 
   const el = h("div", {class: "shell" + (collapsed ? " collapsed" : "")},
     h("aside", {class: "side"},
-      h("div", {class: "brand"}, h("span", {class: "logo"}, icon("power", 18)), h("span", {class: "lbl"}, "Mini PMC")),
+      h("div", {class: "brand"}, h("span", {class: "logo"}, icon("power", 18)), h("span", {class: "lbl"}, "Kutty PMC \ud83d\ude3c")),
       h("nav", {"aria-label": "Main"}, links),
       h("div", {class: "foot"}, "Server times are UTC")),
     h("div", {class: "main"},
@@ -239,7 +239,7 @@ function showSetPassword() {
   stopTimers();
   shell = null;
   closeMenu = () => {};
-  document.title = "Set a new password \u00b7 Mini PMC";
+  document.title = "Set a new password \u00b7 Kutty PMC";
   const old = h("input", {type: "password", autocomplete: "current-password", "aria-label": "One-time password"});
   const fresh = h("input", {type: "password", autocomplete: "new-password", "aria-label": "New password"});
   const again = h("input", {type: "password", autocomplete: "new-password", "aria-label": "Repeat the new password"});
@@ -277,14 +277,14 @@ function showLogin(message, problem) {
   shell = null;
   closeMenu = () => {};
   closeDrawer();
-  document.title = "Log in \u00b7 Mini PMC";
+  document.title = "Log in \u00b7 Kutty PMC";
   const user = h("input", {type: "text", name: "username", autocomplete: "username", autocapitalize: "off", spellcheck: "false", "aria-label": "Username"});
   const pass = h("input", {type: "password", name: "password", autocomplete: "current-password", "aria-label": "Password"});
   const err = h("div", {class: "form-err", role: "alert"}, problem || "");
   const go = h("button", {type: "submit", class: "btn primary"}, "Log in");
   const form = h("form", {class: "login-card"},
     h("div", {class: "logo"}, icon("power", 24)),
-    h("h1", null, "Mini PMC"),
+    h("h1", null, "Kutty PMC \ud83d\ude3c"),
     h("p", {class: "mute"}, "Sign in to manage VM schedules."),
     message ? h("div", {class: "notice"}, message) : null,
     field("Username", user), field("Password", pass), err, go);
