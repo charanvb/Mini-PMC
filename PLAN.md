@@ -18,7 +18,7 @@ Small, reliable start/stop scheduler for the 1,891 VMs in `vms_all.csv` (1,123 A
 | Time zones | logic in UTC; each schedule has a zone. BST = Europe/London (Asia/Dhaka if the text says Dhaka); GMT = fixed UTC; an explicit `GMT+n` / `UTC+n` wins over a name. Full list: Timezones tab of the seed workbook |
 | Storage | one **SQLite** file `data/minipmc.db`; Excel / CSV for bulk import and export (Step 2) |
 | Add / remove VMs | dashboard form or CSV import; a removed VM is disabled, never erased from the audit trail |
-| Login | local username + password (hashed); two roles: admin (everything) / reader (look only). No Entra for now |
+| Login | local username + password (hashed); Global admin, CloudOps admin, and Reader roles. No Entra for now |
 | Logic App | POST `{"vms":[{"name","project","zone"}],"action":"block"}` or `"unblock"`. Azure: project = subscription ID, zone = resource group. **No polling or settle delay: HTTP 2xx = accepted, then call the VM start/stop API immediately.** UNBLOCK before start, BLOCK before stop. Keep the signed HTTP POST URL in Key Vault and configure `logic_app.url_secret_name` in the git-ignored `config\settings.json`. |
 | Rollout | `readonly` -> `dryrun` -> `pilot` (allow-list) -> `live` |
 

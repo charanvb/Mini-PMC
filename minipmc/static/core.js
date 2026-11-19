@@ -392,7 +392,30 @@ function formDialog(o) {
           placeholder: f.placeholder, autocomplete: f.autocomplete || "off", list: f.list, min: f.min, max: f.max,
           maxlength: f.maxlength, disabled: f.disabled});
       }
-      node = field(f.label, input, f.hint);
+      if (f.type === "select" && f.search) {
+        // typing narrows the list; the current choice always stays listed
+        const box = h("input", {type: "search", placeholder: "Type to search...", autocomplete: "off", "aria-label": "Search " + f.label});
+        // a closed <select> cuts a long label off, so a long choice is also written out in full underneath
+        const full = h("div", {class: "fld-full", hidden: true});
+        const showFull = () => {
+          const text = input.selectedIndex >= 0 ? input.options[input.selectedIndex].text : "";
+          full.hidden = text.length <= 90;
+          full.textContent = full.hidden ? "" : "Selected: " + text;
+        };
+        input.addEventListener("change", showFull);
+        box.addEventListener("input", () => {
+          const words = box.value.toLowerCase().split(/\s+/).filter(Boolean);
+          const hits = [...input.options].map(o => words.every(w => o.text.toLowerCase().includes(w)));
+          const idx = hits.indexOf(true);
+          if (idx >= 0 && !hits[input.selectedIndex]) input.selectedIndex = idx;
+          [...input.options].forEach((o, i) => { o.hidden = o.disabled = !hits[i] && i !== input.selectedIndex; });
+          showFull();
+        });
+        showFull();
+        node = h("div", {class: "fld"}, h("span", {class: "fld-l"}, f.label), box, input, full, f.hint ? h("span", {class: "fld-h"}, f.hint) : null);
+      } else {
+        node = field(f.label, input, f.hint);
+      }
       read = () => input.value;
     }
     if (f.name && read) readers[f.name] = read;

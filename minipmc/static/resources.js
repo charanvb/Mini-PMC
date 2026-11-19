@@ -86,9 +86,9 @@ function durationWidget(label) {
     h("span", {class: "fld-l"}, label || "How long?"),
     h("label", {class: "radio"}, rHours, "For", hours, "hours"),
     h("label", {class: "radio"}, rUntil, "Until", when, h("span", {class: "mute"}, "IST (India time) - enter the time in IST, not your local time")),
-    h("label", {class: "radio"}, rForever, "Until someone clears it"));
+    can("admin") ? h("label", {class: "radio"}, rForever, "Until someone clears it") : null);
   const read = () => {
-    if (rForever.checked) return {forever: true};
+    if (rForever.checked && can("admin")) return {forever: true};
     if (rUntil.checked) {
       if (!when.value) throw new Error("Choose the end date and time (IST).");
       const iso = when.value + (when.value.length === 16 ? ":00" : "") + "+05:30";
@@ -537,9 +537,9 @@ async function resourcesPage(ctx) {
   function attachSchedule() {
     const names = [...selected];
     formDialog({
-      title: "Attach schedule", submit: "Attach",
+      title: "Attach schedule", submit: "Attach", wide: true,
       intro: `Choose the schedule for ${plural(names.length, "VM")}. Pick "(none)" to stop managing them.`,
-      fields: [{name: "schedule", label: "Schedule", type: "select", options: scheduleOptions(schedules), value: ""}],
+      fields: [{name: "schedule", label: "Schedule", type: "select", search: true, options: scheduleOptions(schedules), value: ""}],
       run: async v => {
         reportBulk("Schedule attached", await api("vm/update", {names, schedule: v.schedule || null}));
         await afterChange();
@@ -688,9 +688,9 @@ function drawerButtons(d, ctl) {
       let list;
       try { list = (await api("schedules")).schedules; } catch (e) { toast(e.message, "err"); return; }
       formDialog({
-        title: "Change schedule", submit: "Save",
+        title: "Change schedule", submit: "Save", wide: true,
         fields: [
-          {name: "schedule", label: "Schedule", type: "select", options: scheduleOptions(list), value: r.schedule || ""},
+          {name: "schedule", label: "Schedule", type: "select", search: true, options: scheduleOptions(list), value: r.schedule || ""},
           {name: "enabled", label: "Managed by Mini PMC (untick to switch it off)", type: "checkbox", value: r.enabled},
         ],
         run: async v => {

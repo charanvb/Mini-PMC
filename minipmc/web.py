@@ -323,9 +323,11 @@ def api_events(h, st, s, q):
     return {"events": [dict(r) for r in st.recent_events(n, (q.get("q") or [""])[0])]}
 
 
-def _until(b: dict):
+def _until(b: dict, role: str = "admin"):
     """When an override ends, from the request: 'forever', a date/time ('until'), or a number of 'days'."""
     if b.get("forever"):
+        if role != "admin":
+            raise UserError("only a Global admin can set an override that lasts until cleared")
         return None
     if b.get("until"):
         return parse_until(str(b["until"]))
@@ -361,7 +363,7 @@ def api_override_set(h, st, s, q):
     reason = str(b.get("reason", "")).strip()
     if not reason:
         raise UserError("a reason is required")
-    until = _until(b)
+    until = _until(b, s["role"])
     return _each(_names(b), lambda n: st.set_override(n, until, reason))
 
 
@@ -404,7 +406,7 @@ def api_vm_action(h, st, s, q):
             reason = str(ov.get("reason", "")).strip()
             if not reason:
                 raise UserError("a reason is required")
-            st.set_override(r["name"], _until(ov), reason)
+            st.set_override(r["name"], _until(ov, s["role"]), reason)
         executor.queue_manual(st, r["name"], action, guard)
     return _each(names, apply)
 

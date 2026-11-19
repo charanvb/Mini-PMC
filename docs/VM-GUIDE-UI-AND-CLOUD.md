@@ -10,14 +10,13 @@ python -m pytest tests -q
 ```
 No new packages are needed (the web server, Azure and GCP calls use only the standard library).
 
-## 2. Dashboard
+## 2. Dashboard (initial local test)
 ```
 python -m minipmc user add admin --role admin      # prompts for password (min 8 chars)
-python -m minipmc user add team --role reader      # reader = look only; admin = everything
+python -m minipmc user add team --role reader      # or --role cloudops for day-to-day operations
 python -m minipmc serve --port 8080                # test run, Ctrl+C to stop
 ```
-Open http://localhost:8080. Roles: reader (look only), admin (everything). Existing operator/viewer users are converted automatically (operator becomes admin, viewer becomes reader) the next time `python -m minipmc init` runs.
-There is no TLS yet: use it on the internal network only.
+Open http://localhost:8080 for a local smoke test. Roles are Reader (look only), CloudOps admin (day-to-day VM and schedule operations), and Global admin (configuration and user management). See the [Operations Guide](./OPERATIONS-GUIDE.md) for the full permission matrix and command reference. This test command uses HTTP; use the HTTPS deployment steps in section 10 for team access.
 
 ## 3. Keep it running (survives reboot and crashes)
 Elevated PowerShell:
@@ -105,8 +104,8 @@ Only deleting `data\` (or `vm remove`) removes data. Back it up by copying `data
 4. Azure: allow inbound TCP 443 in the VM's NSG, from your office/VPN ranges only.
 5. After that, code updates still only need `Stop-ScheduledTask MiniPMC; Start-ScheduledTask MiniPMC`. Renew a certificate by replacing the two files and restarting the task.
 
-**Team members:** Users tab > Add user. A one-time password is generated; send it to the person. At first login they must choose their own password before anything else works. An admin-set password for someone else is one-time as well. Roles: reader (view) / admin (change things).
+**Team members:** Users tab > Add user. A one-time password is generated; send it to the person. At first login they must choose their own password before anything else works. An admin-set password for someone else is one-time as well. Roles: Reader (view), CloudOps admin (daily resource/schedule operations without configuration or deletion), and Global admin (full control). See the [Operations Guide](./OPERATIONS-GUIDE.md) for details.
 
-**Start/Stop buttons** (Resources tab; admin; Pilot or Live mode): per-row icon, or select rows then Start.../Stop.... If the schedule disagrees (e.g. VM parked by schedule and you start it) a dialog asks for an override: for N hours, until a date/time in IST, or until cleared, plus a reason. Manual actions go to the front of the queue and send the block/unblock signal like scheduled ones. The separate Override... button is unchanged.
+**Start/Stop buttons** (Resources tab; CloudOps admin or Global admin; Pilot or Live mode): per-row icon, or select rows then Start.../Stop.... If the schedule disagrees (e.g. VM parked by schedule and you start it) a dialog asks for an override: for N hours, until a date/time in IST, or (Global admin only) until cleared, plus a reason. Manual actions go to the front of the queue and send the block/unblock signal like scheduled ones. The separate Override... button is unchanged.
 
 **Add many VMs:** `vm name, provider, project/subscription ID, zone/resource group, schedule` per line (blank or `none` = no schedule; header line skipped; paste or upload CSV). A file with extra columns (such as a start/stop column) must have the schedule name in column 5, otherwise that line is reported as "schedule not found".

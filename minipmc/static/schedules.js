@@ -309,7 +309,7 @@ async function scheduleEditorPage(ctx) {
   const editable = can("cloudops") && !builtin;
   const vmCount = meta ? meta.vms : 0;
 
-  const nameIn = h("input", {type: "text", value: origName, disabled: editing || !editable, maxlength: 60, placeholder: "e.g. IST_Mon-Fri_10-22"});
+  const nameIn = h("input", {type: "text", value: origName, disabled: editing || !editable, placeholder: "e.g. IST_Mon-Fri_10-22"});
   const tzIn = h("input", {type: "text", value: meta ? meta.tz : "", list: "tz-list", disabled: !editable, placeholder: "e.g. Asia/Kolkata"});
   const tzGmt = h("span", {class: "chip"});
   const showGmt = () => { const g = gmtLabel(tzIn.value.trim()); tzGmt.textContent = g; tzGmt.style.display = g ? "" : "none"; };
@@ -403,6 +403,9 @@ async function scheduleEditorPage(ctx) {
   if (editing && vmCount > 0 && editable) notices.push(h("div", {class: "callout warn", style: {marginBottom: "12px"}}, icon("alert"),
     `${plural(vmCount, "VM")} use this schedule. Changing it changes when all of them start and stop.`));
 
+  const nameField = field("Name", nameIn, editing ? "The name cannot be changed." : "Letters, numbers, dashes and underscores work best.");
+  nameField.classList.add("full"); // a row of its own, so a long name is readable in full
+
   const view = h("div", null,
     h("a", {class: "back", href: "#/schedules"}, icon("left", 14), "Schedules"),
     pageHead(editing ? origName : "New schedule"),
@@ -410,7 +413,7 @@ async function scheduleEditorPage(ctx) {
     h("div", {class: "panel"}, h("div", {class: "panel-body"},
       notices,
       h("div", {class: "form-row"},
-        field("Name", nameIn, editing ? "The name cannot be changed." : "Letters, numbers, dashes and underscores work best."),
+        nameField,
         field("Time zone", h("div", {class: "nowrap"}, tzIn, " ", tzGmt), "The grid below is in this zone. Summer/winter clock changes are handled automatically.")),
       tools,
       ed.node,

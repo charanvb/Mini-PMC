@@ -1,6 +1,7 @@
 import json
 import threading
 import urllib.error
+import urllib.parse
 import urllib.request
 
 import pytest
@@ -158,12 +159,24 @@ def test_admin_manages_vms_schedules_users(srv):
     assert code == 200 and body["name"].startswith("IST")
     assert c.call("schedule?name=" + body["name"].replace(" ", "%20"))[1]["windows"][0].startswith("Mon")
     code, body = c.call("schedule/add", {"name": "Office", "tz": "Asia/Kolkata", "windows": "Mon-Fri 09:00-17:00"})
-    assert code == 200 and c.call("schedule/test?name=Office")[1]["switches"][0]["to"] == "R"
+    assert code == 200 and {sw["to"] for sw in c.call("schedule/test?name=Office")[1]["switches"]} == {"R", "S"}
     code, body = c.call("vm/bulk", {"text": "z1,azure,s,g\nbad", "schedule": "Office"})
     assert body["added"] == ["z1"] and len(body["errors"]) == 1
     assert c.call("user/save", {"create": True, "username": "new", "password": "longenough", "role": "reader"})[0] == 200
     assert c.call("user/remove", {"username": "ops"})[0] == 200
     assert c.call("user/remove", {"username": "boss"})[0] == 400  # last admin protected
+
+
+def test_schedule_names_can_be_long_and_have_punctuation(srv):
+    c = Client(srv[0])
+    c.login("boss", "password-1")
+    name = "Always Parked (excluding 10hr maintenance period) - Thursday/Europe/London - 10:00-22:00 window"
+    assert len(name) > 60
+    assert c.call("schedule/add", {"name": name, "tz": "UTC", "windows": "Thu 00:00-10:00"})[1] == {"name": name}
+    code, body = c.call("vm/bulk", {"text": f"z1,azure,s,g,{name.lower()}"})  # onboarding matches the name in any letter case
+    assert body == {"added": ["z1"], "errors": []}
+    assert c.call("schedule/test?name=" + urllib.parse.quote(name, safe=""))[0] == 200
+    assert [s["vms"] for s in c.call("schedules")[1]["schedules"] if s["name"] == name] == [1]
 
 
 def test_open_sessions_follow_user_changes(srv):
@@ -315,7 +328,8 @@ def test_cloudops_role_limits(srv):
     adm.call("user/save", {"create": True, "must_change": False, "username": "co", "password": "cloudops-1", "role": "cloudops"})
     c = Client(base); assert c.login("co", "cloudops-1")[0] == 200
     assert c.call("vms")[0] == 200 and c.call("events")[0] == 200
-    assert c.call("override/set", {"name": "vm1", "forever": True, "reason": "x"})[0] == 200
+    assert c.call("override/set", {"name": "vm1", "forever": True, "reason": "x"})[0] == 400
+    assert c.call("override/set", {"name": "vm1", "hours": 2, "reason": "x"})[0] == 200
     for path, body in [("mode", {"mode": "live"}), ("pause", {}), ("users", None), ("user/save", {"username": "x"}),
                        ("vm/remove", {"names": ["vm1"]}), ("schedule/remove", {"name": "x"}), ("email", None)]:
         assert c.call(path, body)[0] == 403, path

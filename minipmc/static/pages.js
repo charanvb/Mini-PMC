@@ -4,8 +4,8 @@
 const AUDIT_LIMITS = [100, 200, 500, 1000];
 const ROLE_OPTIONS = [["admin", "Global admin"], ["cloudops", "CloudOps admin"], ["reader", "Reader"]];
 const ROLE_HELP = {
-  admin: "Everything: also mode, pause, users, connections, email settings, and removing VMs or schedules.",
-  cloudops: "Day-to-day operations: start/stop VMs, overrides, add or edit VMs and schedules, reports, exports and the audit log. No mode, pause, users, connections, email settings or deletions.",
+  admin: "Everything: also mode, pause, users, connections, email settings, removing VMs or schedules, and overrides that last until cleared.",
+  cloudops: "Day-to-day operations: start/stop VMs, timed overrides (hours or until an IST date/time), add or edit VMs and schedules, reports, exports and the audit log. No mode, pause, users, connections, email settings, deletions or until-cleared overrides.",
   reader: "Look only: view resources, schedules, overrides and the audit log.",
 };
 const MODE_NOTES = {
@@ -127,7 +127,7 @@ async function dashboardPage(ctx) {
       return h("tr", null,
         h("td", {class: "nowrap", title: fmtStamp(e.ts) + " UTC"}, inWords(e.ts)),
         h("td", null, actionChip(e.action)),
-        h("td", null, e.target || "", detail ? h("div", {class: "sub", title: detail}, clip(detail, 110)) : null),
+        h("td", null, e.target || "", detail ? h("div", {class: "sub", title: detail}, clip(detail, 300)) : null),
         h("td", {class: "sub nowrap"}, e.actor));
     }))))
     : emptyNote("Nothing has been recorded yet.");
