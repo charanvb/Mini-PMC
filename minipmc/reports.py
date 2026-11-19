@@ -1,5 +1,4 @@
 """The status report email (body + Excel attachment): sent by hand from the dashboard, or once a day by the scheduler."""
-import html
 import logging
 from datetime import datetime, timedelta, timezone
 
@@ -9,8 +8,6 @@ from .service import iso, parse_utc
 from .tz import get_tz
 
 log = logging.getLogger("minipmc.reports")
-MAX_ROWS = 150  # VM rows in the email body; the Excel attachment has all of them
-BLUE, RED, AMBER, GREEN = "#004a99", "#b00020", "#b26a00", "#1b7f3b"
 
 
 def recipients(store, creds) -> list:
@@ -19,17 +16,6 @@ def recipients(store, creds) -> list:
         cfg = creds.cfg.get("email_logic_app", {}) or {}
         text = cfg.get("to") or ""
     return split_addresses(text)
-
-
-def _td(text, style="") -> str:
-    return f"<td style='border:1px solid #ddd;padding:4px 8px;{style}'>{html.escape(str(text))}</td>"
-
-
-def _table(headers, rows) -> str:
-    head = "".join(f"<th style='border:1px solid #ddd;padding:4px 8px;background:#eef3fa;text-align:left'>"
-                   f"{html.escape(h)}</th>" for h in headers)
-    return ("<table style='border-collapse:collapse;font-size:13px'><tr>" + head + "</tr>"
-            + "".join("<tr>" + "".join(r) + "</tr>" for r in rows) + "</table>")
 
 
 def build(store, now=None) -> dict:
@@ -47,40 +33,12 @@ def build(store, now=None) -> dict:
             "SELECT outcome, COUNT(*) n FROM ops WHERE started_at > ? GROUP BY outcome", (since,))}
     bad_ops = ops.get("FAILED", 0) + ops.get("STUCK", 0)
     health = "RED" if bad_ops else ("AMBER" if mismatch or unknown else "GREEN")
-    colour = {"RED": RED, "AMBER": AMBER, "GREEN": GREEN}[health]
-    count = lambda state: sum(1 for v in vms if v["status"] == state)  # noqa: E731
-    mode = store.get_setting("mode", "readonly")
-
-    summary = _table(["Total VMs", "Running", "Stopped", "Unknown / not read", "Differ from schedule",
-                      "Actions 24h (ok / failed / stuck)"],
-                     [[_td(len(vms)), _td(count("RUNNING")), _td(count("STOPPED") + count("DEALLOCATED")),
-                       _td(len(unknown)), _td(len(mismatch), f"color:{AMBER};font-weight:600" if mismatch else ""),
-                       _td(f"{ops.get('SUCCEEDED', 0)} / {ops.get('FAILED', 0)} / {ops.get('STUCK', 0)}",
-                           f"color:{RED};font-weight:600" if bad_ops else "")]])
-    attention = ""
-    if mismatch or unknown:
-        rows = [[_td(v["name"]), _td(v["scope_name"] or v["scope"]), _td(exports.STATE_LABEL.get(v["status"], v["status"])),
-                 _td(exports.SAYS_LABEL.get(v["says"], v["says"])), _td(v["status_error"] or "")]
-                for v in (mismatch + unknown)[:50]]
-        attention = ("<h3 style='color:" + AMBER + "'>Needs attention</h3>"
-                     + _table(["VM", "Subscription", "Current", "Schedule says", "Problem"], rows))
-    h, r = exports.schedules_table(store)
-    sched = _table(h[:4], [[_td(c) for c in row[:4]] for row in r])
-    vm_rows = [[_td(v["name"]), _td(v["scope_name"] or v["scope"]), _td(v["schedule"] or "(none)"),
-                _td(exports.STATE_LABEL.get(v["status"], v["status"])), _td(exports.SAYS_LABEL.get(v["says"], v["says"]))]
-               for v in vms[:MAX_ROWS]]
-    more = f"<p>Showing {MAX_ROWS} of {len(vms)} VMs; the attached Excel file has all of them.</p>" if len(vms) > MAX_ROWS else ""
-    body = (f"<div style='font-family:Segoe UI,Arial,sans-serif;font-size:14px'>"
-            f"<div style='background:{BLUE};color:#fff;padding:10px 14px;font-size:16px;font-weight:600'>"
-            f"Mini PMC report <span style='background:{colour};padding:2px 8px;margin-left:8px'>{health}</span></div>"
-            f"<p>{html.escape(now.strftime('%d %b %Y %H:%M'))} UTC &middot; mode: <b>{html.escape(mode)}</b>"
-            f"{' &middot; <b>PAUSED</b>' if store.paused else ''}</p>"
-            f"{summary}{attention}<h3>Schedules</h3>{sched}<h3>VMs</h3>"
-            f"{_table(['VM', 'Subscription', 'Schedule', 'Current', 'Schedule says'], vm_rows)}{more}"
-            f"<p style='color:#666;font-size:12px'>Full detail is in the attached Excel file.</p></div>")
-    subject = f"Mini PMC report [{health}] {now.strftime('%Y-%m-%d')} - {len(vms)} VMs"
-    return {"subject": subject, "html": body, "health": health,
-            "attachment": (f"MiniPMC-report-{now.strftime('%Y%m%d-%H%M')}.xlsx", exports.full_xlsx(store))}
+    body = ("Hi All,<br><br>"
+            "please find teh attacjed latest automated  parking schedules report.<br><br>"
+            "regards,<br>"
+            "Cloud BAU team")
+    return {"subject": "Cloud VM parking schedules report", "html": body, "health": health,
+            "attachment": ("VMs parking schedules.xlsx", exports.daily_xlsx(store))}
 
 
 def send(store, creds, to=None, mailer: Mailer = None, now=None) -> dict:

@@ -49,14 +49,20 @@ def test_excel_text_is_never_a_formula(srv):
     assert cells == ["=1+1", "@SUM(A1)", "plain"] and wb["T"]["A2"].data_type == "s"
 
 
-def test_report_has_both_sheets(tmp_path):
+def test_report_is_one_sheet_with_the_seven_columns(tmp_path):
     st = Store(str(tmp_path), actor="t")
     st.init()
     st.add_vm("vm1", "azure", "sub", "rg", "ALWAYS_UP")
     rep = reports.build(st)
     name, data = rep["attachment"]
-    assert name.endswith(".xlsx") and set(load_workbook(io.BytesIO(data)).sheetnames) == {"Resources", "Schedules"}
-    assert "vm1" in rep["html"] and rep["subject"].startswith("Mini PMC report [")
+    wb = load_workbook(io.BytesIO(data))
+    assert name == "VMs parking schedules.xlsx" and wb.sheetnames == ["VM Report"]
+    rows = list(wb["VM Report"].values)
+    assert rows[0] == ("VM Name", "Provider", "Project / Subscription", "Resource Group / Zone", "Status", "Schedule", "Override")
+    assert rows[1][:4] == ("vm1", "AZURE", "sub", "rg") and rows[1][5] == "ALWAYS_UP" and rows[1][6] == "None"
+    assert rep["subject"] == "Cloud VM parking schedules report"
+    assert rep["html"] == ("Hi All,<br><br>please find teh attacjed latest automated  parking schedules report."
+                           "<br><br>regards,<br>Cloud BAU team")
 
 
 def test_daily_report_is_sent_once_a_day(tmp_path, monkeypatch):

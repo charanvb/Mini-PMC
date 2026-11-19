@@ -91,6 +91,15 @@ def schedules_xlsx(store) -> bytes:
     return workbook([("Schedules", h, r)])
 
 
+def daily_xlsx(store) -> bytes:
+    """The emailed daily report: one sheet, one row per VM."""
+    _, rows = resources_table(store)
+    # resources_table columns: 0 VM, 1 cloud, 2 scope name, 4 group, 5 schedule, 7 status, 12 override
+    out = [[r[0], r[1], r[2], r[4], r[7], r[5], r[12] or "None"] for r in rows]
+    return workbook([("VM Report", ["VM Name", "Provider", "Project / Subscription", "Resource Group / Zone",
+                                    "Status", "Schedule", "Override"], out)])
+
+
 def full_xlsx(store) -> bytes:
     rh, rr = resources_table(store)
     sh, sr = schedules_table(store)
