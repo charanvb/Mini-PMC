@@ -1,0 +1,74 @@
+Restart the service so it picks up the change: 
+Stop-ScheduledTask MiniPMC; Start-ScheduledTask MiniPMC
+
+
+Live mode: use readonly, then dryrun, then pilot (a short list of VMs you choose), then live. Switch with python -m minipmc mode <name> or the dashboard's "Change mode" button. Live mode needs you to type LIVE
+
+Installed. Dashboard: http://localhost:8080   Logs: E:\Charan\Mini-PMC\logs\app.log
+Stop: Stop-ScheduledTask MiniPMC   Start: Start-ScheduledTask MiniPMC   Remove: .\scripts\uninstall-service.ps1
+After a code update (git pull): Stop-ScheduledTask MiniPMC; Start-ScheduledTask MiniPMC  (no reinstall needed).
+PS E:\Charan\Mini-PMC>
+
+
+HTTPS on port 443 — what you need
+
+A certificate and key as PEM files. For a .pfx, run python -m minipmc pfx-to-pem file.pfx --password …. With no certificate, run pip install cryptography, then python -m minipmc make-cert --names "host,fqdn,ip". A self-signed one gives browser warnings until it is trusted on each PC.
+Nothing else listening on port 443 on the server.
+Re-run the installer once, as Administrator: .\scripts\install-service.ps1 -CertFile <crt> -KeyFile <key> -OpenFirewall. With a certificate the port defaults to 443, and the watchdog probes https.
+An inbound TCP 443 rule on the Azure NSG, limited to your office or VPN ranges.
+
+
+python -m minipmc make-cert --names "localhost,bnlwefspap20560,bnlwefspap20560.s2.ms.unilever.com,10.234.2.19"
+
+PS E:\Charan\Mini-PMC> python -m minipmc make-cert --names "localhost,bnlwefspap20560,bnlwefspap20560.s2.ms.unilever.com,10.234.2.19"
+certificate: E:\Charan\Mini-PMC\certs\minipmc.crt
+private key: E:\Charan\Mini-PMC\certs\minipmc.key
+start with: serve --port 443 --cert "E:\Charan\Mini-PMC\certs\minipmc.crt" --key "E:\Charan\Mini-PMC\certs\minipmc.key"
+
+.\scripts\install-service.ps1 -CertFile .\certs\minipmc.crt -KeyFile .\certs\minipmc.key -OpenFirewall
+
+
+S E:\Charan\Mini-PMC> .\scripts\install-service.ps1 -CertFile .\certs\minipmc.crt -KeyFile .\certs\minipmc.key -OpenFirewall
+Firewall: inbound TCP 443 allowed (Windows firewall only - also check the Azure NSG).
+
+TaskName State
+-------- -----
+MiniPMC      4
+
+Installed. Dashboard: https://localhost:443   Logs: E:\Charan\Mini-PMC\logs\app.log
+Stop: Stop-ScheduledTask MiniPMC   Start: Start-ScheduledTask MiniPMC   Remove: .\scripts\uninstall-service.ps1
+After a code update (git pull): Stop-ScheduledTask MiniPMC; Start-ScheduledTask MiniPMC  (no reinstall needed).
+PS E:\Charan\Mini-PMC>
+
+
+PS E:\Charan\Mini-PMC> Import-Certificate `
+>>   -FilePath E:\Charan\Mini-PMC\certs\minipmc.crt `
+>>   -CertStoreLocation Cert:\LocalMachine\Root
+
+   PSParentPath: Microsoft.PowerShell.Security\Certificate::LocalMachine\Root
+
+Thumbprint                                Subject              EnhancedKeyUsageList
+----------                                -------              --------------------
+BF49EC0D26E72CE42FA6C33CAD71F546BE5175FC  CN=localhost
+
+PS E:\Charan\Mini-PMC>
+
+
+
+
+python -m minipmc mode
+python -m minipmc desired gnlfstlx00002
+python -m minipmc vm show gnlfstlx00002
+python -m minipmc validate
+
+
+Force a cycle now: python -m minipmc cycle. It reads statuses, plans and sends one wave.
+If it sends the stop, the cause was the once-per-slot behaviour (cause 1).
+If it says the slot is already done, wait for the next slot, or tell me and I'll add a "Run now" button.
+
+
+Check the service and logs:
+Run Get-ScheduledTask MiniPMC | Get-ScheduledTaskInfo.
+Run curl.exe -k https://localhost/healthz.
+Read the newest file in logs\.
+

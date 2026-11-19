@@ -30,12 +30,16 @@ try {
     $scheme = 'http'
     if ($Https) {
         $scheme = 'https'
-        [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-        [Net.ServicePointManager]::ServerCertificateValidationCallback = { $true }
+        [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12 -bor [Net.SecurityProtocolType]::Tls11
+        # A compiled callback: a scriptblock callback fails on a thread without a PowerShell runspace.
+        if (-not ('MiniPmcTrustAll' -as [type])) {
+            Add-Type -TypeDefinition 'using System.Net; using System.Net.Security; using System.Security.Cryptography.X509Certificates; public static class MiniPmcTrustAll { public static void Enable() { ServicePointManager.ServerCertificateValidationCallback = delegate(object s, X509Certificate c, X509Chain ch, SslPolicyErrors e) { return true; }; } }'
+        }
+        [MiniPmcTrustAll]::Enable()
     }
     $r = Invoke-WebRequest -Uri "${scheme}://127.0.0.1:$Port/healthz" -UseBasicParsing -TimeoutSec 15
     $healthy = ($r.StatusCode -eq 200)
-} catch { $healthy = $false }
+} catch { $healthy = $false; Note "probe error: $($_.Exception.Message)" }
 
 if (-not $healthy) {
     $up = (Get-Date) - (Get-ScheduledTaskInfo -TaskName $name).LastRunTime
