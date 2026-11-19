@@ -364,7 +364,7 @@ async function resourcesPage(ctx) {
       h("td", null, r.schedule
         ? h("div", {class: "sched-cell"}, strip(schedGrid.get(r.schedule)), h("span", null, r.schedule))
         : chip("Unmanaged", "unm", "No schedule: Mini PMC never starts or stops this VM")),
-      h("td", {class: "nowrap"}, statusChip(r), r.pending_action ? [" ", chip(r.pending_action === "START" ? "Starting\u2026" : "Stopping\u2026", "ovr", "Mini PMC has sent or queued this action")] : null,
+      h("td", {class: "nowrap"}, statusChip(r), r.pending_action ? [" ", chip(r.pending_action.toLowerCase() === "start" ? "Starting\u2026" : "Stopping\u2026", "ovr", "Mini PMC has sent or queued this action")] : null,
         " ", refreshBtn(r.name), actionBtn(r),
         mismatch(r) ? h("div", {class: "sub"}, "differs from schedule") : null),
       h("td", {class: "nowrap"}, stateChip(r.says),
